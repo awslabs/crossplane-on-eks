@@ -1,30 +1,4 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
 
-apiVersion: eks.aws.jet.crossplane.io/v1alpha2
-kind: Cluster
-metadata:
-  annotations:
-  generation: 3
-  name: crossplane01
-spec:
-  deletionPolicy: Delete
-  forProvider:
-    kubernetesNetworkConfig:
-      - serviceIpv4Cidr: 10.100.0.0/16
-    region: eu-west-1
-    roleArn: arn:aws:iam::XXXX:role/crossplane01-cluster-role
-    roleArnRef:
-      name: crossplane01-cluster-role
-    version: "1.21"
-    vpcConfig:
-      - subnetIdRefs:
-          - name: crossplane01-private-a
-          - name: crossplane01-private-b
-          - name: crossplane01-private-c
-        subnetIds:
-          - subnet-02e5848461eebf3f0
-          - subnet-028da00b7418908c0
-          - subnet-053d29019437eb9bb
-  providerConfigRef:
-    name: aws-jet-sandpit
+# TODO Work in Progress

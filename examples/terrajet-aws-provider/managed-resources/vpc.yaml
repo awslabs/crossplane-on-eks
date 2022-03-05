@@ -1,6 +1,7 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
 
+# Run `kubectl apply -f vpc.yaml` to test this example once you bootstrap the EKS cluster with Crossplane and Terrajet AWS Provider
 ---
 apiVersion: ec2.aws.jet.crossplane.io/v1alpha2
 kind: VPC

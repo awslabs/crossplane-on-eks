@@ -15,7 +15,7 @@ kind: ControllerConfig
 metadata:
   name: provider-aws-config
   annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/crossplane-provider-aws
+    eks.amazonaws.com/role-arn: "<arn:aws:iam::ACCOUNT_ID:role/crossplane-provider-aws>" # Enter your IAM Role ARN
 
 spec:
   podSecurityContext:

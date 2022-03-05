@@ -1,6 +1,7 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
 
+# Run `kubectl apply -f vpc.yaml` to test this example once you bootstrap the EKS cluster with Crossplane and AWS Provider
 ---
 apiVersion: network.awsblueprints.io/v1alpha1
 kind: amazonVpc

@@ -1,4 +1,4 @@
-# Crossplane Blueprints
+# Crossplane Blueprint examples
 
 This folder contains example for deploying AWS resources using the following providers
 
