@@ -1,0 +1,46 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: amazon-vpc
+  labels:
+    provider: jet-aws-provider
+    service: vpc
+    compute: managedamazon-vpc
+spec:
+  writeConnectionSecretsToNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: vpc.awsblueprints.io/v1beta1
+    kind: AmazonVpc
+
+  patchSets:
+    - name: common-parameters
+      patches:
+        - fromFieldPath: "spec.parameters.region"
+          toFieldPath: "spec.forProvider.region"
+  resources:
+    - name: vpc
+      base:
+        apiVersion: ec2.aws.jet.crossplane.io/v1alpha2
+        kind: VPC
+        spec:
+          forProvider:
+#            enableDnsSupport: true
+#            enableDnsHostNames: true
+#            tags:
+#              Name:  jet-aws-provider-vpc
+          providerConfigRef:
+            name: jet-aws-provider-config
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters
+        - fromFieldPath: spec.parameters.vpc-cidrBlock
+          toFieldPath: spec.forProvider.cidrBlock
+        - fromFieldPath: spec.parameters.vpc-tags
+          toFieldPath: spec.forProvider.tags[0].key
+        - fromFieldPath: spec.parameters.vpc-tags
+          toFieldPath: spec.forProvider.tags[0].value
+

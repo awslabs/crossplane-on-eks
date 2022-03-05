@@ -1,0 +1,5 @@
+.idea/
+.terraform.lock.hcl
+.terraform/
+kubeconfig_*
+local_tf_state/

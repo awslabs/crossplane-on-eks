@@ -1,0 +1,249 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xdynamodbtables.awsblueprints.io
+spec:
+  group: awsblueprints.io
+  names:
+    kind: XDynamoDBTable
+    plural: xdynamodbtables
+  claimNames:
+    kind: DynamoDBTable
+    plural: dynamodbtables
+  connectionSecretKeys:
+    - region
+    - tableName
+    - tableArn
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          description: Table is the Schema for the tables API
+          properties:
+            spec:
+              description: TableSpec defines the desired state of Table
+              properties:
+                globalSecondaryIndices:
+                  items:
+                    properties:
+                      keySchema:
+                        description: KeySchema specifies the attributes to create the
+                          primary key for tables or indices.
+                        properties:
+                          hashKeyName:
+                            type: string
+                          hashKeyType:
+                            enum:
+                            - B
+                            - "N"
+                            - S
+                            type: string
+                          rangeKeyName:
+                            type: string
+                          rangeKeyType:
+                            enum:
+                            - B
+                            - "N"
+                            - S
+                            type: string
+                        required:
+                        - hashKeyName
+                        - hashKeyType
+                        type: object
+                      name:
+                        type: string
+                      projection:
+                        properties:
+                          attribtues:
+                            description: Attributes specified here must not be in the
+                              primary key or index.
+                            items:
+                              type: string
+                            type: array
+                          projectionType:
+                            description: Attributes to project for this index. Defaults
+                              to ALL
+                            enum:
+                            - KEYS_ONLY
+                            - INCLUDE
+                            - ALL
+                            type: string
+                        required:
+                        - attribtues
+                        - projectionType
+                        type: object
+                      throughputConfig:
+                        description: ThroughputConfig defines this table's read and
+                          write capacities. Not required for on-demand mode.
+                        properties:
+                          read:
+                            type: integer
+                          write:
+                            type: integer
+                        required:
+                        - read
+                        - write
+                        type: object
+                    required:
+                    - keySchema
+                    - name
+                    type: object
+                  type: array
+                id:
+                  type: string
+                localSecondaryIndices:
+                  items:
+                    properties:
+                      keySchema:
+                        description: KeySchema specifies the attributes to create the
+                          primary key for tables or indices.
+                        properties:
+                          hashKeyName:
+                            type: string
+                          hashKeyType:
+                            enum:
+                            - B
+                            - "N"
+                            - S
+                            type: string
+                          rangeKeyName:
+                            type: string
+                          rangeKeyType:
+                            enum:
+                            - B
+                            - "N"
+                            - S
+                            type: string
+                        required:
+                        - hashKeyName
+                        - hashKeyType
+                        type: object
+                      name:
+                        type: string
+                      projection:
+                        properties:
+                          attribtues:
+                            description: Attributes specified here must not be in the
+                              primary key or index.
+                            items:
+                              type: string
+                            type: array
+                          projectionType:
+                            description: Attributes to project for this index. Defaults
+                              to ALL
+                            enum:
+                            - KEYS_ONLY
+                            - INCLUDE
+                            - ALL
+                            type: string
+                        required:
+                        - attribtues
+                        - projectionType
+                        type: object
+                      throughputConfig:
+                        description: ThroughputConfig defines this table's read and
+                          write capacities. Not required for on-demand mode.
+                        properties:
+                          read:
+                            type: integer
+                          write:
+                            type: integer
+                        required:
+                        - read
+                        - write
+                        type: object
+                    required:
+                    - keySchema
+                    - name
+                    type: object
+                  type: array
+                resourceConfig:
+                  description: ResourceConfig defines general properties of this AWS
+                    resource.
+                  properties:
+                    deletionPolicy:
+                      description: Defaults to Delete
+                      enum:
+                      - Delete
+                      - Orphan
+                      type: string
+                    name:
+                      description: Set the name of this resource in AWS to the value
+                        provided by this field.
+                      type: string
+                    providerConfigName:
+                      type: string
+                    region:
+                      type: string
+                    tags:
+                      items:
+                        properties:
+                          key:
+                            type: string
+                          value:
+                            type: string
+                        required:
+                        - key
+                        - value
+                        type: object
+                      type: array
+                  required:
+                  - providerConfigName
+                  - region
+                  - tags
+                  type: object
+                tableIndex:
+                  description: This table's primary key. Can be hash key or hash key
+                    and range key.
+                  properties:
+                    hashKeyName:
+                      type: string
+                    hashKeyType:
+                      enum:
+                      - B
+                      - "N"
+                      - S
+                      type: string
+                    rangeKeyName:
+                      type: string
+                    rangeKeyType:
+                      enum:
+                      - B
+                      - "N"
+                      - S
+                      type: string
+                  required:
+                  - hashKeyName
+                  - hashKeyType
+                  type: object
+                throughputConfig:
+                  description: ThroughputConfig defines this table's read and write
+                    capacities. Not required for on-demand mode.
+                  properties:
+                    read:
+                      type: integer
+                    write:
+                      type: integer
+                  required:
+                  - read
+                  - write
+                  type: object
+              required:
+              - resourceConfig
+              - tableIndex
+              type: object
+            status:
+              description: TableStatus defines the observed state of Table
+              properties:
+                tableARN:
+                  description: Indicates this table's ARN
+                  type: string
+              type: object
+          required:
+          - spec
+          type: object

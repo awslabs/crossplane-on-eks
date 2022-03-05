@@ -1,0 +1,53 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: amazonvpcs.vpc.awsblueprints.io
+spec:
+  group: vpc.awsblueprints.io
+  names:
+    kind: AmazonVpc
+    plural: amazonvpcs
+  versions:
+    - name: v1beta1
+      additionalPrinterColumns:
+      - jsonPath: .status.conditions[?(@.type=='Ready')].status
+        name: READY
+        type: string
+      - jsonPath: .status.conditions[?(@.type=='Synced')].status
+        name: SYNCED
+        type: string
+      - jsonPath: .metadata.creationTimestamp
+        name: AGE
+        type: date
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                parameters:
+                  type: object
+                  properties:
+                    region:
+                      description: Geographic location of this VPC
+                      type: string
+                      enum: ["eu-west-1", "eu-west-2"]
+                    vpc-cidrBlock:
+                      description: CIDR block for VPC
+                      type: string
+                    vpc-tags:
+                      description: VPC tags
+                      type: map
+                  required:
+                    - region
+                    - vpc-tags
+                    - vpc-cidrBlock
+              required:
+                - parameters

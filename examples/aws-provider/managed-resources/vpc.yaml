@@ -1,0 +1,19 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+---
+apiVersion: ec2.aws.crossplane.io/v1beta1
+kind: VPC
+metadata:
+  name: aws-provider-vpc
+spec:
+  forProvider:
+    region: eu-west-1
+    enableDnsHostNames: true
+    enableDnsSupport: true
+    cidrBlock: 10.40.0.0/16
+    tags:
+      - key: Name
+        value: aws-provider-vpc
+  providerConfigRef:
+    name: aws-provider-config

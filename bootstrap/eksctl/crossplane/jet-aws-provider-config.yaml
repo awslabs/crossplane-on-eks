@@ -1,0 +1,10 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: aws.jet.crossplane.io/v1alpha1
+kind: ProviderConfig
+metadata:
+  name: jet-aws-provider-config
+spec:
+  credentials:
+    source: InjectedIdentity

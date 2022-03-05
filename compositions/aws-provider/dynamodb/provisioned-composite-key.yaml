@@ -1,0 +1,113 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: dynamo-provisioned-composite.dynamodb.awsblueprints.io
+  labels:
+    awsblueprints.io/provider: aws
+    awsblueprints.io/environment: dev
+    dynamodb.awsblueprints.io/capacity: provisioned
+    dynamodb.awsblueprints.io/pkType: composite
+spec:
+  writeConnectionSecretsToNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: awsblueprints.io/v1alpha1
+    kind: XDynamoDBTable
+  patchSets:
+    - name: common-fields
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.deletionPolicy
+          toFieldPath: spec.deletionPolicy
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.name
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+  resources:
+    - name: table
+      connectionDetails:
+        - name: tableName
+          fromConnectionSecretKey: tableName
+        - name: tableArn
+          fromConnectionSecretKey: tableArn
+        - type: FromFieldPath
+          name: region
+          fromFieldPath: spec.forProvider.region
+      base:
+        apiVersion: dynamodb.aws.crossplane.io/v1alpha1
+        kind: Table
+        spec:
+          writeConnectionSecretToRef:
+            namespace: crossplane-system
+            name: ""
+          deletionPolicy: Delete
+          forProvider:
+            attributeDefinitions:
+              - attributeName: ""
+                attributeType: ""
+              - attributeName: ""
+                attributeType: ""
+            billingMode: PROVISIONED
+            keySchema:
+              - attributeName: ""
+                keyType: HASH
+              - attributeName: ""
+                keyType: RANGE
+            provisionedThroughput:
+              readCapacityUnits: 5
+              writeCapacityUnits: 5
+            region: ""
+            sseSpecification:
+              enabled: true
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            mergeOptions:
+              appendSlice: true
+              keepMapValues: true
+        - fromFieldPath: spec.writeConnectionSecretToRef.namespace
+          toFieldPath: spec.writeConnectionSecretToRef.namespace
+        - fromFieldPath: metadata.uid
+          toFieldPath: spec.writeConnectionSecretToRef.name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-dynamodb-table"
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.tableIndex.hashKeyName
+          toFieldPath: spec.forProvider.attributeDefinitions[0].attributeName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.tableIndex.hashKeyType
+          toFieldPath: spec.forProvider.attributeDefinitions[0].attributeType
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.tableIndex.rangeKeyName
+          toFieldPath: spec.forProvider.attributeDefinitions[1].attributeName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.tableIndex.rangeKeyType
+          toFieldPath: spec.forProvider.attributeDefinitions[1].attributeType
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.tableIndex.hashKeyName
+          toFieldPath: spec.forProvider.keySchema[0].attributeName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.throughputConfig.read
+          toFieldPath: spec.forProvider.provisionedThroughput.readCapacityUnits
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.throughputConfig.write
+          toFieldPath: spec.forProvider.provisionedThroughput.writeCapacityUnits
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.tableIndex.rangeKeyName
+          toFieldPath: spec.forProvider.keySchema[1].attributeName
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.tableARN
+          toFieldPath: status.tableARN

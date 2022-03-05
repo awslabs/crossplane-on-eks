@@ -1,0 +1,165 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: dynamo-provisioned-composite-gsi.dynamodb.awsblueprints.io
+  labels:
+    awsblueprints.io/provider: aws
+    awsblueprints.io/environment: dev
+    dynamodb.awsblueprints.io/capacity: provisioned
+    dynamodb.awsblueprints.io/pkType: composite
+    dynamodb.awsblueprints.io/secondaryIndex: global
+    dynamodb.awsblueprints.io/secondaryIndexCount: "1"
+spec:
+  writeConnectionSecretsToNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: awsblueprints.io/v1alpha1
+    kind: XDynamoDBTable
+  patchSets:
+    - name: common-fields
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.deletionPolicy
+          toFieldPath: spec.deletionPolicy
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.name
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+    - name: global-secondary-index
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.globalSecondaryIndices[0].name
+          toFieldPath: spec.forProvider.globalSecondaryIndexes[0].indexName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.globalSecondaryIndices[0].keySchema.hashKeyName
+          toFieldPath: spec.forProvider.globalSecondaryIndexes[0].keySchema[0].attributeName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.globalSecondaryIndices[0].keySchema.rangeKeyName
+          toFieldPath: spec.forProvider.globalSecondaryIndexes[0].keySchema[1].attributeName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.globalSecondaryIndices[0].keySchema.hashKeyName
+          toFieldPath: spec.forProvider.attributeDefinitions[2].attributeName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.globalSecondaryIndices[0].keySchema.hashKeyType
+          toFieldPath: spec.forProvider.attributeDefinitions[2].attributeType
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.globalSecondaryIndices[0].keySchema.rangeKeyName
+          toFieldPath: spec.forProvider.attributeDefinitions[3].attributeName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.globalSecondaryIndices[0].keySchema.rangeKeyType
+          toFieldPath: spec.forProvider.attributeDefinitions[3].attributeType
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.globalSecondaryIndices[0].projection.attributes
+          toFieldPath: spec.forProvider.globalSecondaryIndexes[0].projection.attributes
+          policy:
+            mergeOptions:
+              appendSlice: true
+              keepMapValues: true
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.globalSecondaryIndices[0].projection.projectionType
+          toFieldPath: spec.forProvider.globalSecondaryIndexes[0].projection.projectionType
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.globalSecondaryIndices[0].throughputConfig.read
+          toFieldPath: spec.forProvider.globalSecondaryIndexes[0].provisionedThroughput.readCapacityUnits
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.globalSecondaryIndices[0].throughputConfig.write
+          toFieldPath: spec.forProvider.globalSecondaryIndexes[0].provisionedThroughput.writeCapacityUnits
+  resources:
+    - name: table
+      connectionDetails:
+        - name: tableName
+          fromConnectionSecretKey: tableName
+        - name: tableArn
+          fromConnectionSecretKey: tableArn
+        - type: FromFieldPath
+          name: region
+          fromFieldPath: spec.forProvider.region
+      base:
+        apiVersion: dynamodb.aws.crossplane.io/v1alpha1
+        kind: Table
+        spec:
+          writeConnectionSecretToRef:
+            namespace: crossplane-system
+            name: ""
+          deletionPolicy: Delete
+          forProvider:
+            attributeDefinitions:
+              - attributeName: ""
+                attributeType: ""
+              - attributeName: ""
+                attributeType: ""
+            billingMode: PROVISIONED
+            globalSecondaryIndexes:
+              - indexName: ""
+                keySchema:
+                  - attributeName: ""
+                    keyType: HASH
+                  - attributeName: ""
+                    keyType: RANGE
+                projection:
+                  projectionType: ALL
+            keySchema:
+              - attributeName: ""
+                keyType: HASH
+              - attributeName: ""
+                keyType: RANGE
+            provisionedThroughput:
+              readCapacityUnits: 5
+              writeCapacityUnits: 5
+            region: ""
+            sseSpecification:
+              enabled: true
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: PatchSet
+          patchSetName: global-secondary-index
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            mergeOptions:
+              appendSlice: true
+              keepMapValues: true
+        - fromFieldPath: spec.writeConnectionSecretToRef.namespace
+          toFieldPath: spec.writeConnectionSecretToRef.namespace
+        - fromFieldPath: metadata.uid
+          toFieldPath: spec.writeConnectionSecretToRef.name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-dynamodb-table"
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.tableIndex.hashKeyName
+          toFieldPath: spec.forProvider.attributeDefinitions[0].attributeName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.tableIndex.hashKeyType
+          toFieldPath: spec.forProvider.attributeDefinitions[0].attributeType
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.tableIndex.rangeKeyName
+          toFieldPath: spec.forProvider.attributeDefinitions[1].attributeName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.tableIndex.rangeKeyType
+          toFieldPath: spec.forProvider.attributeDefinitions[1].attributeType
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.tableIndex.hashKeyName
+          toFieldPath: spec.forProvider.keySchema[0].attributeName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.tableIndex.rangeKeyName
+          toFieldPath: spec.forProvider.keySchema[1].attributeName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.throughputConfig.read
+          toFieldPath: spec.forProvider.provisionedThroughput.readCapacityUnits
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.throughputConfig.write
+          toFieldPath: spec.forProvider.provisionedThroughput.writeCapacityUnits
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.tableARN
+          toFieldPath: status.tableARN

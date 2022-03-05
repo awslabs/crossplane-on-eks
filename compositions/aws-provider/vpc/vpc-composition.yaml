@@ -1,0 +1,63 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xvpcs.network.awsblueprints.io
+  labels:
+    awsblueprints.io/provider: aws
+    awsblueprints.io/environment: dev
+    crossplane.io/xrd: xamazonvpcs.network.awsblueprints.io
+    service: vpc
+    compute: managedamazon-vpc
+spec:
+  writeConnectionSecretsToNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: network.awsblueprints.io/v1alpha1
+    kind: XAmazonVpc
+
+  patchSets:
+    - name: common-parameters
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.deletionPolicy
+          toFieldPath: spec.deletionPolicy
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+#        - type: FromCompositeFieldPath
+#          fromFieldPath: spec.resourceConfig.name
+#          toFieldPath: metadata.annotations[crossplane.io/external-name]
+
+  resources:
+    - name: vpc
+      base:
+        apiVersion: ec2.aws.crossplane.io/v1beta1
+        kind: VPC
+        spec:
+          forProvider:
+            enableDnsSupport: ""
+            enableDnsHostNames: ""
+            cidrBlock: ""
+            tags:
+              - key: Name
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpccidrBlock
+          toFieldPath: spec.forProvider.cidrBlock
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpcName
+          toFieldPath: spec.forProvider.tags[0].value
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.enableDnsSupport
+          toFieldPath: spec.forProvider.enableDnsSupport
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.enableDnsHostNames
+          toFieldPath: spec.forProvider.enableDnsHostNames
+

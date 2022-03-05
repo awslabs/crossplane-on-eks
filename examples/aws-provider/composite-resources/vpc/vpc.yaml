@@ -1,0 +1,23 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+---
+apiVersion: network.awsblueprints.io/v1alpha1
+kind: amazonVpc
+metadata:
+  name: crossplane-amazon-vpc
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+      service: vpc
+      compute: managedamazon-vpc
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: eu-west-1
+  parameters:
+    vpcName: aws-provider-vpc
+    vpccidrBlock: "10.20.0.0/16"
+

@@ -1,0 +1,70 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: iampolicies.awsblueprints.io
+spec:
+  group: awsblueprints.io
+  names:
+    kind: IAMPolicy
+    plural: iampolicies
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          description: Policy is the Schema for the policies API
+          properties:
+            spec:
+              description: PolicySpec defines the desired state of Policy
+              properties:
+                resourceArn:
+                  type: string
+                resourceConfig:
+                  description: ResourceConfig defines general properties of this AWS
+                    resource.
+                  properties:
+                    deletionPolicy:
+                      description: Defaults to Delete
+                      enum:
+                      - Delete
+                      - Orphan
+                      type: string
+                    name:
+                      description: Set the name of this resource in AWS to the value provided by this field.
+                      type: string
+                    providerConfigName:
+                      type: string
+                    region:
+                      type: string
+                    tags:
+                      items:
+                        properties:
+                          key:
+                            type: string
+                          value:
+                            type: string
+                        required:
+                        - key
+                        - value
+                        type: object
+                      type: array
+                  required:
+                  - providerConfigName
+                  - region
+                  - tags
+                  type: object
+              required:
+              - resourceArn
+              - resourceConfig
+              type: object
+            status:
+              description: PolicyStatus defines the observed state of Policy
+              properties:
+                policyArn:
+                  type: string
+              type: object
+          type: object

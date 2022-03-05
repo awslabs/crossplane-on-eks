@@ -1,0 +1,20 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+---
+apiVersion: ec2.aws.jet.crossplane.io/v1alpha2
+kind: VPC
+metadata:
+  name: jet-aws-provider-vpc
+spec:
+  forProvider:
+    region: eu-west-1
+    enableDnsHostNames: true
+    enableDnsSupport: true
+    enableClasiclink: true
+    cidrBlock: 10.30.0.0/16
+    enableClassiclinkDnsSupport: true
+    tags:
+      Name: jet-aws-provider-vpc
+  providerConfigRef:
+    name: jet-aws-provider-config

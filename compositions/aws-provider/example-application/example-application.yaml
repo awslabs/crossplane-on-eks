@@ -1,0 +1,128 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: example.app.awsblueprints.io
+  labels:
+    awsblueprints.io/environment: dev
+spec:
+  writeConnectionSecretsToNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: awsblueprints.io/v1alpha1
+    kind: XExampleApp
+  patchSets:
+    - name: common-fields
+      patches:
+        - fromFieldPath: spec.resourceConfig
+          toFieldPath: spec.resourceConfig
+          policy:
+            mergeOptions:
+              keepMapValues: true
+  resources:
+    - name: dynamodb-table
+      connectionDetails:
+        - name: tableName
+          fromConnectionSecretKey: tableName
+        - name: tableArn
+          fromConnectionSecretKey: tableArn
+        - name: region
+          fromConnectionSecretKey: region
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: XDynamoDBTable
+        spec:
+          compositionSelector:
+            matchLabels:
+              awsblueprints.io/provider: aws
+              awsblueprints.io/environment: dev
+              dynamodb.awsblueprints.io/capacity: on-demand
+              dynamodb.awsblueprints.io/pkType: partition
+          tableIndex:
+            hashKeyName: hashKey
+            hashKeyType: S
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.tableARN
+          toFieldPath: status.tableArn
+        - type: ToCompositeFieldPath
+          fromFieldPath: spec.tableSpec.hashKeyName
+          toFieldPath: spec.tableIndex.hashKeyName
+        - type: ToCompositeFieldPath
+          fromFieldPath: spec.tableSpec.hashKeyType
+          toFieldPath: spec.tableIndex.hashKeyType
+    - name: read-policy
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: IAMPolicy
+        spec:
+          compositionSelector:
+            matchLabels:
+              awsblueprints.io/provider: aws
+              awsblueprints.io/environment: dev
+              iam.awsblueprints.io/policy-type: read
+              iam.awsblueprints.io/service: dynamodb-table
+          resourceArn: ""
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.policyArn
+          toFieldPath: status.readPolicyArn
+        - fromFieldPath: status.tableArn
+          toFieldPath: spec.resourceArn
+    - name: write-policy
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: IAMPolicy
+        spec:
+          compositionSelector:
+            matchLabels:
+              awsblueprints.io/provider: aws
+              awsblueprints.io/environment: dev
+              iam.awsblueprints.io/policy-type: write
+              iam.awsblueprints.io/service: dynamodb-table
+          resourceArn: ""
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.policyArn
+          toFieldPath: status.writePolicyArn
+        - fromFieldPath: status.tableArn
+          toFieldPath: spec.resourceArn
+    - name: irsa
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: IRSA
+        spec:
+          awsAccountID: ""
+          eksOIDC: ""
+          permissionsBoundaryArn: ""
+          policyArns:
+            - ""
+            - ""
+          serviceAccountName: "example-app"
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+          toFieldPath: metadata.namespace
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.accountId
+          toFieldPath: spec.awsAccountID
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.eksOIDC
+          toFieldPath: spec.eksOIDC
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.permissionsBoundaryArn
+          toFieldPath: spec.permissionsBoundaryArn
+        - fromFieldPath: status.readPolicyArn
+          toFieldPath: spec.policyArns[0]
+        - fromFieldPath: status.writePolicyArn
+          toFieldPath: spec.policyArns[1]
+

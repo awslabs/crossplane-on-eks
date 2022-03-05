@@ -1,0 +1,101 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xexampleapps.awsblueprints.io
+spec:
+  group: awsblueprints.io
+  names:
+    kind: XExampleApp
+    plural: xexampleapps
+  claimNames:
+    kind: ExampleApp
+    plural: exampleapps
+  connectionSecretKeys:
+    - region
+    - tableName
+    - tableArn
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          description: Application is the Schema for the applications API
+          properties:
+            spec:
+              description: ApplicationSpec defines the desired state of Application
+              properties:
+                accountId:
+                  type: string
+                eksOIDC:
+                  type: string
+                permissionsBoundaryArn:
+                  type: string
+                resourceConfig:
+                  description: ResourceConfig defines general properties of this AWS
+                    resource.
+                  properties:
+                    deletionPolicy:
+                      description: Defaults to Delete
+                      enum:
+                      - Delete
+                      - Orphan
+                      type: string
+                    name:
+                      description: Set the name of this resource in AWS to the value
+                        provided by this field.
+                      type: string
+                    providerConfigName:
+                      type: string
+                    region:
+                      type: string
+                    tags:
+                      items:
+                        properties:
+                          key:
+                            type: string
+                          value:
+                            type: string
+                        required:
+                        - key
+                        - value
+                        type: object
+                      type: array
+                  required:
+                  - providerConfigName
+                  - region
+                  - tags
+                  type: object
+                tableSpec:
+                  properties:
+                    hashKeyName:
+                      type: string
+                    hashKeyType:
+                      type: string
+                  required:
+                  - hashKeyName
+                  - hashKeyType
+                  type: object
+              required:
+              - accountId
+              - eksOIDC
+              - permissionsBoundaryArn
+              - resourceConfig
+              - tableSpec
+              type: object
+            status:
+              description: ApplicationStatus defines the observed state of Application
+              properties:
+                applicationRole:
+                  type: string
+                readPolicyArn:
+                  type: string
+                tableArn:
+                  type: string
+                writePolicyArn:
+                  type: string
+              type: object
+          type: object

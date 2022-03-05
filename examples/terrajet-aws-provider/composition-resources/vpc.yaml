@@ -1,0 +1,20 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+---
+apiVersion: vpc.awsblueprints.io/v1beta1
+kind: AmazonVpc
+metadata:
+  name: crossplane-amazon-vpc
+spec:
+  parameters:
+    region: eu-west-1
+    vpc-tags:
+      Name: aws-provider-vpc
+    vpc-cidrBlock: "10.20.0.0/16"
+  compositionRef:
+    name: amazon-vpc
+
+#  writeConnectionSecretToRef:
+#    namespace: cplane-vpc
+#    name: crossplane-prod-cluster-connection

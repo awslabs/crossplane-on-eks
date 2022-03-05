@@ -1,0 +1,24 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: awsblueprints.io/v1alpha1
+kind: IAMPolicy
+metadata:
+  name: iam-dynamodb-read
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+      iam.awsblueprints.io/policy-type: read
+      iam.awsblueprints.io/service: dynamodb-table
+  resourceConfig:
+    providerConfigName: default
+    region: us-west-2
+    tags:
+      - key: env
+        value: test
+      - key: anotherKey
+        value: anotherValue
+  resourceArn: arn:aws:dynamodb:us-west-2:123456789:table/test-table

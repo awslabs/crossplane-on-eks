@@ -1,0 +1,68 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xobjectstorages.aws.platform.amazon.com
+spec:
+  claimNames:
+    kind: ObjectStorage
+    plural: objectstorages
+  group: aws.platform.amazon.com
+  names:
+    kind: XObjectStorage
+    plural: xobjectstorages
+  connectionSecretKeys:
+    - region
+    - bucket-name
+    - s3-put-policy
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                deletionPolicy:
+                  type: string
+                  pattern: "^(Delete|Orphan)$"
+                storageName:
+                  type: string
+                  description: Name of bucket. Must be a globally unique.
+                providerConfigName:
+                  type: string
+                  description: crossplane AWS provider config name to use.
+                tags:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      key:
+                        type: string
+                      value:
+                        type: string
+                    required:
+                      - key
+                      - value
+              required:
+                - providerConfigName
+                # - storageName
+                - deletionPolicy
+            status:
+              type: object
+              properties:
+                s3-put-policy:
+                  type: object
+                  properties:
+                    arn:
+                      type: string
+                bucket:
+                  type: object
+                  properties:
+                    name:
+                      type: string

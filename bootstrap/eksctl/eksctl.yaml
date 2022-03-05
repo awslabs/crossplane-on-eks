@@ -1,0 +1,17 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: crossplane-ssp
+  region: us-west-2
+  version: "1.21"
+managedNodeGroups:
+  - name: managed-ng-1
+    instanceType: m5.large
+    minSize: 2
+    maxSize: 3
+iam:
+  withOIDC: true
+

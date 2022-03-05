@@ -1,0 +1,33 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: awsblueprints.io/v1alpha1
+kind: DynamoDBTable
+metadata:
+  name: test-table-provisioned-composite-key
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+      dynamodb.awsblueprints.io/capacity: provisioned
+      dynamodb.awsblueprints.io/pkType: composite
+  writeConnectionSecretToRef:
+    name: test-table-on-demand-partition-key
+  resourceConfig:
+    providerConfigName: default
+    region: us-west-2
+    tags:
+      - key: env
+        value: test
+      - key: anotherKey
+        value: anotherValue
+  tableIndex:
+    hashKeyName: hashKey
+    hashKeyType: S
+    rangeKeyName: rangeKey
+    rangeKeyType: S
+  throughputConfig:
+    read: 7
+    write: 7
