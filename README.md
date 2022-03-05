@@ -13,7 +13,6 @@ Resources within these APIs are [Composite Resource(XRs)](https://crossplane.io/
 [Crossplane](https://crossplane.io/) extends your Kubernetes cluster, providing you with CRDs for managing AWS resources.
 Crossplane Composite Resources are opinionated Kubernetes Custom Resources that are composed of Managed Resources. 
 
-
 ## Features
 
 ✅   Bootstrap [Amazon EKS](https://aws.amazon.com/eks/) Cluster and Crossplane with [Terraform](https://www.terraform.io/) \
@@ -21,8 +20,8 @@ Crossplane Composite Resources are opinionated Kubernetes Custom Resources that 
 ✅   [AWS Provider](https://github.com/crossplane/provider-aws) - Crossplane Compositions for AWS Services \
 ✅   [Terrajet AWS Provider](https://github.com/crossplane-contrib/provider-jet-aws) - Crossplane Compositions for AWS Services \
 ✅   [AWS IRSA on EKS](https://github.com/crossplane/provider-aws) - AWS Provider Config with IRSA enabled  \
-✅   Example Patterns for [Composite Resources(XRs)](https://crossplane.io/docs/v1.6/concepts/composition.html) for AWS Provider and Terrajet AWS Provider\
-✅   Example Patterns for [Crossplane Managed Resources(MRs)](https://crossplane.io/docs/v1.6/concepts/managed-resources.html)
+✅   Example deployment patterns for [Composite Resources(XRs)](https://crossplane.io/docs/v1.6/concepts/composition.html) for AWS Provider and Terrajet AWS Provider\
+✅   Example deployment patterns for [Crossplane Managed Resources(MRs)](https://crossplane.io/docs/v1.6/concepts/managed-resources.html)
 
 ## Getting Started
 
@@ -47,12 +46,12 @@ Checkout the following README for full deployment configuration
 For debugging Compositions, CompositionResourceDefinitions, etc, [please see the debugging guide](doc/debugging.md). 
 
 ## Maintainers
-This repo is maintained by (A-Z):
+This repo is maintained by:
 
- - Manabu McCloskey 
- - Vara Bonthu
- - Nima Kaviani
- - Nuatu Tseggi
+ - [Manabu McCloskey](https://github.com/nabuskey) 
+ - [Vara Bonthu](https://github.com/vara-bonthu)
+ - [Nima Kaviani](https://github.com/nimakaviani)
+ - [Nuatu Tseggi](https://github.com/Nuatu)
 
 ## Security
 
