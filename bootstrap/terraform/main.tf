@@ -109,8 +109,8 @@ module "aws_vpc" {
   cidr = local.vpc_cidr
   azs  = local.azs
 
-  public_subnets  = [for k, v in data.aws_availability_zones.available.names : cidrsubnet(local.vpc_cidr, 8, k)]
-  private_subnets = [for k, v in data.aws_availability_zones.available.names : cidrsubnet(local.vpc_cidr, 8, k + 10)]
+  public_subnets  = [for k, v in slice(data.aws_availability_zones.available.names, 0, 2) : cidrsubnet(local.vpc_cidr, 8, k)]
+  private_subnets = [for k, v in slice(data.aws_availability_zones.available.names, 0, 2) : cidrsubnet(local.vpc_cidr, 8, k + 10)]
 
   enable_nat_gateway   = true
   create_igw           = true
@@ -132,7 +132,7 @@ module "aws_vpc" {
 # This module deploys EKS Cluster with one Managed group
 #---------------------------------------------------------------
 module "aws-eks-accelerator-for-terraform" {
-  source = "/Users/vabonthu/Documents/GITHUB/aws-eks-accelerator-for-terraform"
+  source = "github.com/aws-samples/aws-eks-accelerator-for-terraform"
 
   tenant            = local.tenant
   environment       = local.environment
@@ -167,7 +167,7 @@ module "aws-eks-accelerator-for-terraform" {
 # This module deploys Kubernetes add-ons
 #---------------------------------------------------------------
 module "kubernetes-addons" {
-  source         = "/Users/vabonthu/Documents/GITHUB/aws-eks-accelerator-for-terraform//modules/kubernetes-addons"
+  source         = "github.com/aws-samples/aws-eks-accelerator-for-terraform//modules/kubernetes-addons"
   eks_cluster_id = module.aws-eks-accelerator-for-terraform.eks_cluster_id
 
   # Deploy Karpenter Autoscaler
@@ -179,14 +179,17 @@ module "kubernetes-addons" {
   # Deploy Crossplane AWS Providers
 
   # Optional config to deploy specific version of AWS Provider and attach additional IAM policies to manage AWS resources using Crossplane
-  # Creates ProviderConfig -> aws-provider
+  # Creates ProviderConfig -> aws-provider-config
+
+  # NOTE: Crossplane requires Admin like permissions to create and update resources similar to Terraform deploy role.
+  # This example config uses AmazonS3FullAccess for demo purpose only, but you should select a policy with the minimum permissions required to provision your resources
   crossplane_aws_provider = {
     enable                   = true
     provider_aws_version     = "v0.24.1"
     additional_irsa_policies = ["arn:aws:iam::aws:policy/AdministratorAccess"]
   }
 
-  # Creates ProviderConfig -> jet-aws-provider
+  # Creates ProviderConfig -> jet-aws-provider-config
   crossplane_jet_aws_provider = {
     enable                   = true
     provider_aws_version     = "v0.4.1"

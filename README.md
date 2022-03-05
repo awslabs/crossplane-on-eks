@@ -1,25 +1,38 @@
-# AWS Crossplane Blueprints
+# AWS Blueprints for Crossplane
+> **Note**: AWS Blueprints for Crossplane is an active development and should be considered a pre-production framework. 
+
 Welcome to the AWS Crossplane Blueprints.
 
 ## Introduction
 [AWS](https://aws.amazon.com/) Crossplane Blueprints is an open source repo to Bootstrap EKS Clusters
-and provision AWS resources with a library of Crossplane Compositions(XRD).
+and provision AWS resources with a library of [Crossplane Compositions(XRs)](https://crossplane.io/docs/v1.6/concepts/composition.html) with Composite Resource Definitions(XRDs).
+
+Compositions allow platform teams to define and offer bespoke infrastructure APIs to the teams of application developers.
+Resources within these APIs are [Composite Resource(XRs)](https://crossplane.io/docs/v1.6/concepts/composition.html) and it is composed of one or more [Managed Resources(MRs)](https://crossplane.io/docs/v1.6/concepts/managed-resources.html)
 
 [Crossplane](https://crossplane.io/) extends your Kubernetes cluster, providing you with CRDs for managing AWS resources.
-Crossplane Composite Resources are opinionated Kubernetes Custom Resources that are composed of Managed Resources.
+Crossplane Composite Resources are opinionated Kubernetes Custom Resources that are composed of Managed Resources. 
+
+
+## Features
+
+✅   Bootstrap [Amazon EKS](https://aws.amazon.com/eks/) Cluster and Crossplane with [Terraform](https://www.terraform.io/) \
+✅   Bootstrap [Amazon EKS](https://aws.amazon.com/eks/) Cluster and Crossplane with [eksctl](https://eksctl.io/) \
+✅   [AWS Provider](https://github.com/crossplane/provider-aws) - Crossplane Compositions for AWS Services \
+✅   [Terrajet AWS Provider](https://github.com/crossplane-contrib/provider-jet-aws) - Crossplane Compositions for AWS Services \
+✅   [AWS IRSA on EKS](https://github.com/crossplane/provider-aws) - AWS Provider Config with IRSA enabled  \
+✅   Example Patterns for [Composite Resources(XRs)](https://crossplane.io/docs/v1.6/concepts/composition.html) for AWS Provider and Terrajet AWS Provider\
+✅   Example Patterns for [Crossplane Managed Resources(MRs)](https://crossplane.io/docs/v1.6/concepts/managed-resources.html)
 
 ## Getting Started
 
-✅   Bootstrap EKS Cluster 
+✅   Bootstrap EKS Cluster
 
-This repo provides multiple options to bootstrap Amazon EKS Clusters with Crossplane and AWS Providers.
+This repo provides multiple options to bootstrap Amazon EKS Clusters with Crossplane and AWS Providers. 
+Checkout the following README for full deployment configuration 
 
 - [Bootstrap EKS Cluster with eksctl](bootstrap/eksctl/README.md)
 - [Bootstrap EKS Cluster with Terraform](bootstrap/terraform/README.md)
-
-✅   Deploy AWS resources with Crossplane
-<!--TBD Refer to the S3 example-->
-
 
 ## Learn More
 
@@ -40,7 +53,6 @@ This repo is maintained by (A-Z):
  - Vara Bonthu
  - Nima Kaviani
  - Nuatu Tseggi
-
 
 ## Security
 

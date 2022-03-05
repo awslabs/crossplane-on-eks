@@ -28,7 +28,7 @@ spec:
         kind: VPC
         spec:
           forProvider:
-#            enableDnsSupport: true
+#            enableDnsSupport: true       # Disabled due to Open defect with Terrajet Crossplane provider
 #            enableDnsHostNames: true
 #            tags:
 #              Name:  jet-aws-provider-vpc
