@@ -97,7 +97,7 @@ spec:
     - name: irsa
       base:
         apiVersion: awsblueprints.io/v1alpha1
-        kind: IRSA
+        kind: XIRSA
         spec:
           awsAccountID: ""
           eksOIDC: ""
@@ -109,9 +109,6 @@ spec:
       patches:
         - type: PatchSet
           patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
-          toFieldPath: metadata.namespace
         - type: FromCompositeFieldPath
           fromFieldPath: spec.accountId
           toFieldPath: spec.awsAccountID
@@ -125,4 +122,53 @@ spec:
           toFieldPath: spec.policyArns[0]
         - fromFieldPath: status.writePolicyArn
           toFieldPath: spec.policyArns[1]
-
+    - name: example-app
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: example-app
+                namespace: ""
+                labels:
+                  app: dynamodb-table-test
+              spec:
+                replicas: 1
+                selector:
+                  matchLabels:
+                    app: dynamodb-table-test
+                template:
+                  metadata:
+                    labels:
+                      app: dynamodb-table-test
+                  spec:
+                    serviceAccountName: example-app
+                    containers:
+                    - name: aws-cli
+                      image: amazon/aws-cli:latest
+                      env:
+                        - name: AWS_DEFAULT_REGION
+                          valueFrom:
+                            secretKeyRef:
+                              name: example-application-secrets
+                              key: region
+                        - name: TABLE_NAME
+                          valueFrom:
+                            secretKeyRef:
+                              name: example-application-secrets
+                              key: tableName
+                        - name: TEST_KEY
+                          value: '{"hashKey": {"S":"test1"}}'
+                      command: 
+                        - "/bin/bash"
+                      args:
+                        - "-c"
+                        - 'while true; do echo "putting item"; aws dynamodb put-item --table-name $TABLE_NAME  --item "$TEST_KEY" || exit 10; sleep 120; echo "removing item"; aws dynamodb delete-item --table-name $TABLE_NAME --key "$TEST_KEY"; sleep 120 ; done'
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+          toFieldPath: spec.forProvider.manifest.metadata.namespace
