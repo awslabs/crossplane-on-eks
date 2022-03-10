@@ -5,17 +5,17 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: xvpcs.network.jet.awsblueprints.io
+  name: xvpcs-jet.network.awsblueprints.io
   labels:
     awsblueprints.io/provider: jet-aws
     awsblueprints.io/environment: dev
-    crossplane.io/xrd: xamazonvpcs.network.jet.awsblueprints.io
+    crossplane.io/xrd: xamazonvpcs-jet.network.awsblueprints.io
     service: vpc
     compute: managedamazon-vpc
 spec:
   writeConnectionSecretsToNamespace: crossplane-system
   compositeTypeRef:
-    apiVersion: network.jet.awsblueprints.io/v1alpha1
+    apiVersion: network.awsblueprints.io/v1alpha1
     kind: XAmazonVpc
 
   patchSets:
