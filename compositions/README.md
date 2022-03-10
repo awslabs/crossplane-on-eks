@@ -8,18 +8,14 @@ The following steps demonstrate the example to deploy the VPC with AWS Provider
 ### Deploy Composition and XRD
 
 ```shell
-cd compositions/aws-provider/vpc
-
-kubectl apply -f .
+kubectl apply -f compositions/aws-provider/vpc
 ```
 
 
 ### Deploy Application example
 
 ```shell
-cd examples/aws-provider/composite-resources/vpc
-
-kubectl apply -f vpc.yaml
+kubectl apply -f examples/aws-provider/composite-resources/vpc/vpc.yaml
 ```
 
 ## Deployment Steps - Jet AWS Provider
@@ -29,16 +25,12 @@ The following steps demonstrate the example to deploy the VPC with Jet AWS Provi
 ### Deploy Composition and XRD
 
 ```shell
-cd compositions/terrajet-aws-provider/vpc
-
-kubectl apply -f .
+kubectl apply -f compositions/terrajet-aws-provider/vpc
 ```
 
 
 ### Deploy Application example
 
 ```shell
-cd examples/terrajet-aws-provider/composition-resources
-
-kubectl apply -f vpc.yaml
+kubectl apply -f examples/terrajet-aws-provider/composition-resources/vpc.yaml
 ```
