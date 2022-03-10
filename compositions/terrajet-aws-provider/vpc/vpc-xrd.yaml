@@ -5,9 +5,9 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: xamazonvpcs-jet.network.awsblueprints.io  # must be spec.names.plural+"."+spec.group
+  name: xamazonvpcs.network.jet.awsblueprints.io  # must be spec.names.plural+"."+spec.group
 spec:
-  group: network.awsblueprints.io
+  group: network.jet.awsblueprints.io
   names:
     kind: XAmazonVpc        # cluster scope type
     plural: xamazonvpcs
