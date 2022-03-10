@@ -5,22 +5,35 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: amazon-vpc
+  name: xvpcs.network.jet.awsblueprints.io
   labels:
-    provider: jet-aws-provider
+    awsblueprints.io/provider: jet-aws
+    awsblueprints.io/environment: dev
+    crossplane.io/xrd: xamazonvpcs.network.jet.awsblueprints.io
     service: vpc
     compute: managedamazon-vpc
 spec:
   writeConnectionSecretsToNamespace: crossplane-system
   compositeTypeRef:
-    apiVersion: vpc.awsblueprints.io/v1beta1
-    kind: AmazonVpc
+    apiVersion: network.jet.awsblueprints.io/v1alpha1
+    kind: XAmazonVpc
 
   patchSets:
     - name: common-parameters
       patches:
-        - fromFieldPath: "spec.parameters.region"
-          toFieldPath: "spec.forProvider.region"
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.deletionPolicy
+          toFieldPath: spec.deletionPolicy
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+#        - type: FromCompositeFieldPath
+#          fromFieldPath: spec.resourceConfig.name
+#          toFieldPath: metadata.annotations[crossplane.io/external-name]
+
   resources:
     - name: vpc
       base:
@@ -28,19 +41,25 @@ spec:
         kind: VPC
         spec:
           forProvider:
-#            enableDnsSupport: true       # Disabled due to Open defect with Terrajet Crossplane provider
-#            enableDnsHostNames: true
-#            tags:
-#              Name:  jet-aws-provider-vpc
-          providerConfigRef:
-            name: jet-aws-provider-config
+            enableDnsSupport: ""
+            enableDnsHostNames: ""
+            cidrBlock: ""
+            tags:
+              Name: ""
+
       patches:
         - type: PatchSet
           patchSetName: common-parameters
-        - fromFieldPath: spec.parameters.vpc-cidrBlock
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpccidrBlock
           toFieldPath: spec.forProvider.cidrBlock
-        - fromFieldPath: spec.parameters.vpc-tags
-          toFieldPath: spec.forProvider.tags[0].key
-        - fromFieldPath: spec.parameters.vpc-tags
-          toFieldPath: spec.forProvider.tags[0].value
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpcName
+          toFieldPath: spec.forProvider.tags.Name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.enableDnsSupport
+          toFieldPath: spec.forProvider.enableDnsSupport
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.enableDnsHostNames
+          toFieldPath: spec.forProvider.enableDnsHostNames
 
