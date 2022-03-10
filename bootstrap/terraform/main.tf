@@ -171,18 +171,17 @@ module "kubernetes-addons" {
   eks_cluster_id = module.aws-eks-accelerator-for-terraform.eks_cluster_id
 
   # Deploy Karpenter Autoscaler
-  enable_karpenter      = true
+  enable_karpenter  = true
 
   # Deploy Crossplane
   enable_crossplane = true
 
   # Deploy Crossplane AWS Providers
 
-  # Optional config to deploy specific version of AWS Provider and attach additional IAM policies to manage AWS resources using Crossplane
-  # Creates ProviderConfig -> aws-provider-config
-
   # NOTE: Crossplane requires Admin like permissions to create and update resources similar to Terraform deploy role.
-  # This example config uses AmazonS3FullAccess for demo purpose only, but you should select a policy with the minimum permissions required to provision your resources
+  # This example config uses AdministratorAccess for demo purpose only, but you should select a policy with the minimum permissions required to provision your resources
+    
+  # Creates ProviderConfig -> aws-provider-config
   crossplane_aws_provider = {
     enable                   = true
     provider_aws_version     = "v0.24.1"
