@@ -35,13 +35,12 @@ kubectl apply -f compositions/terrajet-aws-provider/vpc
 kubectl apply -f examples/terrajet-aws-provider/composition-resources/vpc.yaml
 ```
 
-## Option3: Deploy Managed resource
+## Option3: Deploy Managed resource for AWS Provider
 
 The following shows the deployment of VPC using AWS Provider
 
 ```shell
-cd ~/aws-crossplane-blueprints/examples/aws-provider/managed-resources
-kubectl apply -f vpc.yaml
+kubectl apply -f examples/aws-provider/managed-resources/vpc.yaml
 
 # Verify the resource. When provisioning is complete, you should see READY: True in the output
 kubectl get VPC aws-provider-vpc
