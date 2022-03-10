@@ -8,6 +8,11 @@ Most error messages are logged to resources' event field. Whenever your Composit
 3. If no errors, follow its sub-resources. `kubectl get <KIND> <NAME> -o=jsonpath='{.spec.resourceRef}{" "}{.spec.resourceRefs}' | jq`
 4. Go back to step 1 using one of resources returned by step 3. 
 
+_Note:_ Debugging is also enabled for the AWS provider pods. You may find it
+useful to check the logs for the provider pods for extra information on
+failures. You can also disable logging
+[here](/bootstrap/eksctl/crossplane/aws-provider.yaml#L24).
+
 ## Debugging Example
 
 ### Composition
