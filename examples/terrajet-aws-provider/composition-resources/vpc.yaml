@@ -3,7 +3,7 @@
 
 # Run `kubectl apply -f vpc.yaml` to test this example once you bootstrap the EKS cluster with Crossplane and Terrajet AWS Provider
 ---
-apiVersion: network.jet.awsblueprints.io/v1alpha1
+apiVersion: network.awsblueprints.io/v1alpha1
 kind: amazonVpc
 metadata:
   name: xplane-jet-amazon-vpc
@@ -21,3 +21,4 @@ spec:
   parameters:
     vpcName: jet-aws-provider-vpc
     vpccidrBlock: "10.30.0.0/16"
+

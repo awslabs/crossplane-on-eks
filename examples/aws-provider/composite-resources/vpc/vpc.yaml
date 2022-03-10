@@ -6,7 +6,7 @@
 apiVersion: network.awsblueprints.io/v1alpha1
 kind: amazonVpc
 metadata:
-  name: crossplane-amazon-vpc
+  name: xplane-amazon-vpc
   namespace: default
 spec:
   compositionSelector:
@@ -21,4 +21,5 @@ spec:
   parameters:
     vpcName: aws-provider-vpc
     vpccidrBlock: "10.20.0.0/16"
+    amazonProvidedIpv6CidrBlock: true
 
