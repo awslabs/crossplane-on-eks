@@ -4,7 +4,7 @@
 apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 metadata:
-  name: crossplane-ssp
+  name: crossplane-blueprints
   region: us-west-2
   version: "1.21"
 managedNodeGroups:

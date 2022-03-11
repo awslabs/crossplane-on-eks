@@ -35,7 +35,7 @@ Create a role for crossplane to use to deploy (admin role with permissions bound
 ```bash
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
-OIDC_PROVIDER=$(aws eks describe-cluster --name crossplane-ssp --query "cluster.identity.oidc.issuer" --output text | sed -e "s/^https:\/\///")
+OIDC_PROVIDER=$(aws eks describe-cluster --name crossplane-blueprints --query "cluster.identity.oidc.issuer" --output text | sed -e "s/^https:\/\///")
 
 PERMISSION_BOUNDARY_ARN="arn:aws:iam::${ACCOUNT_ID}:policy/crossplaneBoundary"
 
