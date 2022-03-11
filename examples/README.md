@@ -2,8 +2,8 @@
 
 This folder contains example for deploying AWS resources using the following providers
 
-- AWS Provider
-- Terrajet AWS Provider
+- [AWS Provider](https://github.com/crossplane/provider-aws)
+- [Terrajet AWS Provider](https://github.com/crossplane-contrib/provider-jet-aws)
 
 ## Usage
 
