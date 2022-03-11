@@ -1,14 +1,17 @@
 # Crossplane Configuration
 
 ## Steps to build and deploy Crossplane Configuration packages
-
  
+`vpc-composition.yaml` and `vpc-xrd.yaml` can be deployed using `kubectl apply` 
+
+Alternatively, you can use the following steps to package the composition and deploy
+
 ### Step1 
 
 - Create a `crossplane.yaml` file where Composition and CompositeResourceDefinition resource files are available
 
 
-### Step2: Build Configuraiton file
+### Step2: Build Configuration file
 
 ```shell
 kubectl crossplane build configuration

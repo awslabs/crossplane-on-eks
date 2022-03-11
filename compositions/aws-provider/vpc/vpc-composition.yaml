@@ -40,9 +40,13 @@ spec:
         kind: VPC
         spec:
           forProvider:
-            enableDnsSupport: ""
-            enableDnsHostNames: ""
-            cidrBlock: ""
+            amazonProvidedIpv6CidrBlock:
+            enableDnsSupport:
+            enableDnsHostNames:
+            cidrBlock:
+            instanceTenancy:
+            ipv6CidrBlock:
+            ipv6Pool:
             tags:
               - key: Name
       patches:
@@ -60,4 +64,16 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: spec.parameters.enableDnsHostNames
           toFieldPath: spec.forProvider.enableDnsHostNames
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.amazonProvidedIpv6CidrBlock
+          toFieldPath: spec.forProvider.amazonProvidedIpv6CidrBlock
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.instanceTenancy
+          toFieldPath: spec.forProvider.instanceTenancy
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.ipv6CidrBlock
+          toFieldPath: spec.forProvider.ipv6CidrBlock
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.ipv6Pool
+          toFieldPath: spec.forProvider.ipv6Pool
 
