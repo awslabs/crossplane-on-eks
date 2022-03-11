@@ -8,6 +8,26 @@ Most error messages are logged to resources' event field. Whenever your Composit
 3. If no errors, follow its sub-resources. `kubectl get <KIND> <NAME> -o=jsonpath='{.spec.resourceRef}{" "}{.spec.resourceRefs}' | jq`
 4. Go back to step 1 using one of resources returned by step 3. 
 
+_Note:_ Debugging is also enabled for the AWS provider pods. You may find it
+useful to check the logs for the provider pods for extra information on
+failures. You can also disable logging
+[here](/bootstrap/eksctl/crossplane/aws-provider.yaml#L24).
+
+```bash
+# kubectl get pods -n crossplane-system
+NAME                                                READY   STATUS    RESTARTS   AGE
+crossplane-5b6896bb4c-mjr8x                         1/1     Running   0          12d
+crossplane-rbac-manager-7874897d59-fc9wf            1/1     Running   0          12d
+provider-aws-f6a4a9bdba04-84ddf67474-z78nl          1/1     Running   0          12d
+provider-kubernetes-cfae2275d58e-6b7bcf5bb5-2rjk2   1/1     Running   0          8d
+
+# For the AWS provider logs
+# kubectl -n crossplane-system logs provider-aws-f6a4a9bdba04-84ddf67474-z78nl | less
+
+# For Crossplane core logs
+# kubectl -n crossplane-system logs crossplane-5b6896bb4c-mjr8x  | less
+```
+
 ## Debugging Example
 
 ### Composition
