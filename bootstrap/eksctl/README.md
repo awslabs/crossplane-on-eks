@@ -72,6 +72,7 @@ Annotate the service account to use IRSA.
 
 ```
 sed -i '' "s/ACCOUNT_ID/${ACCOUNT_ID}/g" crossplane/aws-provider.yaml
+sed -i '' "s/ACCOUNT_ID/${ACCOUNT_ID}/g" crossplane/jet-aws-provider.yaml
 ```
 
 ## Install Crossplane
@@ -91,10 +92,12 @@ helm install crossplane --namespace crossplane-system --version 1.6.2 crossplane
 # wait for the provider CRD to be ready.
 kubectl wait --for condition=established --timeout=300s crd/providers.pkg.crossplane.io
 kubectl apply -f crossplane/aws-provider.yaml
+kubectl apply -f crossplane/jet-aws-provider.yaml
 
 # wait for the AWS provider CRD to be ready.
 kubectl wait --for condition=established --timeout=300s crd/providerconfigs.aws.crossplane.io
 kubectl apply -f crossplane/aws-provider-config.yaml
+kubectl apply -f crossplane/jet-aws-provider-config.yaml
 ```
 
 ### Kustomize
