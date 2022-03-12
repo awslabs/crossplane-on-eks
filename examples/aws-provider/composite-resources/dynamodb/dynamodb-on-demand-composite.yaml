@@ -13,8 +13,6 @@ spec:
       awsblueprints.io/environment: dev
       dynamodb.awsblueprints.io/capacity: on-demand
       dynamodb.awsblueprints.io/pkType: composite
-      dynamodb.awsblueprints.io/secondaryIndex: global
-      dynamodb.awsblueprints.io/secondaryIndexCount: "1"
   writeConnectionSecretToRef:
     name: test-table-on-demand-composite-key
   resourceConfig:
