@@ -6,7 +6,7 @@ kind: Provider
 metadata:
   name: provider-jet-aws
 spec:
-  package: crossplane/provider-jet-aws:v0.4.0
+  package: crossplane/provider-jet-aws:v0.4.1
   controllerConfigRef:
     name: jet-aws-controller-config
 
@@ -16,7 +16,7 @@ kind: ControllerConfig
 metadata:
   name: jet-aws-controller-config
   annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::<ACCOUNT_ID>:role/<ROLENAME> # Enter your IAM Role ARN
+    eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/crossplane-provider-aws # Enter your IAM Role ARN
 spec:
   podSecurityContext:
     fsGroup: 2000

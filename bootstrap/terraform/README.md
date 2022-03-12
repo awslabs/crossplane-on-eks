@@ -91,26 +91,6 @@ kubectl get nodes
 kubectl get pods -n crossplane-system
 ```
 
-### Deploy S3 bucket using Crossplane
-
-- Edit the `s3.yaml` to update the new bucket name
-
-```shell script
-vi ~/bootstrap/terraform/examples/s3.yaml
-```
-Enter the new bucket name and region in YAML file.
-Save the file using `:wq!`
-
-- Use `kubectl` to apply the `s3.yaml`
-
-```shell script
-cd ~/bootstrap/terraform/examples/
-kubectl apply -f s3.yaml
-```
-
-- Login to AWS Console and verify the new S3 bucket
-
-
 ## How to Destroy
 The following command destroys the resources created by `terraform apply`
 

@@ -6,7 +6,7 @@ kind: Provider
 metadata:
   name: provider-aws
 spec:
-  package: "crossplane/provider-aws:v0.23.0"
+  package: "crossplane/provider-aws:v0.24.1"
   controllerConfigRef:
     name: provider-aws-config
 ---
@@ -15,7 +15,7 @@ kind: ControllerConfig
 metadata:
   name: provider-aws-config
   annotations:
-    eks.amazonaws.com/role-arn: "<arn:aws:iam::ACCOUNT_ID:role/crossplane-provider-aws>" # Enter your IAM Role ARN
+    eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/crossplane-provider-aws # Enter your IAM Role ARN
 
 spec:
   podSecurityContext:

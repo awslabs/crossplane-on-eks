@@ -14,7 +14,7 @@ spec:
       iam.awsblueprints.io/policy-type: read
       iam.awsblueprints.io/service: dynamodb-table
   resourceConfig:
-    providerConfigName: default
+    providerConfigName: aws-provider-config
     region: us-west-2
     tags:
       - key: env
