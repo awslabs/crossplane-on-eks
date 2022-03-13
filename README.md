@@ -35,7 +35,7 @@ Checkout the following README for full deployment configuration
 Depending on whether you want to use the jet provider or the default provider
 for AWS, you need to install one or both of the crossplane providers on the EKS
 cluster. You will also need to enable IRSA support for your EKS cluster for the
-necessary permissions to spin up other AWS services. Refer to the bootstrap README for this configuraiton.
+necessary permissions to spin up other AWS services. Refer to the bootstrap README for this configuration.
 
  - [AWS Provider](https://github.com/crossplane/provider-aws) - Crossplane Compositions for AWS Services
  - [Terrajet AWS Provider](https://github.com/crossplane-contrib/provider-jet-aws) - Crossplane Compositions for AWS Services
