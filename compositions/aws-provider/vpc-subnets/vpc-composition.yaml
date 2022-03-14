@@ -1,0 +1,516 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xvpcsubnets.network.awsblueprints.io
+  labels:
+    awsblueprints.io/provider: aws
+    awsblueprints.io/environment: dev
+    crossplane.io/xrd: xvpcsubnets.network.awsblueprints.io
+    service: vpcsubnet
+spec:
+  writeConnectionSecretsToNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: network.awsblueprints.io/v1alpha1
+    kind: XVpcSubnet
+
+  patchSets:
+    - name: common-parameters
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.deletionPolicy
+          toFieldPath: spec.deletionPolicy
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+#        - type: FromCompositeFieldPath
+#          fromFieldPath: spec.resourceConfig.name
+#          toFieldPath: metadata.annotations[crossplane.io/external-name]
+
+  resources:
+    - name: vpc
+      base:
+        apiVersion: ec2.aws.crossplane.io/v1beta1
+        kind: VPC
+        spec:
+          forProvider:
+            amazonProvidedIpv6CidrBlock:
+            enableDnsSupport:
+            enableDnsHostNames:
+            cidrBlock:
+            instanceTenancy:
+            ipv6CidrBlock:
+            ipv6Pool:
+            tags:
+              - key: Name
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpc-cidrBlock
+          toFieldPath: spec.forProvider.cidrBlock
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpc-Name
+          toFieldPath: spec.forProvider.tags[0].value
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpc-enableDnsSupport
+          toFieldPath: spec.forProvider.enableDnsSupport
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpc-enableDnsHostNames
+          toFieldPath: spec.forProvider.enableDnsHostNames
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpc-amazonProvidedIpv6CidrBlock
+          toFieldPath: spec.forProvider.amazonProvidedIpv6CidrBlock
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpc-instanceTenancy
+          toFieldPath: spec.forProvider.instanceTenancy
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpc-ipv6CidrBlock
+          toFieldPath: spec.forProvider.ipv6CidrBlock
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpc-ipv6Pool
+          toFieldPath: spec.forProvider.ipv6Pool
+# PUBLIC SUBNET1
+    - name: public-subnet1
+      base:
+        apiVersion: ec2.aws.crossplane.io/v1beta1
+        kind: Subnet
+        metadata:
+          labels:
+            type: subnet
+            visibility: public
+        spec:
+          forProvider:
+            cidrBlock:
+            ipv6CIDRBlock:
+            availabilityZone:
+            mapPublicIpOnLaunch: true
+            vpcIdSelector:
+              matchControllerRef: true
+            tags:
+              - key: Name
+              - key: kubernetes.io/role/elb
+                value: "1"
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpc-Name
+          toFieldPath: spec.forProvider.tags[0].value
+          transforms:
+            - string:
+                fmt: 'public-subnet1-%s'
+              type: string
+          policy:
+            fromFieldPath: Required
+        - type: PatchSet
+          patchSetName: common-parameters
+        - fromFieldPath: spec.parameters.publicSubnet1-cidrBlock
+          toFieldPath: spec.forProvider.cidrBlock
+        - fromFieldPath: spec.parameters.publicSubnet1-ipv6CIDRBlock
+          toFieldPath: spec.forProvider.ipv6CIDRBlock
+        - fromFieldPath: spec.parameters.publicSubnet1-availabilityZone
+          toFieldPath: spec.forProvider.availabilityZone
+        - fromFieldPath: spec.parameters.publicSubnet1-availabilityZone
+          toFieldPath: metadata.labels.zone
+# PUBLIC SUBNET2
+    - name: public-subnet2
+      base:
+        apiVersion: ec2.aws.crossplane.io/v1beta1
+        kind: Subnet
+        metadata:
+          labels:
+            type: subnet
+            visibility: public
+        spec:
+          forProvider:
+            cidrBlock:
+            ipv6CIDRBlock:
+            availabilityZone:
+            mapPublicIpOnLaunch: true
+            vpcIdSelector:
+              matchControllerRef: true
+            tags:
+              - key: Name
+              - key: kubernetes.io/role/elb
+                value: "1"
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpc-Name
+          toFieldPath: spec.forProvider.tags[0].value
+          transforms:
+            - string:
+                fmt: 'public-subnet2-%s'
+              type: string
+          policy:
+            fromFieldPath: Required
+        - type: PatchSet
+          patchSetName: common-parameters
+        - fromFieldPath: spec.parameters.publicSubnet2-cidrBlock
+          toFieldPath: spec.forProvider.cidrBlock
+        - fromFieldPath: spec.parameters.publicSubnet2-ipv6CIDRBlock
+          toFieldPath: spec.forProvider.ipv6CIDRBlock
+        - fromFieldPath: spec.parameters.publicSubnet2-availabilityZone
+          toFieldPath: spec.forProvider.availabilityZone
+        - fromFieldPath: spec.parameters.publicSubnet2-availabilityZone
+          toFieldPath: metadata.labels.zone
+# PUBLIC SUBNET3
+    - name: public-subnet3
+      base:
+        apiVersion: ec2.aws.crossplane.io/v1beta1
+        kind: Subnet
+        metadata:
+          labels:
+            type: subnet
+            visibility: public
+        spec:
+          forProvider:
+            cidrBlock:
+            ipv6CIDRBlock:
+            availabilityZone:
+            mapPublicIpOnLaunch: true
+            vpcIdSelector:
+              matchControllerRef: true
+            tags:
+              - key: Name
+              - key: kubernetes.io/role/elb
+                value: "1"
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpc-Name
+          toFieldPath: spec.forProvider.tags[0].value
+          transforms:
+            - string:
+                fmt: 'public-subnet3-%s'
+              type: string
+          policy:
+            fromFieldPath: Required
+        - type: PatchSet
+          patchSetName: common-parameters
+        - fromFieldPath: spec.parameters.publicSubnet3-cidrBlock
+          toFieldPath: spec.forProvider.cidrBlock
+        - fromFieldPath: spec.parameters.publicSubnet3-ipv6CIDRBlock
+          toFieldPath: spec.forProvider.ipv6CIDRBlock
+        - fromFieldPath: spec.parameters.publicSubnet3-availabilityZone
+          toFieldPath: spec.forProvider.availabilityZone
+        - fromFieldPath: spec.parameters.publicSubnet3-availabilityZone
+          toFieldPath: metadata.labels.zone
+# Private Subnet1
+    - name: private-subnet1
+      base:
+        apiVersion: ec2.aws.crossplane.io/v1beta1
+        kind: Subnet
+        metadata:
+          labels:
+            type: subnet
+            visibility: private
+        spec:
+          forProvider:
+            cidrBlock:
+            ipv6CIDRBlock:
+            availabilityZone:
+            mapPublicIpOnLaunch: false
+            vpcIdSelector:
+              matchControllerRef: true
+            tags:
+              - key: Name
+              - key: kubernetes.io/role/elb
+                value: "1"
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpc-Name
+          toFieldPath: spec.forProvider.tags[0].value
+          transforms:
+            - string:
+                fmt: 'private-subnet1-%s'
+              type: string
+          policy:
+            fromFieldPath: Required
+        - type: PatchSet
+          patchSetName: common-parameters
+        - fromFieldPath: spec.parameters.privateSubnet1-cidrBlock
+          toFieldPath: spec.forProvider.cidrBlock
+        - fromFieldPath: spec.parameters.privateSubnet1-ipv6CIDRBlock
+          toFieldPath: spec.forProvider.ipv6CIDRBlock
+        - fromFieldPath: spec.parameters.privateSubnet1-availabilityZone
+          toFieldPath: spec.forProvider.availabilityZone
+        - fromFieldPath:  spec.parameters.privateSubnet1-availabilityZone
+          toFieldPath: metadata.labels.zone
+# Private Subnet2
+    - name: private-subnet2
+      base:
+        apiVersion: ec2.aws.crossplane.io/v1beta1
+        kind: Subnet
+        metadata:
+          labels:
+            type: subnet
+            visibility: private
+        spec:
+          forProvider:
+            cidrBlock:
+            ipv6CIDRBlock:
+            availabilityZone:
+            mapPublicIpOnLaunch: false
+            vpcIdSelector:
+              matchControllerRef: true
+            tags:
+              - key: Name
+              - key: kubernetes.io/role/elb
+                value: "1"
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpc-Name
+          toFieldPath: spec.forProvider.tags[0].value
+          transforms:
+            - string:
+                fmt: 'private-subnet2-%s'
+              type: string
+          policy:
+            fromFieldPath: Required
+        - type: PatchSet
+          patchSetName: common-parameters
+        - fromFieldPath: spec.parameters.privateSubnet2-cidrBlock
+          toFieldPath: spec.forProvider.cidrBlock
+        - fromFieldPath: spec.parameters.privateSubnet2-ipv6CIDRBlock
+          toFieldPath: spec.forProvider.ipv6CIDRBlock
+        - fromFieldPath: spec.parameters.privateSubnet2-availabilityZone
+          toFieldPath: spec.forProvider.availabilityZone
+        - fromFieldPath:  spec.parameters.privateSubnet2-availabilityZone
+          toFieldPath: metadata.labels.zone
+# Private Subnet3
+    - name: private-subnet3
+      base:
+        apiVersion: ec2.aws.crossplane.io/v1beta1
+        kind: Subnet
+        metadata:
+          labels:
+            type: subnet
+            visibility: private
+        spec:
+          forProvider:
+            cidrBlock:
+            ipv6CIDRBlock:
+            availabilityZone:
+            mapPublicIpOnLaunch: false
+            vpcIdSelector:
+              matchControllerRef: true
+            tags:
+              - key: Name
+              - key: kubernetes.io/role/elb
+                value: "1"
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpc-Name
+          toFieldPath: spec.forProvider.tags[0].value
+          transforms:
+            - string:
+                fmt: 'private-subnet3-%s'
+              type: string
+          policy:
+            fromFieldPath: Required
+        - type: PatchSet
+          patchSetName: common-parameters
+        - fromFieldPath: spec.parameters.privateSubnet3-cidrBlock
+          toFieldPath: spec.forProvider.cidrBlock
+        - fromFieldPath: spec.parameters.privateSubnet3-ipv6CIDRBlock
+          toFieldPath: spec.forProvider.ipv6CIDRBlock
+        - fromFieldPath: spec.parameters.privateSubnet3-availabilityZone
+          toFieldPath: spec.forProvider.availabilityZone
+        - fromFieldPath:  spec.parameters.privateSubnet3-availabilityZone
+          toFieldPath: metadata.labels.zone
+# Internet Gateway
+    - name: internetgateway
+      base:
+        apiVersion: ec2.aws.crossplane.io/v1beta1
+        kind: InternetGateway
+        metadata:
+          labels:
+            type: igw
+        spec:
+          forProvider:
+            vpcIdSelector:
+              matchControllerRef: true
+            tags:
+              - key: Name
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpc-Name
+          toFieldPath: spec.forProvider.tags[0].value
+          transforms:
+            - string:
+                fmt: 'igw-%s'
+              type: string
+          policy:
+            fromFieldPath: Required
+# Single NAT Gateway for Private Subnets
+    - name: single-natgateway
+      base:
+        apiVersion: ec2.aws.crossplane.io/v1beta1
+        kind: NATGateway
+        metadata:
+          labels:
+            type: natgw
+        spec:
+          forProvider:
+            allocationIdSelector:
+              matchLabels:
+                type: eip
+            connectivityType:
+            subnetIdSelector:
+              matchLabels:
+                type: subnet
+                visibility: public
+            tags:
+              - key: Name
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpc-Name
+          toFieldPath: spec.forProvider.tags[0].value
+          transforms:
+            - string:
+                fmt: 'nat-gw-%s'
+              type: string
+          policy:
+            fromFieldPath: Required
+        - type: PatchSet
+          patchSetName: common-parameters
+        - fromFieldPath: spec.parameters.publicSubnet1-availabilityZone
+          toFieldPath: spec.forProvider.subnetIdSelector.matchLabels.zone
+        - fromFieldPath: spec.parameters.nat-connectivityType
+          toFieldPath: spec.forProvider.connectivityType
+# ElasticIp for NAT Gateway
+    - name: elastic-ip
+      base:
+        apiVersion: ec2.aws.crossplane.io/v1beta1
+        kind: Address
+        metadata:
+          labels:
+            type: eip
+        spec:
+          forProvider:
+            domain: vpc
+            tags:
+              - key: Name
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpc-Name
+          toFieldPath: spec.forProvider.tags[0].value
+          transforms:
+            - string:
+                fmt: 'eip-%s'
+              type: string
+          policy:
+            fromFieldPath: Required
+# Public Route Table
+    - name: public-route-table
+      base:
+        apiVersion: ec2.aws.crossplane.io/v1beta1
+        kind: RouteTable
+        spec:
+          forProvider:
+            vpcIdSelector:
+              matchControllerRef: true
+            routes:
+              - destinationCidrBlock: 0.0.0.0/0
+                gatewayIdSelector:
+                  matchLabels:
+                    type: igw
+            associations:
+              - subnetIdSelector:
+                  matchControllerRef: true
+                  matchLabels:
+                    type: subnet
+                    visibility: public
+                    zone:
+              - subnetIdSelector:
+                  matchControllerRef: true
+                  matchLabels:
+                    type: subnet
+                    visibility: public
+                    zone:
+              - subnetIdSelector:
+                  matchControllerRef: true
+                  matchLabels:
+                    type: subnet
+                    visibility: public
+                    zone:
+            tags:
+              - key: Name
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpc-Name
+          toFieldPath: spec.forProvider.tags[0].value
+          transforms:
+            - string:
+                fmt: 'public-route-%s'
+              type: string
+          policy:
+            fromFieldPath: Required
+        - type: PatchSet
+          patchSetName: common-parameters
+        - fromFieldPath: spec.parameters.publicSubnet1-availabilityZone
+          toFieldPath: spec.forProvider.associations[0].subnetIdSelector.matchLabels.zone
+        - fromFieldPath: spec.parameters.publicSubnet2-availabilityZone
+          toFieldPath: spec.forProvider.associations[1].subnetIdSelector.matchLabels.zone
+        - fromFieldPath: spec.parameters.publicSubnet3-availabilityZone
+          toFieldPath: spec.forProvider.associations[2].subnetIdSelector.matchLabels.zone
+# Private Route Table
+    - name: private-route-table
+      base:
+        apiVersion: ec2.aws.crossplane.io/v1beta1
+        kind: RouteTable
+        spec:
+          forProvider:
+            vpcIdSelector:
+              matchControllerRef: true
+            routes:
+              - destinationCidrBlock: 0.0.0.0/0
+                natGatewayIdSelector:
+                  matchLabels:
+                    type: natgw
+            associations:
+              - subnetIdSelector:
+                  matchControllerRef: true
+                  matchLabels:
+                    type: subnet
+                    visibility: private
+                    zone:
+              - subnetIdSelector:
+                  matchControllerRef: true
+                  matchLabels:
+                    type: subnet
+                    visibility: private
+                    zone:
+              - subnetIdSelector:
+                  matchControllerRef: true
+                  matchLabels:
+                    type: subnet
+                    visibility: private
+                    zone:
+            tags:
+              - key: Name
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpc-Name
+          toFieldPath: spec.forProvider.tags[0].value
+          transforms:
+            - string:
+                fmt: 'private-route-%s'
+              type: string
+          policy:
+            fromFieldPath: Required
+        - type: PatchSet
+          patchSetName: common-parameters
+        - fromFieldPath: spec.parameters.privateSubnet1-availabilityZone
+          toFieldPath: spec.forProvider.associations[0].subnetIdSelector.matchLabels.zone
+        - fromFieldPath: spec.parameters.privateSubnet2-availabilityZone
+          toFieldPath: spec.forProvider.associations[1].subnetIdSelector.matchLabels.zone
+        - fromFieldPath: spec.parameters.privateSubnet3-availabilityZone
+          toFieldPath: spec.forProvider.associations[2].subnetIdSelector.matchLabels.zone
