@@ -1,0 +1,48 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+#----------------------------------------------------------------------------------
+# Steps to Deploy:
+#----------------------------------------------------------------------------------
+#    Step1: Deploy VPC and Subnets using the example
+#         > kubectl apply -f compositions/aws-provider/vpc-subnets
+#         > kubectl apply -f examples/aws-provider/composite-resources/vpc-subnets
+#    Step2: Update the Private SubnetIds in the YAML file below
+#    Step3: Deploy EKS Cluster
+#         > kubectl apply -f compositions/aws-provider/eks
+#         > kubectl apply -f examples/aws-provider/composite-resources/eks
+#----------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------
+# This example resource creates the following resources
+#     1. EKS Cluster
+#     2. EkS CLuster IAM Role
+#     3. Attaches EKS Cluster Policies to the IAM Role
+#----------------------------------------------------------------------------------
+---
+apiVersion: cluster.awsblueprints.io/v1alpha1
+kind: amazonEks
+metadata:
+  name: xplane-eks
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+      service: eks
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: eu-west-1
+  parameters:
+    #EKS Input parameters
+    eks-version: "1.21"
+    eks-endpointPrivateAccess: false
+    eks-endpointPublicAccess: true
+    eks-subnet-ids:                   # Replace these with your Private SubnetID list
+      - "subnet-123"
+      - "subnet-456"
+      - "subnet-789"
+
+
+

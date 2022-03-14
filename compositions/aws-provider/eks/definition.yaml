@@ -1,0 +1,91 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xamazonekss.cluster.awsblueprints.io  # must be spec.names.plural+"."+spec.group
+spec:
+  group: cluster.awsblueprints.io
+  names:
+    kind: XAmazonEks        # cluster scope type
+    plural: xamazonekss
+  claimNames:               # namespace scope type
+    kind: amazonEks
+    plural: amazonekss      # lowercase only
+
+  versions:
+    - name: v1alpha1
+      additionalPrinterColumns:
+      - jsonPath: .status.conditions[?(@.type=='Ready')].status
+        name: READY
+        type: string
+      - jsonPath: .status.conditions[?(@.type=='Synced')].status
+        name: SYNCED
+        type: string
+      - jsonPath: .metadata.creationTimestamp
+        name: AGE
+        type: date
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                parameters:
+                  description: EKS Input parameters
+                  type: object
+                  properties:
+
+                    eks-version:
+                      description: Kubernetes Version
+                      type: string
+                      enum: [ "1.21", "1.22" ]
+                    eks-endpointPrivateAccess:
+                      description: endpointPrivateAccess
+                      type: boolean
+                      default: false
+                    eks-endpointPublicAccess:
+                      description: endpointPublicAccess
+                      type: boolean
+                      default: true
+                    eks-subnet-ids:
+                      description: EKS Cluster Subnet Id references
+                      items:
+                        type: string
+                      type: array
+                  required:
+                    - eks-version
+                    - eks-subnet-ids
+                resourceConfig:
+                  description: ResourceConfig defines general properties of this AWS
+                    resource.
+                  type: object
+                  properties:
+
+                    deletionPolicy:
+                      description: Defaults to Delete
+                      enum:
+                        - Delete
+                        - Orphan
+                      type: string
+                      name:
+                        description: Set the name of this resource in AWS to the value
+                          provided by this field.
+                        type: string
+                    providerConfigName:
+                      type: string
+                    region:
+                      type: string
+
+                  required:
+                    - providerConfigName
+                    - region
+              required:
+                - parameters
+                - resourceConfig
+          required:
+            - spec

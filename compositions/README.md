@@ -1,11 +1,11 @@
 # Composition library
 
-Compositions folder contains the Composite files and the XRD files to deploy the Composites for each AWS service.
+Compositions folder contains the Compositions and CompositeResourceDefinition(XRD) files to deploy the Composites for each AWS service.
 
-Compositions and XRD definition files split into dedicated folders for each AWS Provider. 
+Compositions and CompositeResourceDefinition(XRD) files split into dedicated folders for each AWS Provider. 
 
-- AWS Provider
-- Terrajet AWS Provider
+- **AWS Provider**
+- **Terrajet AWS Provider**
 
 ## Option1 - AWS Provider
 The following steps demonstrate the example to deploy the composition to create VPC with AWS Provider

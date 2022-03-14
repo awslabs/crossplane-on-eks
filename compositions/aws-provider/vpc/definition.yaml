@@ -12,7 +12,7 @@ spec:
     plural: xamazonvpcs
   claimNames:               # namespace scope type
     kind: amazonVpc
-    plural: amazonvpcs
+    plural: amazonvpcs      # lowercase only
 
   versions:
     - name: v1alpha1
