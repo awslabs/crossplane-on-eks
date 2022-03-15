@@ -59,12 +59,6 @@ spec:
           patchSetName: common-parameters
         - fromFieldPath: metadata.annotations[crossplane.io/external-name]
           toFieldPath: metadata.annotations[crossplane.io/external-name]
-        - fromFieldPath: metadata.uid
-          toFieldPath: spec.writeConnectionSecretToRef.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-eks-cluster"
         - fromFieldPath: spec.parameters.eks-version
           toFieldPath: spec.forProvider.version
         - fromFieldPath: spec.parameters.eks-subnet-ids
