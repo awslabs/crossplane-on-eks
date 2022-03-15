@@ -26,4 +26,3 @@ spec:
   tableIndex:
     hashKeyName: hashKey
     hashKeyType: S
-  

@@ -21,4 +21,3 @@ spec:
   parameters:
     vpcName: jet-aws-provider-vpc
     vpccidrBlock: "10.30.0.0/16"
-

@@ -4,9 +4,9 @@
 
 Most error messages are logged to resources' event field. Whenever your Composite Resources are not getting provisioned, follow the following:
 1. Get the events for the root resource using `kubectl describe` or `kubectl get event`
-2. If there are errors in the events, address them. 
+2. If there are errors in the events, address them.
 3. If no errors, follow its sub-resources. `kubectl get <KIND> <NAME> -o=jsonpath='{.spec.resourceRef}{" "}{.spec.resourceRefs}' | jq`
-4. Go back to step 1 using one of resources returned by step 3. 
+4. Go back to step 1 using one of resources returned by step 3.
 
 _Note:_ Debugging is also enabled for the AWS provider pods. You may find it
 useful to check the logs for the provider pods for extra information on
@@ -31,9 +31,9 @@ provider-kubernetes-cfae2275d58e-6b7bcf5bb5-2rjk2   1/1     Running   0         
 ## Debugging Example
 
 ### Composition
-An example application was deployed as a claim of a composite resource. Kind = `ExampleApp`. Name = `example-application`. 
+An example application was deployed as a claim of a composite resource. Kind = `ExampleApp`. Name = `example-application`.
 
-The example application never reaches available state. 
+The example application never reaches available state.
 
 
 1. Run `kubectl describe exampleapp example-application`
@@ -46,7 +46,7 @@ The example application never reaches available state.
         Type:                  Ready
     Events:                    <none>
     ```
-2. No error in events. Find its cluster scoped resource. 
+2. No error in events. Find its cluster scoped resource.
     ```bash
     # kubectl get exampleapp example-application -o=jsonpath='{.spec.resourceRef}{" "}{.spec.resourceRefs}' | jq
 
@@ -57,7 +57,7 @@ The example application never reaches available state.
     }
     ```
 3. In the above output, we see the cluster scoped resource for this claim. Kind = `XExampleApp` name = `example-application-xqlsz`
-4. Get the cluster resource's event. 
+4. Get the cluster resource's event.
     ```bash
     # kubectl describe xexampleapp example-application-xqlsz
 
@@ -95,13 +95,13 @@ The example application never reaches available state.
         }
     ]
     ```
-6. Notice the last element in the array does not have a name. When a resource in composition fails validation, the resource object is not created and will not have a name. For this particular issue, we need to specify the namespace for the IRSA resource. 
+6. Notice the last element in the array does not have a name. When a resource in composition fails validation, the resource object is not created and will not have a name. For this particular issue, we need to specify the namespace for the IRSA resource.
 
 ### Composition Definition
 
-Debugging Composition Definitions is similar to debugging Compositions. 
+Debugging Composition Definitions is similar to debugging Compositions.
 
-1. Get XRD 
+1. Get XRD
     ```bash
     # kubectl get xrd testing.awsblueprints.io
     NAME                       ESTABLISHED   OFFERED   AGE

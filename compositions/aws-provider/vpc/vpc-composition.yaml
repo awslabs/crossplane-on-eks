@@ -76,4 +76,3 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: spec.parameters.ipv6Pool
           toFieldPath: spec.forProvider.ipv6Pool
-

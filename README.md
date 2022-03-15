@@ -7,7 +7,7 @@ Welcome to the AWS Crossplane Blueprints.
 [AWS](https://aws.amazon.com/) Crossplane Blueprints is an open source repo to bootstrap EKS Clusters
 and provision AWS resources with a library of [Crossplane Compositions (XRs)](https://crossplane.io/docs/v1.6/concepts/composition.html) with Composite Resource Definitions (XRDs).
 
-Compositions in this repository enable platform teams to define and offer bespoke AWS infrastructure APIs to the teams of application developers based on 
+Compositions in this repository enable platform teams to define and offer bespoke AWS infrastructure APIs to the teams of application developers based on
 predefined [Composite Resources (XRs)](https://crossplane.io/docs/v1.6/concepts/composition.html), encompassing one or more of AWS [Managed Resources (MRs)](https://crossplane.io/docs/v1.6/concepts/managed-resources.html)
 
 ## Features
@@ -59,7 +59,7 @@ are evolving.
 - [Terrajet](https://github.com/crossplane-contrib/provider-jet-aws/releases) AWS provider for Crossplane
   - [API Docs](https://doc.crds.dev/github.com/crossplane-contrib/provider-jet-aws) provider-jet-aws
 
-## Debugging 
+## Debugging
 For debugging Compositions, CompositionResourceDefinitions, etc, [please see the debugging guide](doc/debugging.md).
 
 ## Maintainers

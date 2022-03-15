@@ -106,7 +106,7 @@ spec:
               metadata:
                 name: ""
                 namespace: default
-                annotations: 
+                annotations:
                   eks.amazonaws.com/role-arn: ""
       patches:
         - type: FromCompositeFieldPath

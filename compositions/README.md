@@ -2,7 +2,7 @@
 
 Compositions folder contains the Compositions and CompositeResourceDefinition(XRD) files to deploy the Composites for each AWS service.
 
-Compositions and CompositeResourceDefinition(XRD) files split into dedicated folders for each AWS Provider. 
+Compositions and CompositeResourceDefinition(XRD) files split into dedicated folders for each AWS Provider.
 
 - **AWS Provider**
 - **Terrajet AWS Provider**

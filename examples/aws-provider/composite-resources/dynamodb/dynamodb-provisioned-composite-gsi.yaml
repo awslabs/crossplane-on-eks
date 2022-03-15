@@ -43,4 +43,3 @@ spec:
       throughputConfig:
         read: 7
         write: 4
-

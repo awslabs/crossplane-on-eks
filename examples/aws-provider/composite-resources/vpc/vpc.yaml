@@ -22,4 +22,3 @@ spec:
     vpcName: aws-provider-vpc
     vpccidrBlock: "10.20.0.0/16"
     amazonProvidedIpv6CidrBlock: true
-

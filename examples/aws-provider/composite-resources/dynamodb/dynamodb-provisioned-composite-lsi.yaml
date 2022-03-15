@@ -40,4 +40,3 @@ spec:
         rangeKeyName: rangeKeyLSI
         rangeKeyType: S
       name: lsiExample
-

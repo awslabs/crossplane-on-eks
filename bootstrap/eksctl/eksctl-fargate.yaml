@@ -16,4 +16,3 @@ fargateProfiles:
       - namespace: crossplane-system
 iam:
   withOIDC: true
-
