@@ -6,6 +6,8 @@ kind: CompositeResourceDefinition
 metadata:
   name: xamazonekss.cluster.awsblueprints.io  # must be spec.names.plural+"."+spec.group
 spec:
+  connectionSecretKeys:
+    - kubeconfig
   group: cluster.awsblueprints.io
   names:
     kind: XAmazonEks        # cluster scope type
@@ -60,6 +62,48 @@ spec:
                   required:
                     - eks-version
                     - eks-subnet-ids
+                managedNodeGroups:
+                  description: Managed Node Groups properties
+                  type: object
+                  properties:
+
+                    mng-minSize:
+                      type: integer
+                      description: Nodegroup Min Size.
+                    mng-desiredSize:
+                      type: integer
+                      description: Nodegroup desiredSize.
+                      default: 3
+                    mng-maxSize:
+                      type: integer
+                      description: Nodegroup maxSize.
+                      default: 10
+                    mng-amiType:
+                      type: string
+                      description: AMI Type.
+                      enum:
+                        - AL2_x86_64_GPU
+                        - AL2_x86_64
+                        - AL2_ARM_64
+                        - BOTTLEROCKET_x86_64
+                        - BOTTLEROCKET_ARM_64
+                      default: AL2_x86_64
+                    mng-capacityType:
+                      type: string
+                      description: Capacity Type.
+                      enum:
+                        - ON_DEMAND
+                        - SPOT
+                      default: ON_DEMAND
+                    mng-instanceTypes:
+                      items:
+                        type: string
+                      type: array
+                      description: Instance Type.
+                      default:
+                       - m5.large
+                  required:
+                    - mng-minSize
                 resourceConfig:
                   description: ResourceConfig defines general properties of this AWS
                     resource.
@@ -87,5 +131,6 @@ spec:
               required:
                 - parameters
                 - resourceConfig
+                - managedNodeGroups
           required:
             - spec

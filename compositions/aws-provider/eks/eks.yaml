@@ -38,6 +38,9 @@ spec:
       base:
         apiVersion: eks.aws.crossplane.io/v1beta1
         kind: Cluster
+        metadata:
+          labels:
+            role: controlplane
         spec:
           forProvider:
             verison:
@@ -54,6 +57,14 @@ spec:
       patches:
         - type: PatchSet
           patchSetName: common-parameters
+        - fromFieldPath: metadata.annotations[crossplane.io/external-name]
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+        - fromFieldPath: metadata.uid
+          toFieldPath: spec.writeConnectionSecretToRef.name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-eks-cluster"
         - fromFieldPath: spec.parameters.eks-version
           toFieldPath: spec.forProvider.version
         - fromFieldPath: spec.parameters.eks-subnet-ids
@@ -150,6 +161,140 @@ spec:
               matchControllerRef: true
               matchLabels:
                 role: controlplane
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters
+
+# EKS Managed Node groups
+    - name: eks-managed-nodegroups
+      base:
+        apiVersion: eks.aws.crossplane.io/v1alpha1
+        kind: NodeGroup
+        spec:
+          forProvider:
+            amiType:
+            clusterNameSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: controlplane
+            nodeRoleSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: managed-nodegroup
+            subnets:
+#            subnetSelector:
+#              matchLabels:
+#                access: private
+            scalingConfig:
+              minSize:
+              desiredSize:
+              maxSize:
+            capacityType:
+            instanceTypes:
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters
+        - fromFieldPath: metadata.annotations[crossplane.io/external-name]
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+        - fromFieldPath: spec.managedNodeGroups.mng-minSize
+          toFieldPath: spec.forProvider.scalingConfig.minSize
+        - fromFieldPath: spec.managedNodeGroups.mng-maxSize
+          toFieldPath: spec.forProvider.scalingConfig.maxSize
+        - fromFieldPath: spec.managedNodeGroups.mng-desiredSize
+          toFieldPath: spec.forProvider.scalingConfig.desiredSize
+        - fromFieldPath: spec.managedNodeGroups.mng-desiredSize
+          toFieldPath: spec.forProvider.scalingConfig.desiredSize
+        - fromFieldPath: spec.managedNodeGroups.mng-capacityType
+          toFieldPath: spec.forProvider.capacityType
+        - fromFieldPath: spec.managedNodeGroups.mng-instanceTypes
+          toFieldPath: spec.forProvider.instanceTypes
+        - fromFieldPath: spec.managedNodeGroups.mng-amiType
+          toFieldPath: spec.forProvider.amiType
+        - fromFieldPath: spec.parameters.eks-subnet-ids
+          toFieldPath: spec.forProvider.subnets
+
+    - name: eks-managed-nodegroup-iam-role
+      base:
+        apiVersion: iam.aws.crossplane.io/v1beta1
+        kind: Role
+        metadata:
+          labels:
+            role: managed-nodegroup
+        spec:
+          forProvider:
+            assumeRolePolicyDocument: |
+              {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Principal": {
+                            "Service": [
+                                "ec2.amazonaws.com"
+                            ]
+                        },
+                        "Action": [
+                            "sts:AssumeRole"
+                        ]
+                    }
+                ]
+              }
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters
+    - name: eks-managed-nodegroup-worker-node-policy
+      base:
+        apiVersion: iam.aws.crossplane.io/v1beta1
+        kind: RolePolicyAttachment
+        spec:
+          forProvider:
+            policyArn: arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+            roleNameSelector:
+              matchControllerRef: true
+              matchLabels:
+                role:  managed-nodegroup
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters
+    - name: eks-managed-nodegroup-container-registry-policy
+      base:
+        apiVersion: iam.aws.crossplane.io/v1beta1
+        kind: RolePolicyAttachment
+        spec:
+          forProvider:
+            policyArn: arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+            roleNameSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: managed-nodegroup
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters
+    - name: eks-managed-nodegroup-ssm-policy
+      base:
+        apiVersion: iam.aws.crossplane.io/v1beta1
+        kind: RolePolicyAttachment
+        spec:
+          forProvider:
+            policyArn: arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+            roleNameSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: managed-nodegroup
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters
+    - name: eks-managed-nodegroup-cni-policy
+      base:
+        apiVersion: iam.aws.crossplane.io/v1beta1
+        kind: RolePolicyAttachment
+        spec:
+          forProvider:
+            policyArn: arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+            roleNameSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: managed-nodegroup
       patches:
         - type: PatchSet
           patchSetName: common-parameters
