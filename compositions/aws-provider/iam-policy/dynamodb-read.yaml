@@ -56,7 +56,7 @@ spec:
             variables:
               - fromFieldPath: metadata.name
             strategy: string
-            string: 
+            string:
               fmt: "%s-dynamodb-table-read-policy"
         - type: CombineFromComposite
           toFieldPath: spec.forProvider.document

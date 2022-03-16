@@ -69,7 +69,7 @@ The need for `provider-*` comes from the fact that crossplane appends random suf
 
 If you would like to tighten this further, you can modify the trust relationship with the exact service account name after the service account is created. For example:
 ```bash
-kubectl get sa -n crossplane-system 
+kubectl get sa -n crossplane-system
 kubectl get sa -n crossplane-system
 NAME                               SECRETS   AGE
 provider-aws-f78664a342f1          1         52m
@@ -96,7 +96,7 @@ Update the trust relationship as follows:
   ]
 }
 ```
-See the [IRSA documentation](https://docs.aws.amazon.com/eks/latest/userguide/create-service-account-iam-policy-and-role.html) and the [IRSA troubleshooting guide](https://aws.amazon.com/premiumsupport/knowledge-center/eks-troubleshoot-IRSA-errors/) for more information. 
+See the [IRSA documentation](https://docs.aws.amazon.com/eks/latest/userguide/create-service-account-iam-policy-and-role.html) and the [IRSA troubleshooting guide](https://aws.amazon.com/premiumsupport/knowledge-center/eks-troubleshoot-IRSA-errors/) for more information.
 ### IAM roles for service accounts (IRSA)
 Annotate the service account to use IRSA.
 

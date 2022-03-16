@@ -180,7 +180,7 @@ module "kubernetes-addons" {
 
   # NOTE: Crossplane requires Admin like permissions to create and update resources similar to Terraform deploy role.
   # This example config uses AdministratorAccess for demo purpose only, but you should select a policy with the minimum permissions required to provision your resources
-    
+
   # Creates ProviderConfig -> aws-provider-config
   crossplane_aws_provider = {
     enable                   = true

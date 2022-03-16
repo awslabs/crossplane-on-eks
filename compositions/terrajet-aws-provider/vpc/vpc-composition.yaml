@@ -62,4 +62,3 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: spec.parameters.enableDnsHostNames
           toFieldPath: spec.forProvider.enableDnsHostNames
-

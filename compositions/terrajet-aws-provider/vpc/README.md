@@ -1,12 +1,12 @@
 # Crossplane Configuration
 
 ## Steps to build and deploy Crossplane Configuration packages
- 
-`vpc-composition.yaml` and `vpc-xrd.yaml` can be deployed using `kubectl apply` 
+
+`vpc-composition.yaml` and `vpc-xrd.yaml` can be deployed using `kubectl apply`
 
 Alternatively, you can use the following steps to package the composition and deploy
 
-### Step1 
+### Step1
 
 - Create a `crossplane.yaml` file where Composition and CompositeResourceDefinition resource files are available
 
@@ -28,7 +28,7 @@ kubectl crossplane build configuration
 Push the Crossplane configuration package to ECR with version 1.0.0
 
 ```shell
-kubectl crossplane push configuration public.ecr.aws/r1l5w1y9/cplane-vpc-composition:1.0.0 
+kubectl crossplane push configuration public.ecr.aws/r1l5w1y9/cplane-vpc-composition:1.0.0
 ```
 
 ### Step5: Install Crossplane Configuration
@@ -41,8 +41,8 @@ kubectl crossplane push configuration public.ecr.aws/r1l5w1y9/cplane-vpc-composi
 
 ```shell
 kubectl get configuration
-                                                                                                 
-``` 
+
+```
     # Output
     NAME                              INSTALLED   HEALTHY   PACKAGE                                                                                               AGE
     r1l5w1y9-cplane-vpc-composition   True        True      public.ecr.aws/r1l5w1y9/cplane-vpc-composition:public.ecr.aws/r1l5w1y9/cplane-vpc-composition:1.0.0   40h
@@ -50,9 +50,9 @@ kubectl get configuration
 ### Step7: Update Crossplane Configuration
 
 ```shell
-kubectl get configuration   
+kubectl get configuration  
 ```
-                                                                                                
+
     NAME                              INSTALLED   HEALTHY   PACKAGE                                                                                               AGE
     r1l5w1y9-cplane-vpc-composition   True        True      public.ecr.aws/r1l5w1y9/cplane-vpc-composition:public.ecr.aws/r1l5w1y9/cplane-vpc-composition:1.0.0   40h
 
@@ -64,4 +64,3 @@ kubectl crossplane update configuration r1l5w1y9-cplane-vpc-composition public.e
 # configuration.pkg.crossplane.io/r1l5w1y9-cplane-vpc-composition updated
 
 ```
-

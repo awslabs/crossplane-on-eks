@@ -14,4 +14,3 @@ managedNodeGroups:
     maxSize: 3
 iam:
   withOIDC: true
-

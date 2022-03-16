@@ -163,7 +163,7 @@ spec:
                               key: tableName
                         - name: TEST_KEY
                           value: '{"hashKey": {"S":"test1"}}'
-                      command: 
+                      command:
                         - "/bin/bash"
                       args:
                         - "-c"

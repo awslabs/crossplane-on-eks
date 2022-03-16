@@ -99,7 +99,7 @@ spec:
               - fromFieldPath: metadata.name
               # - fromFieldPath: metadata.uuid
             strategy: string
-            string: 
+            string:
               fmt: "%s"
         - type: CombineFromComposite
           toFieldPath: spec.forProvider.document
@@ -134,4 +134,3 @@ spec:
                     }
                   ]
                 }
-

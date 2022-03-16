@@ -50,4 +50,3 @@ spec:
     minSize: 2
   writeConnectionSecretToRef:
     name: xplane-eks-cluster
-
