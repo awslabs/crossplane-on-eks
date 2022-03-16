@@ -42,43 +42,43 @@ spec:
                   type: object
                   properties:
 
-                    eks-version:
+                    version:
                       description: Kubernetes Version
                       type: string
                       enum: [ "1.21", "1.22" ]
-                    eks-endpointPrivateAccess:
+                    endpointPrivateAccess:
                       description: endpointPrivateAccess
                       type: boolean
                       default: false
-                    eks-endpointPublicAccess:
+                    endpointPublicAccess:
                       description: endpointPublicAccess
                       type: boolean
                       default: true
-                    eks-subnet-ids:
+                    subnetIds:
                       description: EKS Cluster Subnet Id references
                       items:
                         type: string
                       type: array
                   required:
-                    - eks-version
-                    - eks-subnet-ids
+                    - version
+                    - subnetIds
                 managedNodeGroups:
                   description: Managed Node Groups properties
                   type: object
                   properties:
 
-                    mng-minSize:
+                    minSize:
                       type: integer
                       description: Nodegroup Min Size.
-                    mng-desiredSize:
+                    desiredSize:
                       type: integer
                       description: Nodegroup desiredSize.
                       default: 3
-                    mng-maxSize:
+                    maxSize:
                       type: integer
                       description: Nodegroup maxSize.
                       default: 10
-                    mng-amiType:
+                    amiType:
                       type: string
                       description: AMI Type.
                       enum:
@@ -88,14 +88,14 @@ spec:
                         - BOTTLEROCKET_x86_64
                         - BOTTLEROCKET_ARM_64
                       default: AL2_x86_64
-                    mng-capacityType:
+                    capacityType:
                       type: string
                       description: Capacity Type.
                       enum:
                         - ON_DEMAND
                         - SPOT
                       default: ON_DEMAND
-                    mng-instanceTypes:
+                    instanceTypes:
                       items:
                         type: string
                       type: array
@@ -103,7 +103,7 @@ spec:
                       default:
                        - m5.large
                   required:
-                    - mng-minSize
+                    - minSize
                 resourceConfig:
                   description: ResourceConfig defines general properties of this AWS
                     resource.

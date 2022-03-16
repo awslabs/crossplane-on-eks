@@ -59,13 +59,13 @@ spec:
           patchSetName: common-parameters
         - fromFieldPath: metadata.annotations[crossplane.io/external-name]
           toFieldPath: metadata.annotations[crossplane.io/external-name]
-        - fromFieldPath: spec.parameters.eks-version
+        - fromFieldPath: spec.parameters.version
           toFieldPath: spec.forProvider.version
-        - fromFieldPath: spec.parameters.eks-subnet-ids
+        - fromFieldPath: spec.parameters.subnetIds
           toFieldPath: spec.forProvider.resourcesVpcConfig.subnetIds
-        - fromFieldPath: spec.parameters.eks-endpointPrivateAccess
+        - fromFieldPath: spec.parameters.endpointPrivateAccess
           toFieldPath: spec.forProvider.resourcesVpcConfig.endpointPrivateAccess
-        - fromFieldPath: spec.parameters.eks-endpointPublicAccess
+        - fromFieldPath: spec.parameters.endpointPublicAccess
           toFieldPath: spec.forProvider.resourcesVpcConfig.endpointPublicAccess
         - fromFieldPath: metadata.uid
           toFieldPath: spec.writeConnectionSecretToRef.name
@@ -190,21 +190,21 @@ spec:
           patchSetName: common-parameters
         - fromFieldPath: metadata.annotations[crossplane.io/external-name]
           toFieldPath: metadata.annotations[crossplane.io/external-name]
-        - fromFieldPath: spec.managedNodeGroups.mng-minSize
+        - fromFieldPath: spec.managedNodeGroups.minSize
           toFieldPath: spec.forProvider.scalingConfig.minSize
-        - fromFieldPath: spec.managedNodeGroups.mng-maxSize
+        - fromFieldPath: spec.managedNodeGroups.maxSize
           toFieldPath: spec.forProvider.scalingConfig.maxSize
-        - fromFieldPath: spec.managedNodeGroups.mng-desiredSize
+        - fromFieldPath: spec.managedNodeGroups.desiredSize
           toFieldPath: spec.forProvider.scalingConfig.desiredSize
-        - fromFieldPath: spec.managedNodeGroups.mng-desiredSize
+        - fromFieldPath: spec.managedNodeGroups.desiredSize
           toFieldPath: spec.forProvider.scalingConfig.desiredSize
-        - fromFieldPath: spec.managedNodeGroups.mng-capacityType
+        - fromFieldPath: spec.managedNodeGroups.capacityType
           toFieldPath: spec.forProvider.capacityType
-        - fromFieldPath: spec.managedNodeGroups.mng-instanceTypes
+        - fromFieldPath: spec.managedNodeGroups.instanceTypes
           toFieldPath: spec.forProvider.instanceTypes
-        - fromFieldPath: spec.managedNodeGroups.mng-amiType
+        - fromFieldPath: spec.managedNodeGroups.amiType
           toFieldPath: spec.forProvider.amiType
-        - fromFieldPath: spec.parameters.eks-subnet-ids
+        - fromFieldPath: spec.parameters.subnetIds
           toFieldPath: spec.forProvider.subnets
 
     - name: eks-managed-nodegroup-iam-role

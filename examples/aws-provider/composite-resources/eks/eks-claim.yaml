@@ -37,17 +37,17 @@ spec:
   resourceConfig:
     providerConfigName: aws-provider-config
     region: eu-west-1
-  managedNodeGroups:
-    mng-minSize: 2
   parameters:
     #EKS Input parameters
-    eks-version: "1.21"
-    eks-endpointPrivateAccess: false
-    eks-endpointPublicAccess: true
-    eks-subnet-ids: # Update your subnet ids
+    version: "1.21"
+    endpointPrivateAccess: false
+    endpointPublicAccess: true
+    subnetIds: # Update your subnet ids
       - "subnet-abc"
       - "subnet-def"
       - "subnet-ghi"
+  managedNodeGroups:
+    minSize: 2
   writeConnectionSecretToRef:
     name: xplane-eks-cluster
 
