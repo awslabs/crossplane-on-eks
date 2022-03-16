@@ -16,7 +16,7 @@ predefined [Composite Resources (XRs)](https://crossplane.io/docs/v1.6/concepts/
 ✅   Bootstrap [Amazon EKS](https://aws.amazon.com/eks/) Cluster and Crossplane with [eksctl](https://eksctl.io/) \
 ✅   [AWS Provider](https://github.com/crossplane/provider-aws) - Crossplane Compositions for AWS Services \
 ✅   [Terrajet AWS Provider](https://github.com/crossplane-contrib/provider-jet-aws) - Crossplane Compositions for AWS Services \
-✅   [AWS IRSA on EKS](https://github.com/crossplane/provider-aws) - AWS Provider Config with IRSA enabled  \
+✅   [AWS IRSA on EKS](https://github.com/crossplane/provider-aws/blob/master/AUTHENTICATION.md#using-iam-roles-for-serviceaccounts) - AWS Provider Config with IRSA enabled  \
 ✅   Example deployment patterns for [Composite Resources (XRs)](https://crossplane.io/docs/v1.6/concepts/composition.html) for AWS Provider and Terrajet AWS Provider\
 ✅   Example deployment patterns for [Crossplane Managed Resources (MRs)](https://crossplane.io/docs/v1.6/concepts/managed-resources.html)
 
@@ -39,7 +39,6 @@ necessary permissions to spin up other AWS services. Refer to the bootstrap READ
 
  - [AWS Provider](https://github.com/crossplane/provider-aws) - Crossplane Compositions for AWS Services
  - [Terrajet AWS Provider](https://github.com/crossplane-contrib/provider-jet-aws) - Crossplane Compositions for AWS Services
- - [AWS IRSA on EKS](https://github.com/crossplane/provider-aws) - AWS Provider Config with IRSA enabled
 
 ✅   Deploy the Examples
 
@@ -56,7 +55,7 @@ are evolving.
 - [Crossplane](https://crossplane.io/)
 - [AWS Provider](https://github.com/crossplane/provider-aws) for Crossplane
   - [API Docs](https://doc.crds.dev/github.com/crossplane/provider-aws) provider-aws
-- [Terrajet](https://github.com/crossplane-contrib/provider-jet-aws/releases) AWS provider for Crossplane
+- [Terrajet](https://github.com/crossplane/terrajet) [AWS provider](https://github.com/crossplane-contrib/provider-jet-aws) for Crossplane
   - [API Docs](https://doc.crds.dev/github.com/crossplane-contrib/provider-jet-aws) provider-jet-aws
 
 ## Debugging
