@@ -6,6 +6,8 @@ kind: CompositeResourceDefinition
 metadata:
   name: xamazonekss.cluster.awsblueprints.io  # must be spec.names.plural+"."+spec.group
 spec:
+  connectionSecretKeys:
+    - kubeconfig
   group: cluster.awsblueprints.io
   names:
     kind: XAmazonEks        # cluster scope type
@@ -40,26 +42,68 @@ spec:
                   type: object
                   properties:
 
-                    eks-version:
+                    version:
                       description: Kubernetes Version
                       type: string
                       enum: [ "1.21", "1.22" ]
-                    eks-endpointPrivateAccess:
+                    endpointPrivateAccess:
                       description: endpointPrivateAccess
                       type: boolean
                       default: false
-                    eks-endpointPublicAccess:
+                    endpointPublicAccess:
                       description: endpointPublicAccess
                       type: boolean
                       default: true
-                    eks-subnet-ids:
+                    subnetIds:
                       description: EKS Cluster Subnet Id references
                       items:
                         type: string
                       type: array
                   required:
-                    - eks-version
-                    - eks-subnet-ids
+                    - version
+                    - subnetIds
+                managedNodeGroups:
+                  description: Managed Node Groups properties
+                  type: object
+                  properties:
+
+                    minSize:
+                      type: integer
+                      description: Nodegroup Min Size.
+                    desiredSize:
+                      type: integer
+                      description: Nodegroup desiredSize.
+                      default: 3
+                    maxSize:
+                      type: integer
+                      description: Nodegroup maxSize.
+                      default: 10
+                    amiType:
+                      type: string
+                      description: AMI Type.
+                      enum:
+                        - AL2_x86_64_GPU
+                        - AL2_x86_64
+                        - AL2_ARM_64
+                        - BOTTLEROCKET_x86_64
+                        - BOTTLEROCKET_ARM_64
+                      default: AL2_x86_64
+                    capacityType:
+                      type: string
+                      description: Capacity Type.
+                      enum:
+                        - ON_DEMAND
+                        - SPOT
+                      default: ON_DEMAND
+                    instanceTypes:
+                      items:
+                        type: string
+                      type: array
+                      description: Instance Type.
+                      default:
+                       - m5.large
+                  required:
+                    - minSize
                 resourceConfig:
                   description: ResourceConfig defines general properties of this AWS
                     resource.
@@ -87,5 +131,6 @@ spec:
               required:
                 - parameters
                 - resourceConfig
+                - managedNodeGroups
           required:
             - spec
