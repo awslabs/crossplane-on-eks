@@ -17,9 +17,11 @@
 
 - [ ] Yes, I have updated the [docs](https://github.com/aws-samples/crossplane-aws-blueprints/tree/main/doc) for this feature
 
+- [ ] Yes, I have linked to an issue or feature request (applicable to PRs that solves a bug or a feature request)
 
-
-**Note**: Not all the PRs require examples and docs
+**Note**:
+ - Not all the PRs require examples and docs
+ - We prefer small, well tested pull requests. Please ensure your pull requests are self-contained, and commits are squashed
 
 ### For Moderators
 - [ ] E2E Test successfully complete before merge?
