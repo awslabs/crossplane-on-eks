@@ -18,12 +18,15 @@
 #     1. EKS Cluster
 #     2. EkS CLuster IAM Role
 #     3. Attaches EKS Cluster Policies to the IAM Role
+#     4. EKS Managed Node group
+#     5. IAM Role for EKS Managed Node group
+#     6. Attaches EKS Managed Node Policies to the IAM Role
 #----------------------------------------------------------------------------------
 ---
 apiVersion: cluster.awsblueprints.io/v1alpha1
 kind: amazonEks
 metadata:
-  name: xplane-eks
+  name: xplane-eks-cluster
   namespace: default
 spec:
   compositionSelector:
@@ -36,13 +39,15 @@ spec:
     region: eu-west-1
   parameters:
     #EKS Input parameters
-    eks-version: "1.21"
-    eks-endpointPrivateAccess: false
-    eks-endpointPublicAccess: true
-    eks-subnet-ids:                   # Replace these with your Private SubnetID list
-      - "subnet-123"
-      - "subnet-456"
-      - "subnet-789"
-
-
+    version: "1.21"
+    endpointPrivateAccess: false
+    endpointPublicAccess: true
+    subnetIds: # Update your subnet ids
+      - "subnet-abc"
+      - "subnet-def"
+      - "subnet-ghi"
+  managedNodeGroups:
+    minSize: 2
+  writeConnectionSecretToRef:
+    name: xplane-eks-cluster
 
