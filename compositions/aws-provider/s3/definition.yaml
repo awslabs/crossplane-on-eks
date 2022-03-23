@@ -4,12 +4,12 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: xobjectstorages.aws.platform.amazon.com
+  name: xobjectstorages.awsblueprints.io
 spec:
   claimNames:
     kind: ObjectStorage
     plural: objectstorages
-  group: aws.platform.amazon.com
+  group: awsblueprints.io
   names:
     kind: XObjectStorage
     plural: xobjectstorages
@@ -23,46 +23,54 @@ spec:
       referenceable: true
       schema:
         openAPIV3Schema:
-          type: object
           properties:
             spec:
-              type: object
+              description: ObjectStorageSpec defines the desired state of ObjectStorage
               properties:
-                deletionPolicy:
-                  type: string
-                  pattern: "^(Delete|Orphan)$"
-                storageName:
-                  type: string
-                  description: Name of bucket. Must be a globally unique.
-                providerConfigName:
-                  type: string
-                  description: crossplane AWS provider config name to use.
-                tags:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      key:
-                        type: string
-                      value:
-                        type: string
-                    required:
-                      - key
-                      - value
-              required:
-                - providerConfigName
-                # - storageName
-                - deletionPolicy
-            status:
-              type: object
-              properties:
-                s3-put-policy:
-                  type: object
+                resourceConfig:
+                  description: ResourceConfig defines general properties of this AWS
+                    resource.
                   properties:
-                    arn:
+                    deletionPolicy:
+                      description: Defaults to Delete
+                      enum:
+                      - Delete
+                      - Orphan
                       type: string
-                bucket:
-                  type: object
-                  properties:
                     name:
+                      description: Set the name of this resource in AWS to the value
+                        provided by this field.
                       type: string
+                    providerConfigName:
+                      type: string
+                    region:
+                      type: string
+                    tags:
+                      items:
+                        properties:
+                          key:
+                            type: string
+                          value:
+                            type: string
+                        required:
+                        - key
+                        - value
+                        type: object
+                      type: array
+                  required:
+                  - providerConfigName
+                  - region
+                  - tags
+                  type: object
+              required:
+              - resourceConfig
+              type: object
+            status:
+              description: ObjectStorageStatus defines the observed state of ObjectStorage
+              properties:
+                bucketName:
+                  type: string
+                bucketArn:
+                  type: string
+              type: object
+          type: object
