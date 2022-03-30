@@ -49,6 +49,12 @@ are evolving.
 
 - Deploy the Examples by following [this README](examples/README.md)
 
+✅   Work with nested compositions.
+
+Compositions can be nested to further define and abstract application specific needs.
+
+- Take a quick tour of a [nested composition example](doc/nested-compositions.md)
+
 ## Learn More
 
 - [Amazon EKS](https://aws.amazon.com/eks/)
