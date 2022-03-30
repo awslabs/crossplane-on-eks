@@ -1,0 +1,46 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+# Update spec.subnetIds and spec.vpcId fields before use.
+# The Kubernetes secret below is used to create the master user password for RDS. Unfortunately, auto generated passwords are not supported by RDS cluster yet.
+# Run `kubectl apply -f aurora-postgres.yaml` to test this example once you bootstrap the EKS cluster with Crossplane and AWS Provider
+
+
+# This example resource creates the following resources
+#     1. Two RDS Postgres Instance 
+#     2. RDS Aurora cluster
+#     3. RDS subnet group
+#     4. EC2 Security group
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-root-user-password
+  namespace: default
+data:
+  password: bXlzZWNyZXRQYXNzd29yZDEh # mysecretPassword1!
+---
+apiVersion: awsblueprints.io/v1alpha1
+kind: RelationalDatabase
+metadata:
+  name: test-aurora-postgresql-db
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: staging
+      awsblueprints.io/createDBSubnetGroup: "true"
+  writeConnectionSecretToRef:
+    name: test-aurora-postgresql-db # secret contains endpoint, username, and password.
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: us-west-2
+    tags:
+      - key: testKey
+        value: testValue
+  databaseName: "test"
+  subnetIds:
+    - subnet-123 # change these values before use
+    - subnet-456
+  vpcId: vpc-789

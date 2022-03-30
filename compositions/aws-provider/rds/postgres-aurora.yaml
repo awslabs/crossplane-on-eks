@@ -1,0 +1,201 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: rds-aurora-postgresql.awsblueprints.io
+  labels:
+    awsblueprints.io/provider: aws
+    awsblueprints.io/environment: staging
+    awsblueprints.io/createDBSubnetGroup: "true"
+spec:
+  writeConnectionSecretsToNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: awsblueprints.io/v1alpha1
+    kind: XRelationalDatabase
+  patchSets:
+    - name: common-fields
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.deletionPolicy
+          toFieldPath: spec.deletionPolicy
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            mergeOptions:
+              appendSlice: true
+        - fromFieldPath: spec.writeConnectionSecretToRef.namespace
+          toFieldPath: spec.writeConnectionSecretToRef.namespace
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.name
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+  resources:
+    - base:
+        apiVersion: database.aws.crossplane.io/v1beta1
+        kind: DBSubnetGroup
+        spec:
+          forProvider:
+            description: "rds-postgres"
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - fromFieldPath: "spec.subnetIds"
+          toFieldPath: spec.forProvider.subnetIds
+        - fromFieldPath: "metadata.uid"
+          toFieldPath: "spec.writeConnectionSecretToRef.name"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-dbsubnet"
+    - base:
+        apiVersion: ec2.aws.crossplane.io/v1beta1
+        kind: SecurityGroup
+        spec:
+          forProvider:
+            description: "rds-postgres-sg"
+            ingress:
+              - ipProtocol: tcp
+                fromPort: 5432
+                toPort: 5432
+                ipRanges:
+                  - cidrIp: "10.0.0.0/8"
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.securityGroupID
+          toFieldPath: status.securityGroupId
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.IngressRules
+          toFieldPath: spec.forProvider.ingress
+          policy:
+            mergeOptions:
+              appendSlice: true
+        - fromFieldPath: "metadata.uid"
+          toFieldPath: "spec.forProvider.groupName"
+          transforms:
+            - type: string
+              string:
+                fmt: "rds-postgres-sg-%s"
+        - fromFieldPath: "spec.vpcId"
+          toFieldPath: "spec.forProvider.vpcId"
+        - fromFieldPath: "metadata.uid"
+          toFieldPath: "spec.writeConnectionSecretToRef.name"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-db-sg"
+    - base:
+        apiVersion: rds.aws.crossplane.io/v1alpha1
+        kind: DBCluster
+        spec:
+          forProvider:
+            backupRetentionPeriod: 7
+            copyTagsToSnapshot: true
+            dbSubnetGroupNameSelector:
+              matchControllerRef: true
+            enableHTTPEndpoint: false
+            engine: aurora-postgresql
+            engineVersion: "13.6"
+            finalDBSnapshotIdentifier: "to-be-patched"
+            masterUserPasswordSecretRef:
+              key: password
+              name: postgres-root-user-password
+              namespace: crossplane-system
+            masterUsername: root
+            preferredBackupWindow: 02:00-03:00
+            preferredMaintenanceWindow: sun:04:00-sun:05:00
+            skipFinalSnapshot: false
+            storageEncrypted: true
+            vpcSecurityGroupIDs: [] 
+            # This is a workaround for SGs not getting updated properly. https://github.com/crossplane/provider-aws/issues/1153
+            # https://github.com/crossplane/crossplane-runtime/issues/250
+            vpcSecurityGroupIDSelector:
+              matchControllerRef: true
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - fromFieldPath: spec.writeConnectionSecretToRef.namespace
+          toFieldPath: spec.writeConnectionSecretToRef.namespace
+        - fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+          toFieldPath: spec.forProvider.masterUserPasswordSecretRef.namespace
+        - fromFieldPath: "metadata.uid"
+          toFieldPath: "spec.writeConnectionSecretToRef.name"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-postgresql"
+        - fromFieldPath: "metadata.name"
+          toFieldPath: "spec.forProvider.finalDBSnapshotIdentifier"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-final-snapshot"
+        - fromFieldPath: "spec.engineVersion"
+          toFieldPath: "spec.forProvider.engineVersion"
+        - fromFieldPath: "spec.databaseName"
+          toFieldPath: "spec.forProvider.databaseName"
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.dbClusterIdentifier
+          toFieldPath: status.clusterId
+      connectionDetails:
+        - fromConnectionSecretKey: username
+        - fromConnectionSecretKey: password
+        - fromConnectionSecretKey: endpoint
+        - fromConnectionSecretKey: port
+    - base:
+        apiVersion: rds.aws.crossplane.io/v1alpha1
+        kind: DBInstance
+        spec:
+          forProvider:
+            autogeneratePassword: false
+            dbClusterIdentifier: "to-be-patched"
+            dbSubnetGroupNameSelector:
+              matchControllerRef: true
+            dbInstanceClass: db.r5.xlarge
+            engine: aurora-postgresql
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - fromFieldPath: spec.writeConnectionSecretToRef.namespace
+          toFieldPath: spec.writeConnectionSecretToRef.namespace
+        - fromFieldPath: "metadata.uid"
+          toFieldPath: "spec.writeConnectionSecretToRef.name"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-cluster-postgres-1"
+        - fromFieldPath: "status.clusterId"
+          toFieldPath: "spec.forProvider.dbClusterIdentifier"
+    - base:
+        apiVersion: rds.aws.crossplane.io/v1alpha1
+        kind: DBInstance
+        spec:
+          forProvider:
+            autogeneratePassword: false
+            dbClusterIdentifier: "to-be-patched"
+            dbSubnetGroupNameSelector:
+              matchControllerRef: true
+            dbInstanceClass: db.r5.xlarge
+            engine: aurora-postgresql
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - fromFieldPath: spec.writeConnectionSecretToRef.namespace
+          toFieldPath: spec.writeConnectionSecretToRef.namespace
+        - fromFieldPath: "metadata.uid"
+          toFieldPath: "spec.writeConnectionSecretToRef.name"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-cluster-postgres-2"
+        - fromFieldPath: "status.clusterId"
+          toFieldPath: "spec.forProvider.dbClusterIdentifier"

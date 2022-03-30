@@ -1,0 +1,35 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+# Update spec.subnetIds and spec.vpcId fields before use.
+# Run `kubectl apply -f postgres.yaml` to test this example once you bootstrap the EKS cluster with Crossplane and AWS Provider
+
+# This example resource creates the following resources
+#     1. RDS Postgres Instance with auto generated password
+#     2. RDS subnet group
+#     3. EC2 Security group
+
+apiVersion: awsblueprints.io/v1alpha1
+kind: RelationalDatabase
+metadata:
+  name: test-postgresql-db
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+      awsblueprints.io/createDBSubnetGroup: "true"
+  writeConnectionSecretToRef:
+    name: test-postgresql-db # secret contains endpoint, username, and password.
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: us-west-2
+    tags:
+      - key: env
+        value: test
+  storageGB: 100
+  subnetIds:
+    - subnet-123 # change these values before use
+    - subnet-456
+  vpcId: vpc-789
