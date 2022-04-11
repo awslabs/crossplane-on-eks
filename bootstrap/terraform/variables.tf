@@ -25,7 +25,7 @@ variable "zone" {
   default = "cplane"
 }
 
-variable "kubernetes_version" {
+variable "cluster_version" {
   type        = string
   description = "Kubernetes Version"
   default     = "1.21"
