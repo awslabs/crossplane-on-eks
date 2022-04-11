@@ -4,6 +4,7 @@
 variable "region" {
   description = "AWS region"
   type = string
+  default = "us-east-1"
 }
 
 variable "tenant" {
@@ -24,7 +25,7 @@ variable "zone" {
   default = "cplane"
 }
 
-variable "kubernetes_version" {
+variable "cluster_version" {
   type        = string
   description = "Kubernetes Version"
   default     = "1.21"
