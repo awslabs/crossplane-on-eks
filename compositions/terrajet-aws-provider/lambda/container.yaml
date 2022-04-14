@@ -74,6 +74,9 @@ spec:
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.arn
           toFieldPath: status.functionArn
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.id
+          toFieldPath: status.functionName
     - name: function-role
       base:
         apiVersion: iam.aws.crossplane.io/v1beta1 # https://github.com/crossplane-contrib/provider-jet-aws/issues/176

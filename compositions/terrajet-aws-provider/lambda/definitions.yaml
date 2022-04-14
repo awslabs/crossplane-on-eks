@@ -64,6 +64,8 @@ spec:
               properties:
                 functionRoleArn:
                   type: string
+                functionName:
+                  type: string
                 functionArn:
                   description: Indicates this function's ARN
                   type: string
