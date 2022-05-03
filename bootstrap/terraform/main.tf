@@ -86,7 +86,7 @@ locals {
   tenant             = var.tenant         # AWS account name or unique id for tenant
   environment        = var.environment    # Environment area eg., preprod or prod
   zone               = var.zone           # Environment with in one sub_tenant or business unit
-  kubernetes_version = var.kubernetes_version
+  cluster_version = var.cluster_version
   azs  = data.aws_availability_zones.available.names
 
   vpc_cidr     = var.vpc_cidr
