@@ -51,7 +51,7 @@ spec:
                       description: enable DNS Support
                       type: boolean
                       default: true
-                    enableDnsHostNames:
+                    enableDnsHostnames:
                       description: enable DNS Hostnames
                       type: boolean
                       default: true

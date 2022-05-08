@@ -42,7 +42,7 @@ spec:
         spec:
           forProvider:
             enableDnsSupport: ""
-            enableDnsHostNames: ""
+            enableDnsHostnames: ""
             cidrBlock: ""
             tags:
               Name: ""
@@ -60,5 +60,5 @@ spec:
           fromFieldPath: spec.parameters.enableDnsSupport
           toFieldPath: spec.forProvider.enableDnsSupport
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.parameters.enableDnsHostNames
-          toFieldPath: spec.forProvider.enableDnsHostNames
+          fromFieldPath: spec.parameters.enableDnsHostnames
+          toFieldPath: spec.forProvider.enableDnsHostnames
