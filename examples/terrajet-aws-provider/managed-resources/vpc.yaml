@@ -10,9 +10,9 @@ metadata:
 spec:
   forProvider:
     region: eu-west-1
-    enableDnsHostNames: true
+    enableDnsHostnames: true
     enableDnsSupport: true
-    enableClasiclink: true
+    enableClassiclink: true
     cidrBlock: 10.30.0.0/16
     enableClassiclinkDnsSupport: true
     tags:
