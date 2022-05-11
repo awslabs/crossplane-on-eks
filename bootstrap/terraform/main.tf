@@ -75,7 +75,7 @@ locals {
 # You can comment or remove module if you already have an existing VPC and Subnets. You must add public_subnet_tags, private_subnet_tags to your existing VPC
 #---------------------------------------------------------------
 module "aws_vpc" {
-  source  = "registry.terraform.io/terraform-aws-modules/vpc/aws"
+  source  = "terraform-aws-modules/vpc/aws"
   version = "v3.2.0"
 
   name = local.vpc_name
@@ -105,7 +105,7 @@ module "aws_vpc" {
 # This module deploys EKS Cluster with one Managed group
 #---------------------------------------------------------------
 module "eks_blueprints" {
-  source = "git::https://github.com/aws-ia/terraform-aws-eks-blueprints.git"
+  source = "git::https://github.com/aws-ia/terraform-aws-eks-blueprints.git?ref=v4.0.4"
 
   tenant            = local.tenant
   environment       = local.environment
@@ -140,7 +140,7 @@ module "eks_blueprints" {
 # This module deploys Kubernetes add-ons
 #---------------------------------------------------------------
 module "kubernetes-addons" {
-  source         = "git::https://github.com/aws-ia/terraform-aws-eks-blueprints.git//modules/kubernetes-addons"
+  source         = "git::https://github.com/aws-ia/terraform-aws-eks-blueprints.git//modules/kubernetes-addons?ref=v4.0.4"
   eks_cluster_id = module.eks_blueprints.eks_cluster_id
 
   # Deploy Karpenter Autoscaler
@@ -178,6 +178,8 @@ module "kubernetes-addons" {
     provider_aws_version     = "v0.4.2"
     additional_irsa_policies = ["arn:aws:iam::aws:policy/AdministratorAccess"]
   }
+
+  depends_on = [module.eks_blueprints.managed_node_groups]
 
 }
 
