@@ -1,0 +1,93 @@
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: rediscluster.aws.cache.corp.adobe.com
+spec:
+  claimNames:
+    kind: RedisCache
+    plural: rediscaches
+  group: awsblueprints.io
+  names:
+    kind: XRedisCache
+    plural: xrediscaches
+  versions:
+  - name: v1alpha1
+    served: true
+    referenceable: true
+    schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              description: RedisCacheSpec defines the desired state of RedisCache
+              properties:
+                providerConfigRef:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                  required:
+                  - name
+                resourceConfig:
+                  description: ResourceConfig defines general properties of this AWS
+                    resource.
+                  properties:
+                    size:
+                      description: "Set the size of the AWS Redis cache to the value
+                        provided by this field
+
+                        small: cache-t4g-small, 2 nodes
+                        medium: cache-t4g-medium, 2 nodes [default]
+                        large: cache-m6g-large, 2 nodes
+                        xlarge: cache-m6g-large, 4 nodes
+                      "
+                      enum:
+                        - small
+                        - medium
+                        - large
+                        - xlarge
+                    port:
+                      description: "Set the port of the AWS Redis cache to the value
+                        provided by this field (default: 6380)"
+                      type: integer
+                    region:
+                      type: string
+                    tags:
+                      items:
+                        properties:
+                          key:
+                            type: string
+                          value:
+                            type: string
+                        required:
+                          - key
+                          - value
+                        type: object
+                      type: array
+                  required:
+                    - region
+                  type: object
+              required:
+                - providerConfigName
+                - resourceConfig
+              type: object
+            status:
+              description: RedisCacheStatus defines the observed state of RedisCache
+              properties:
+                cacheName:
+                  type: string
+                configurationEndpoint:
+                  description: ConfigurationEndpoint for this replication group
+                  properties:
+                    address:
+                      type: string
+                    port:
+                      type: integer
+                  type: object
+                securityGroupID:
+                  type: string
+                status:
+                  type: string
+              type: object
+          type: object

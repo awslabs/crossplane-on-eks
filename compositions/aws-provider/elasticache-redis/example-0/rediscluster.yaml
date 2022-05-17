@@ -1,0 +1,11 @@
+apiVersion: aws.cache.corp.adobe.com/v1alpha1
+kind: RedisCluster
+metadata:
+  name: rediscluster-example
+spec:
+  resourceConfig:
+    port: 6380
+    region: us-east-1
+    size: medium
+  providerConfigRef:
+    name: my-aws-provider

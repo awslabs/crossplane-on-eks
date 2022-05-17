@@ -1,0 +1,268 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: rediscluster.aws.cache.corp.adobe.com
+  labels:
+     crossplane.io/xrd: rediscluster.aws.cache.corp.adobe.com
+     provider: aws
+spec:
+  reclaimPolicy: Delete
+  compositeTypeRef:
+    apiVersion: aws.cache.corp.adobe.com/v1alpha1
+    kind: RedisCluster
+  resources:
+    - base:
+        apiVersion: ec2.aws.crossplane.io/v1beta1
+        kind: SecurityGroup
+        metadata: {}
+        spec:
+          forProvider:
+            description: security group for redis cluster access
+            egress:
+              userIDGroupPairs:
+                - description: Allowing Cache port Outbound Access
+                  ipProtocol: tcp
+                  port: 6380
+                  groupIDSelector:
+                    matchControllerRef: true
+            ingress:
+              userIDGroupPairs:
+                - description: Allowing Cache port Inbound Access
+                  ipProtocol: tcp
+                  port: 6380
+                  groupIDSelector:
+                    matchControllerRef: true
+          providerConfigRef:
+            name: placeholder
+          writeConnectionSecretToRef:
+            name: placeholder
+            namespace: placeholder
+      patches:
+        # Description
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.name
+          toFieldPath: spec.forProvider.description
+          transforms:
+            - type: string
+              string:
+                fmt: "SecurityGroup for %s RedisCluster"
+
+        # Name
+        - type: FromCompositeFieldPath 
+          fromFieldPath: metadata.name
+          toFieldPath: spec.forProvider.groupName
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-rediscluster"
+        - type: FromCompositeFieldPath 
+          fromFieldPath: metadata.name
+          toFieldPath: spec.writeConnectionSecretToRef.name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-rediscluster-sg"
+        - type: FromCompositeFieldPath 
+          fromFieldPath: metadata.name
+          toFieldPath: metadata.annotations.crossplane.io/external-name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-rediscluster"
+
+        # Namespace
+        - type: FromCompositeFieldPath 
+          fromFieldPath: metadata.namespace
+          toFieldPath: spec.writeConnectionSecretToRef.namespace
+
+        # ProviderConfigRef
+        - type: FromCompositeFieldPath 
+          fromFieldPath: spec.providerConfigRef.name
+          toFieldPath: spec.providerConfigRef.name
+
+        # Port
+        - type: FromCompositeFieldPath 
+          fromFieldPath: spec.resourceConfig.port
+          toFieldPath: spec.forProvider.egress.userIDGroupPairs[0].port
+        - type: FromCompositeFieldPath 
+          fromFieldPath: spec.resourceConfig.port
+          toFieldPath: spec.forProvider.ingress.userIDGroupPairs[0].port
+
+        # Region
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+
+        # Tags
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            mergeOptions:
+              appendSlice: true
+              keepMapValues: true
+
+        # -----
+
+        # Status
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.securityGroupID
+          toFieldPath: status.securityGroupID
+    - base:
+        apiVersion: cache.aws.crossplane.io/v1alpha1
+        kind: CacheSubnetGroup
+        metadata: {}
+        spec:
+          forProvider:
+            description: An excellent formation of subnetworks.
+            subnetIdSelector:
+              matchLabels:
+                desc: crossplane-poc-ethos-subnet
+          providerConfigRef:
+            name: placeholder
+          reclaimPolicy: Delete
+      patches:
+        # Description
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.name
+          toFieldPath: spec.forProvider.description
+          transforms:
+            - type: string
+              string:
+                fmt: "CacheSubnetGroup for %s RedisCluster"
+
+        # Name
+        - type: FromCompositeFieldPath 
+          fromFieldPath: metadata.name
+          toFieldPath: metadata.annotations.crossplane.io/external-name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-rediscluster"
+
+        # ProviderConfigRef
+        - type: FromCompositeFieldPath 
+          fromFieldPath: spec.providerConfigRef.name
+          toFieldPath: spec.providerConfigRef.name
+
+        # Region
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+    - base:
+        apiVersion: cache.aws.crossplane.io/v1beta1
+        kind: ReplicationGroup
+        metadata: {}
+        spec:
+          forProvider:
+            applyModificationsImmediately: true
+            atRestEncryptionEnabled: true
+            authEnabled: true
+            automaticFailoverEnabled: true
+            cacheNodeType: cache-t4g-medium
+            cacheParameterGroupName: default.redis6.x
+            cacheSubnetGroupNameSelector:
+              matchControllerRef: true
+            cacheSecurityGroupNameSelector:
+              matchControllerRef: true
+            engine: Redis
+            engineVersion: 6.x
+            multiAZEnabled: true
+            numCacheClusters: 2
+            port: 6380
+            transitEncryptionEnabled: true
+          publishConnectionDetailsTo:
+            namespace: placeholder
+            name: placeholder
+          providerConfigRef:
+            name: placeholder
+          reclaimPolicy: Delete
+      connectionDetails:
+        - name: hostname
+          fromConnectionSecretKey: endpoint
+        - name: port
+          fromConnectionSecretKey: port
+      patches:
+        # Description
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.name
+          toFieldPath: spec.forProvider.replicationGroupDescription
+          transforms:
+            - type: string
+              string:
+                fmt: "%s RedisCluster"
+
+        # Name
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: spec.publishConnectionDetailsTo.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: metadata.annotations.crossplane.io/external-name
+
+        # Namespace
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.namespace
+          toFieldPath: spec.publishConnectionDetailsTo.namespace
+
+        # Port
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.port
+          toFieldPath: spec.forProvider.port
+
+        # ProviderConfigRef
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.providerConfigRef.name
+          toFieldPath: spec.providerConfigRef.name
+
+        # Region
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+
+        # Size
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.size
+          toFieldPath: spec.forProvider.cacheNodeType
+          transforms:
+            - type: map
+              map:
+                small: cache-t4g-small
+                medium: cache-t4g-medium
+                large: cache-m6g-large
+                xlarge: cache-m6g-large
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.size
+          toFieldPath: spec.forProvider.numCacheClusters
+          transforms:
+            - type: map
+              map:
+                small: 2
+                medium: 2
+                large: 2
+                xlarge: 4
+
+        # Tags
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            mergeOptions:
+              appendSlice: true
+              keepMapValues: true
+
+        # -----
+
+        # Status
+        - type: ToCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: status.cacheName
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.configurationEndpoint.address
+          toFieldPath: status.configurationEndpoint.address
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.configurationEndpoint.port
+          toFieldPath: status.configurationEndpoint.port
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.status
+          toFieldPath: status.status

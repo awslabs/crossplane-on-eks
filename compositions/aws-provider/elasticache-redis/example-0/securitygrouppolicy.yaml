@@ -1,0 +1,12 @@
+apiVersion: vpcresources.k8s.aws/v1beta1
+kind: SecurityGroupPolicy
+metadata:
+  name: rediscluster-example
+spec:
+  serviceAccountSelector: 
+    matchLabels:
+      app: rediscluster-example-application
+  securityGroups:
+    groupIds:
+      - sg-abc123  # SecurityGroup ID for rediscluster-example rediscluster 
+      - sg-123abc  # Cluster Security Group
