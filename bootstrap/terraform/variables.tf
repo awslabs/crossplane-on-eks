@@ -4,7 +4,6 @@
 variable "region" {
   description = "AWS region"
   type = string
-  default = "us-east-1"
 }
 
 variable "tenant" {
@@ -28,7 +27,7 @@ variable "zone" {
 variable "cluster_version" {
   type        = string
   description = "Kubernetes Version"
-  default     = "1.21"
+  default     = "1.22"
 }
 
 variable "vpc_cidr" {

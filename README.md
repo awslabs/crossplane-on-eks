@@ -68,12 +68,11 @@ Compositions can be nested to further define and abstract application specific n
 For debugging Compositions, CompositionResourceDefinitions, etc, [please see the debugging guide](doc/debugging.md).
 
 ## Maintainers
-This repo is maintained by:
+This repo is maintained by AWS OSS team:
 
  - [Manabu McCloskey](https://github.com/nabuskey)
  - [Vara Bonthu](https://github.com/vara-bonthu)
  - [Nima Kaviani](https://github.com/nimakaviani)
- - [Nuatu Tseggi](https://github.com/Nuatu)
 
 ## Security
 

@@ -1,41 +1,14 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
 
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "4.2.0"
-    }
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = ">= 2.7.1"
-    }
-    helm = {
-      source  = "hashicorp/helm"
-      version = ">= 2.4.1"
-    }
-    kubectl = {
-      source  = "gavinbunney/kubectl"
-      version = ">= 1.13.1"
-    }
-  }
-  # Please note that this example is using the local state file you can always change this to remote state e.g., s3 bucket
-  backend "local" {
-    path = "local_tf_state/terraform-main.tfstate"
-  }
-
-  required_version = ">= 1.0.0"
-}
-
 data "aws_availability_zones" "available" {}
 
 data "aws_eks_cluster" "cluster" {
-  name = module.aws-eks-accelerator-for-terraform.eks_cluster_id
+  name = module.eks_blueprints.eks_cluster_id
 }
 
 data "aws_eks_cluster_auth" "cluster" {
-  name = module.aws-eks-accelerator-for-terraform.eks_cluster_id
+  name = module.eks_blueprints.eks_cluster_id
 }
 
 data "kubectl_path_documents" "karpenter_provisioners" {
@@ -76,7 +49,7 @@ provider "kubectl" {
   cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
   token                  = data.aws_eks_cluster_auth.cluster.token
   load_config_file       = false
-  apply_retry_count      = 15
+  apply_retry_count      = 30
 }
 
 #---------------------------------------------------------------
@@ -86,7 +59,7 @@ locals {
   tenant             = var.tenant         # AWS account name or unique id for tenant
   environment        = var.environment    # Environment area eg., preprod or prod
   zone               = var.zone           # Environment with in one sub_tenant or business unit
-  kubernetes_version = var.kubernetes_version
+  cluster_version    = var.cluster_version
   azs  = data.aws_availability_zones.available.names
 
   vpc_cidr     = var.vpc_cidr
@@ -131,8 +104,8 @@ module "aws_vpc" {
 #---------------------------------------------------------------
 # This module deploys EKS Cluster with one Managed group
 #---------------------------------------------------------------
-module "aws-eks-accelerator-for-terraform" {
-  source = "github.com/aws-samples/aws-eks-accelerator-for-terraform"
+module "eks_blueprints" {
+  source = "git::https://github.com/aws-ia/terraform-aws-eks-blueprints.git?ref=v4.0.4"
 
   tenant            = local.tenant
   environment       = local.environment
@@ -167,14 +140,25 @@ module "aws-eks-accelerator-for-terraform" {
 # This module deploys Kubernetes add-ons
 #---------------------------------------------------------------
 module "kubernetes-addons" {
-  source         = "github.com/aws-samples/aws-eks-accelerator-for-terraform//modules/kubernetes-addons"
-  eks_cluster_id = module.aws-eks-accelerator-for-terraform.eks_cluster_id
+  source         = "git::https://github.com/aws-ia/terraform-aws-eks-blueprints.git//modules/kubernetes-addons?ref=v4.0.4"
+  eks_cluster_id = module.eks_blueprints.eks_cluster_id
 
   # Deploy Karpenter Autoscaler
   enable_karpenter  = true
 
   # Deploy Crossplane
   enable_crossplane = true
+
+  crossplane_helm_config = {
+    name                      = "crossplane"
+    chart                     = "crossplane"
+    repository                = "https://charts.crossplane.io/stable/"
+    version                   = "1.7.1"
+    namespace                 = "crossplane-system"
+    values = [templatefile("${path.module}/values.yaml", {
+      operating-system     = "linux"
+    })]
+  }
 
   # Deploy Crossplane AWS Providers
 
@@ -184,16 +168,18 @@ module "kubernetes-addons" {
   # Creates ProviderConfig -> aws-provider-config
   crossplane_aws_provider = {
     enable                   = true
-    provider_aws_version     = "v0.24.1"
+    provider_aws_version     = "v0.27.0"
     additional_irsa_policies = ["arn:aws:iam::aws:policy/AdministratorAccess"]
   }
 
   # Creates ProviderConfig -> jet-aws-provider-config
   crossplane_jet_aws_provider = {
     enable                   = true
-    provider_aws_version     = "v0.4.1"
+    provider_aws_version     = "v0.4.2"
     additional_irsa_policies = ["arn:aws:iam::aws:policy/AdministratorAccess"]
   }
+
+  depends_on = [module.eks_blueprints.managed_node_groups]
 
 }
 
