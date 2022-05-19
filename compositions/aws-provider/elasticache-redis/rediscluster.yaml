@@ -8,7 +8,6 @@ metadata:
     service: elasticache
     provider: aws
 spec:
-  deletionPolicy: Delete
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
     kind: XRedisCluster
@@ -44,6 +43,7 @@ spec:
           writeConnectionSecretToRef:
             name: placeholder
             namespace: placeholder
+          deletionPolicy: Delete
       patches:
         # Description
         - type: FromCompositeFieldPath
@@ -265,10 +265,10 @@ spec:
           transforms:
             - type: map
               map:
-                small: 2
-                medium: 2
-                large: 2
-                xlarge: 4
+                small: "2"
+                medium: "2"
+                large: "2"
+                xlarge: "4"
 
         # Tags
         - type: FromCompositeFieldPath

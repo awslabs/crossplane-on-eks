@@ -52,6 +52,7 @@ spec:
                         - medium
                         - large
                         - xlarge
+                      type: string
                     subnetIds:
                       description: "List of Subnet IDs for the AWS Redis Cluster Cache Subnet Group."
                       items:
