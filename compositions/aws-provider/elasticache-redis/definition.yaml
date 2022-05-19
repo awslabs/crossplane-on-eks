@@ -3,15 +3,15 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: rediscluster.aws.cache.corp.adobe.com
+  name: xredisclusters.awsblueprints.io
 spec:
-  claimNames:
-    kind: RedisCache
-    plural: rediscaches
   group: awsblueprints.io
   names:
-    kind: XRedisCache
-    plural: xrediscaches
+    kind: XRedisCluster
+    plural: xredisclusters
+  claimNames:
+    kind: RedisCluster
+    plural: redisclusters
   versions:
   - name: v1alpha1
     served: true
@@ -20,7 +20,7 @@ spec:
         openAPIV3Schema:
           properties:
             spec:
-              description: RedisCacheSpec defines the desired state of RedisCache
+              description: RedisClusterSpec defines the desired state of RedisCluster
               properties:
                 providerConfigRef:
                   type: object
@@ -34,13 +34,13 @@ spec:
                     resource.
                   properties:
                     port:
-                      description: "Set the port of the AWS Redis cache to the value
+                      description: "Set the port of the AWS Redis Cluster to the value
                         provided by this field (default: 6380)"
                       type: integer
                     region:
                       type: string
                     size:
-                      description: "Set the size of the AWS Redis cache to the value
+                      description: "Set the size of the AWS Redis Cluster to the value
                         provided by this field
 
                         small: cache-t4g-small, 2 nodes
@@ -53,7 +53,7 @@ spec:
                         - large
                         - xlarge
                     subnetIds:
-                      description: "List of Subnet IDs for the Cache Subnet Group." 
+                      description: "List of Subnet IDs for the AWS Redis Cluster Cache Subnet Group."
                       items:
                         type: string
                       type: array
@@ -78,7 +78,7 @@ spec:
                 - resourceConfig
               type: object
             status:
-              description: RedisCacheStatus defines the observed state of RedisCache
+              description: RedisClusterStatus defines the observed state of RedisCluster
               properties:
                 cacheName:
                   type: string

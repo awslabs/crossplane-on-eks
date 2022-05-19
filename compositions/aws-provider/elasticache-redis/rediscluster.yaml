@@ -1,15 +1,17 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: rediscluster.aws.cache.corp.adobe.com
+  name: xredisclusters.awsblueprints.io
   labels:
-     crossplane.io/xrd: rediscluster.aws.cache.corp.adobe.com
-     provider: aws
+    awsblueprints.io/provider: aws
+    crossplane.io/xrd: xredisclusters.awsblueprints.io
+    service: elasticache
+    provider: aws
 spec:
   deletionPolicy: Delete
   compositeTypeRef:
-    apiVersion: aws.cache.corp.adobe.com/v1alpha1
-    kind: RedisCluster
+    apiVersion: awsblueprints.io/v1alpha1
+    kind: XRedisCluster
   resources:
     - base:
         apiVersion: ec2.aws.crossplane.io/v1beta1
