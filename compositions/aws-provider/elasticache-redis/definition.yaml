@@ -43,10 +43,10 @@ spec:
                       description: "Set the size of the AWS Redis Cluster to the value
                         provided by this field
 
-                        small: cache-t4g-small, 2 nodes
-                        medium: cache-t4g-medium, 2 nodes [default]
-                        large: cache-m6g-large, 2 nodes
-                        xlarge: cache-m6g-large, 4 nodes"
+                        small: cache-t4g-small, 2 nodes;
+                        medium: cache-t4g-medium, 2 nodes [default];
+                        large: cache-m6g-large, 2 nodes;
+                        xlarge: cache-m6g-large, 4 nodes;"
                       enum:
                         - small
                         - medium
@@ -75,7 +75,7 @@ spec:
                     - subnetIds
                   type: object
               required:
-                - providerConfigName
+                - providerConfigRef
                 - resourceConfig
               type: object
             status:

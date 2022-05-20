@@ -1,4 +1,4 @@
-apiVersion: aws.cache.corp.adobe.com/v1alpha1
+apiVersion: awsblueprints.io/v1alpha1
 kind: RedisCluster
 metadata:
   name: rediscluster-example
@@ -7,5 +7,8 @@ spec:
     port: 6380
     region: us-east-1
     size: medium
+    subnetIds:
+      - subnet-abcd123
+      - subnet-123abcd
   providerConfigRef:
     name: my-aws-provider

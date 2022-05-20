@@ -47,7 +47,7 @@ spec:
       patches:
         # Description
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.name
+          fromFieldPath: spec.claimRef.name
           toFieldPath: spec.forProvider.description
           transforms:
             - type: string
@@ -56,22 +56,22 @@ spec:
 
         # Name
         - type: FromCompositeFieldPath 
-          fromFieldPath: metadata.name
+          fromFieldPath: spec.claimRef.name
           toFieldPath: spec.forProvider.groupName
           transforms:
             - type: string
               string:
                 fmt: "%s-rediscluster"
         - type: FromCompositeFieldPath 
-          fromFieldPath: metadata.name
+          fromFieldPath: spec.claimRef.name
           toFieldPath: spec.writeConnectionSecretToRef.name
           transforms:
             - type: string
               string:
                 fmt: "%s-rediscluster-sg"
         - type: FromCompositeFieldPath 
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.annotations.crossplane.io/external-name
+          fromFieldPath: spec.claimRef.name
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
           transforms:
             - type: string
               string:
@@ -79,7 +79,7 @@ spec:
 
         # Namespace
         - type: FromCompositeFieldPath 
-          fromFieldPath: metadata.namespace
+          fromFieldPath: spec.claimRef.namespace
           toFieldPath: spec.writeConnectionSecretToRef.namespace
 
         # ProviderConfigRef
@@ -136,7 +136,7 @@ spec:
       patches:
         # Description
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.name
+          fromFieldPath: spec.claimRef.name
           toFieldPath: spec.forProvider.description
           transforms:
             - type: string
@@ -145,8 +145,8 @@ spec:
 
         # Name
         - type: FromCompositeFieldPath 
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.annotations.crossplane.io/external-name
+          fromFieldPath: spec.claimRef.name
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
           transforms:
             - type: string
               string:
@@ -183,8 +183,6 @@ spec:
             automaticFailoverEnabled: true
             cacheNodeType: cache.t4g.medium
             cacheParameterGroupName: default.redis6.x
-            cacheSecurityGroupNameSelector:
-              matchControllerRef: true
             cacheSubnetGroupNameSelector:
               matchControllerRef: true
             engine: Redis
@@ -193,6 +191,8 @@ spec:
             port: 6380
             region: placeholder
             replicationGroupDescription: placeholder
+            securityGroupIdSelector:
+              matchControllerRef: true
             tags: []
             transitEncryptionEnabled: true
           writeConnectionSecretToRef:
@@ -209,7 +209,7 @@ spec:
       patches:
         # Description
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.name
+          fromFieldPath: spec.claimRef.name
           toFieldPath: spec.forProvider.replicationGroupDescription
           transforms:
             - type: string
@@ -218,19 +218,19 @@ spec:
 
         # Name
         - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
+          fromFieldPath: spec.claimRef.name
           toFieldPath: spec.writeConnectionSecretToRef.name
           transforms:
             - type: string
               string:
                 fmt: "%s-rediscluster"
         - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.annotations.crossplane.io/external-name
+          fromFieldPath: spec.claimRef.name
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
 
         # Namespace
         - type: FromCompositeFieldPath
-          fromFieldPath: metadata.namespace
+          fromFieldPath: spec.claimRef.namespace
           toFieldPath: spec.writeConnectionSecretToRef.namespace
 
         # Port
@@ -269,6 +269,9 @@ spec:
                 medium: "2"
                 large: "2"
                 xlarge: "4"
+            - type: convert
+              convert:
+                toType: int
 
         # Tags
         - type: FromCompositeFieldPath
@@ -283,7 +286,7 @@ spec:
 
         # Status
         - type: ToCompositeFieldPath
-          fromFieldPath: metadata.name
+          fromFieldPath: spec.claimRef.name
           toFieldPath: status.cacheName
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.configurationEndpoint.address
