@@ -1,0 +1,14 @@
+apiVersion: kubernetes.crossplane.io/v1alpha1
+kind: Object
+metadata:
+  name: crossplane-test-namespace # Namespace name
+spec:
+  forProvider:
+    manifest:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        labels:
+          example: "true"
+  providerConfigRef:
+    name: kubernetes-provider-config # Refer this file for providerConfigRef.name -> bootstrap/terraform/crossplane-providers/kubernetes-provider.yaml

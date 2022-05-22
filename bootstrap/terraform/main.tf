@@ -11,15 +11,6 @@ data "aws_eks_cluster_auth" "cluster" {
   name = module.eks_blueprints.eks_cluster_id
 }
 
-data "kubectl_path_documents" "karpenter_provisioners" {
-  pattern = "${path.module}/karpenter-provisioners/default-provisioner.yaml"
-  vars = {
-    azs = join(",",local.azs)
-    iam-instance-profile-id = format("%s-%s", local.cluster_name, local.node_group_name)
-    eks-cluster-id = local.cluster_name
-  }
-}
-
 #---------------------------------------------------------------
 # DON'T remove these providers as these are key to deploy EKS Cluster and Kubernetes add-ons
 #---------------------------------------------------------------
@@ -165,14 +156,21 @@ module "kubernetes-addons" {
   # NOTE: Crossplane requires Admin like permissions to create and update resources similar to Terraform deploy role.
   # This example config uses AdministratorAccess for demo purpose only, but you should select a policy with the minimum permissions required to provision your resources
 
-  # Creates ProviderConfig -> aws-provider-config
+  #
+  #---------------------------------------------------------
+  # Crossplane AWS Provider deployment
+  #   Creates ProviderConfig name as "aws-provider-config"
+  #---------------------------------------------------------
   crossplane_aws_provider = {
     enable                   = true
     provider_aws_version     = "v0.27.0"
     additional_irsa_policies = ["arn:aws:iam::aws:policy/AdministratorAccess"]
   }
 
-  # Creates ProviderConfig -> jet-aws-provider-config
+  #---------------------------------------------------------
+  # Crossplane Terrajest AWS Provider deployment
+  #   Creates ProviderConfig name as "jet-aws-provider-config"
+  #---------------------------------------------------------
   crossplane_jet_aws_provider = {
     enable                   = true
     provider_aws_version     = "v0.4.2"
@@ -183,10 +181,40 @@ module "kubernetes-addons" {
 
 }
 
-# Deploying default provisioner for Karpenter autoscaler
+#---------------------------------------------------------
+# Karpenter autoscaler with default provisioner
+#---------------------------------------------------------
+data "kubectl_path_documents" "karpenter_provisioners" {
+  pattern = "${path.module}/karpenter-provisioners/default-provisioner.yaml"
+  vars = {
+    azs = join(",",local.azs)
+    iam-instance-profile-id = format("%s-%s", local.cluster_name, local.node_group_name)
+    eks-cluster-id = local.cluster_name
+  }
+}
+
 resource "kubectl_manifest" "karpenter_provisioner" {
   for_each  = toset(data.kubectl_path_documents.karpenter_provisioners.documents)
   yaml_body = each.value
+
+  depends_on = [module.kubernetes-addons]
+}
+
+#---------------------------------------------------------
+# Crossplane Kubernetes Provider deployment
+# Creates ProviderConfig name as "kubernetes-provider-config"
+#---------------------------------------------------------
+data "kubectl_path_documents" "kubernetes_provider_manifests" {
+  pattern = "${path.module}/crossplane-providers/kubernetes-provider.yaml"
+  vars = {
+    package-version = "crossplane/provider-kubernetes:v0.3.0"
+    service-account = "crossplane-provider-kubernetes"
+  }
+}
+
+resource "kubectl_manifest" "kubernetes_provider" {
+  count     = length(data.kubectl_path_documents.kubernetes_provider_manifests.documents)
+  yaml_body = element(data.kubectl_path_documents.kubernetes_provider_manifests.documents, count.index)
 
   depends_on = [module.kubernetes-addons]
 }
