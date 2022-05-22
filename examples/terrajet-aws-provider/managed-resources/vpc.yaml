@@ -17,5 +17,6 @@ spec:
     enableClassiclinkDnsSupport: true
     tags:
       Name: jet-aws-provider-vpc
+      awsblueprints.io/environment: dev
   providerConfigRef:
     name: jet-aws-provider-config
