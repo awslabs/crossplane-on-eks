@@ -23,7 +23,7 @@ Create permission boundary:
 ```bash
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
-sed -i '' "s/ACCOUNT_ID/${ACCOUNT_ID}/g" permission-boundary.json
+sed -i "s/ACCOUNT_ID/${ACCOUNT_ID}/g" permission-boundary.json
 
 aws iam create-policy \
     --policy-name crossplaneBoundary \
