@@ -1,0 +1,7 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+status:
+  conditions:
+    - status: "False"
+      type: Established
+    - reason: WatchingCompositeResourceClaim

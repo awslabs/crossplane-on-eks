@@ -1,0 +1,14 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestSuite
+commands:
+  - command: helm install crossplane https://charts.crossplane.io/stable/crossplane-1.6.5.tgz --namespace crossplane-system --wait --create-namespace --values tests/kuttl/values.yaml
+  - command: kubectl wait --for condition=healthy --timeout=300s providers.pkg.crossplane.io/crossplane-provider-aws
+  - command: kubectl wait --for condition=healthy --timeout=300s providers.pkg.crossplane.io/crossplane-provider-jet-aws
+  - command: kubectl wait --for condition=healthy --timeout=300s providers.pkg.crossplane.io/crossplane-provider-kubernetes
+  # XRDs cannot be installed through crdDir or manifestDirs due to timing.
+  - script: for i in `ls compositions/aws-provider`; do kubectl apply -f compositions/aws-provider/${i}; done
+  - script: for i in `ls compositions/terrajet-aws-provider`; do kubectl apply -f compositions/terrajet-aws-provider/${i}; done
+startKIND: true
+kindContext: kuttl-test
+testDirs:
+  - tests/e2e/

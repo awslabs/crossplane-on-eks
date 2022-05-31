@@ -1,0 +1,17 @@
+name: PR
+on: [ pull_request ]
+env: 
+  KUTTL_VERSION: "0.12.1"
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: install kuttl
+        run: |
+          mkdir ${HOME}/bin
+          wget -O ${HOME}/bin/kubectl-kuttl https://github.com/kudobuilder/kuttl/releases/download/v${{ env.KUTTL_VERSION }}/kubectl-kuttl_${{ env.KUTTL_VERSION }}_linux_x86_64 
+          chmod +x ${HOME}/bin/kubectl-kuttl
+          echo "${HOME}/bin/" >> $GITHUB_PATH
+      - name: run tests
+        run: kubectl kuttl test --config tests/kuttl/test-suite.yaml
