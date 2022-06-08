@@ -31,6 +31,9 @@ spec:
 #        - type: FromCompositeFieldPath
 #          fromFieldPath: spec.resourceConfig.name
 #          toFieldPath: metadata.annotations[crossplane.io/external-name]
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.networkId
+          toFieldPath: metadata.labels[network.awsblueprints.io/network-id]
 
   resources:
     - name: vpc
