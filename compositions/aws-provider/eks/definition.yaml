@@ -54,14 +54,12 @@ spec:
                       description: endpointPublicAccess
                       type: boolean
                       default: true
-                    subnetIds:
-                      description: EKS Cluster Subnet Id references
-                      items:
-                        type: string
-                      type: array
+                    networkId:
+                      description: Name of network to use for subnet lookup (subnet label 'network.awsblueprints.io/network-id').
+                      type: string
                   required:
                     - version
-                    - subnetIds
+                    - networkId
                 managedNodeGroups:
                   description: Managed Node Groups properties
                   type: object

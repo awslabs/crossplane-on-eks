@@ -42,10 +42,8 @@ spec:
     version: "1.21"
     endpointPrivateAccess: false
     endpointPublicAccess: true
-    subnetIds: # Update your subnet ids
-      - "subnet-abc"
-      - "subnet-def"
-      - "subnet-ghi"
+    # networkId is used to select subnets through label 'network.awsblueprints.io/network-id'
+    networkId: dev-net
   managedNodeGroups:
     minSize: 2
   writeConnectionSecretToRef:

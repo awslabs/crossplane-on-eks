@@ -43,7 +43,7 @@ spec:
             role: controlplane
         spec:
           forProvider:
-            verison:
+            version:
             roleArnSelector:
               matchControllerRef: true
               matchLabels:
@@ -51,7 +51,9 @@ spec:
             resourcesVpcConfig:
               endpointPrivateAccess:
               endpointPublicAccess:
-              subnetIds:
+              subnetIdSelector:
+                matchLabels:
+                  network.awsblueprints.io/network-id:
           writeConnectionSecretToRef:
             namespace: crossplane-system
       patches:
@@ -61,8 +63,8 @@ spec:
           toFieldPath: metadata.annotations[crossplane.io/external-name]
         - fromFieldPath: spec.parameters.version
           toFieldPath: spec.forProvider.version
-        - fromFieldPath: spec.parameters.subnetIds
-          toFieldPath: spec.forProvider.resourcesVpcConfig.subnetIds
+        - fromFieldPath: spec.parameters.networkId
+          toFieldPath: spec.forProvider.resourcesVpcConfig.subnetIdSelector.matchLabels[network.awsblueprints.io/network-id]
         - fromFieldPath: spec.parameters.endpointPrivateAccess
           toFieldPath: spec.forProvider.resourcesVpcConfig.endpointPrivateAccess
         - fromFieldPath: spec.parameters.endpointPublicAccess
@@ -80,6 +82,9 @@ spec:
 #          toFieldPath: status.eks.oidc
 #          policy:
 #            fromFieldPath: Optional
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.resourcesVpcConfig.vpcId
+          toFieldPath: status.vpcId
       connectionDetails:
         - name: cluster-ca
           fromConnectionSecretKey: clusterCA
@@ -175,10 +180,10 @@ spec:
               matchControllerRef: true
               matchLabels:
                 role: managed-nodegroup
-            subnets:
-#            subnetSelector:
-#              matchLabels:
-#                access: private
+            subnetSelector:
+              matchLabels:
+                network.awsblueprints.io/network-id:
+                visibility: private
             scalingConfig:
               minSize:
               desiredSize:
@@ -204,8 +209,8 @@ spec:
           toFieldPath: spec.forProvider.instanceTypes
         - fromFieldPath: spec.managedNodeGroups.amiType
           toFieldPath: spec.forProvider.amiType
-        - fromFieldPath: spec.parameters.subnetIds
-          toFieldPath: spec.forProvider.subnets
+        - fromFieldPath: spec.parameters.networkId
+          toFieldPath: spec.forProvider.subnetSelector.matchLabels[network.awsblueprints.io/network-id]
 
     - name: eks-managed-nodegroup-iam-role
       base:
