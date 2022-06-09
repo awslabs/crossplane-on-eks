@@ -23,7 +23,7 @@ Create permission boundary:
 ```bash
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
-sed -i '' "s/ACCOUNT_ID/${ACCOUNT_ID}/g" permission-boundary.json
+sed -i.bak "s/ACCOUNT_ID/${ACCOUNT_ID}/g" permission-boundary.json
 
 aws iam create-policy \
     --policy-name crossplaneBoundary \
@@ -101,8 +101,8 @@ See the [IRSA documentation](https://docs.aws.amazon.com/eks/latest/userguide/cr
 Annotate the service account to use IRSA.
 
 ```
-sed -i '' "s/ACCOUNT_ID/${ACCOUNT_ID}/g" crossplane/aws-provider.yaml
-sed -i '' "s/ACCOUNT_ID/${ACCOUNT_ID}/g" crossplane/jet-aws-provider.yaml
+sed -i.bak "s/ACCOUNT_ID/${ACCOUNT_ID}/g" crossplane/aws-provider.yaml
+sed -i.bak "s/ACCOUNT_ID/${ACCOUNT_ID}/g" crossplane/jet-aws-provider.yaml
 ```
 
 ## Install Crossplane
