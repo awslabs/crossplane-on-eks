@@ -9,6 +9,7 @@ metadata:
   labels:
     awsblueprints.io/provider: aws
     awsblueprints.io/environment: dev
+    awsblueprints.io/subnet-selection: id
     crossplane.io/xrd: xamazonekss.cluster.awsblueprints.io
     service: eks
 spec:
@@ -51,9 +52,7 @@ spec:
             resourcesVpcConfig:
               endpointPrivateAccess:
               endpointPublicAccess:
-              subnetIdSelector:
-                matchLabels:
-                  network.awsblueprints.io/network-id:
+              subnetIds:
           writeConnectionSecretToRef:
             namespace: crossplane-system
       patches:
@@ -63,8 +62,8 @@ spec:
           toFieldPath: metadata.annotations[crossplane.io/external-name]
         - fromFieldPath: spec.parameters.version
           toFieldPath: spec.forProvider.version
-        - fromFieldPath: spec.parameters.networkId
-          toFieldPath: spec.forProvider.resourcesVpcConfig.subnetIdSelector.matchLabels[network.awsblueprints.io/network-id]
+        - fromFieldPath: spec.parameters.subnetIds
+          toFieldPath: spec.forProvider.resourcesVpcConfig.subnetIds
         - fromFieldPath: spec.parameters.endpointPrivateAccess
           toFieldPath: spec.forProvider.resourcesVpcConfig.endpointPrivateAccess
         - fromFieldPath: spec.parameters.endpointPublicAccess
@@ -180,10 +179,7 @@ spec:
               matchControllerRef: true
               matchLabels:
                 role: managed-nodegroup
-            subnetSelector:
-              matchLabels:
-                network.awsblueprints.io/network-id:
-                visibility: private
+            subnets:
             scalingConfig:
               minSize:
               desiredSize:
@@ -209,8 +205,8 @@ spec:
           toFieldPath: spec.forProvider.instanceTypes
         - fromFieldPath: spec.managedNodeGroups.amiType
           toFieldPath: spec.forProvider.amiType
-        - fromFieldPath: spec.parameters.networkId
-          toFieldPath: spec.forProvider.subnetSelector.matchLabels[network.awsblueprints.io/network-id]
+        - fromFieldPath: spec.parameters.subnetIds
+          toFieldPath: spec.forProvider.subnets
 
     - name: eks-managed-nodegroup-iam-role
       base:

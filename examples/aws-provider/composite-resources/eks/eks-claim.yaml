@@ -33,6 +33,7 @@ spec:
     matchLabels:
       awsblueprints.io/provider: aws
       awsblueprints.io/environment: dev
+      awsblueprints.io/subnet-selection: label
       service: eks
   resourceConfig:
     providerConfigName: aws-provider-config

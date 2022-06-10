@@ -38,6 +38,7 @@ spec:
                 networkId:
                   description: ID of this network which other objects can use to reference it.
                   type: string
+                  default: ""
                 parameters:
                   description: VPC Input parameters
                   type: object
@@ -175,7 +176,6 @@ spec:
                     - providerConfigName
                     - region
               required:
-                - networkId
                 - parameters
                 - resourceConfig
           required:

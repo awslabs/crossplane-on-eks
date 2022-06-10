@@ -8,6 +8,7 @@ metadata:
   labels:
     awsblueprints.io/provider: aws
     awsblueprints.io/environment: dev
+    awsblueprints.io/network-id: "false"
     crossplane.io/xrd: xvpcsubnets.network.awsblueprints.io
     service: vpcsubnet
 spec:
@@ -31,9 +32,6 @@ spec:
 #        - type: FromCompositeFieldPath
 #          fromFieldPath: spec.resourceConfig.name
 #          toFieldPath: metadata.annotations[crossplane.io/external-name]
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.networkId
-          toFieldPath: metadata.labels[network.awsblueprints.io/network-id]
 
   resources:
     - name: vpc
