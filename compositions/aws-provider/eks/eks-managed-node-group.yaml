@@ -85,7 +85,7 @@ spec:
           fromConnectionSecretKey: clusterCA
         - name: apiserver-endpoint
           fromConnectionSecretKey: endpoint
-        - name: value
+        - name: kubeconfig
           fromConnectionSecretKey: kubeconfig
     - name: eks-cluster-role
       base:
