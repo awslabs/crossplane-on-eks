@@ -18,31 +18,35 @@ spec:
         metadata: {}
         spec:
           forProvider:
-            description: placeholder
+            description: description-placeholder
             egress:
               - ipProtocol: tcp
                 fromPort: 6380
                 toPort: 6380
                 userIdGroupPairs:
                 - description: Allowing Cache port Outbound Access
-                  groupIdSelector:
-                    matchControllerRef: true
-            groupName: placeholder
+                  groupIdRef:
+                    name: name-placeholder
+                    policy:
+                      resolution: Optional
+            groupName: name-placeholder
             ingress:
               - ipProtocol: tcp
                 fromPort: 6380
                 toPort: 6380
                 userIdGroupPairs:
                 - description: Allowing Cache port Inbound Access
-                  groupIdSelector:
-                    matchControllerRef: true
-            region: placeholder
+                  groupIdRef:
+                    name: name-placeholder
+                    policy:
+                      resolution: Optional
+            region: region-placeholder
             tags: []
           providerConfigRef:
-            name: placeholder
+            name: provider-placeholder
           writeConnectionSecretToRef:
-            name: placeholder
-            namespace: placeholder
+            name: name-placeholder
+            namespace: namespace-placeholder
           deletionPolicy: Delete
       patches:
         # Description
@@ -55,40 +59,54 @@ spec:
                 fmt: "SecurityGroup for %s RedisCluster"
 
         # Name
-        - type: FromCompositeFieldPath 
+        - type: FromCompositeFieldPath
           fromFieldPath: spec.claimRef.name
           toFieldPath: spec.forProvider.groupName
           transforms:
             - type: string
               string:
                 fmt: "%s-rediscluster"
-        - type: FromCompositeFieldPath 
+        - type: FromCompositeFieldPath
           fromFieldPath: spec.claimRef.name
           toFieldPath: spec.writeConnectionSecretToRef.name
           transforms:
             - type: string
               string:
                 fmt: "%s-rediscluster-sg"
-        - type: FromCompositeFieldPath 
+        - type: FromCompositeFieldPath
           fromFieldPath: spec.claimRef.name
           toFieldPath: metadata.annotations[crossplane.io/external-name]
           transforms:
             - type: string
               string:
                 fmt: "%s-rediscluster"
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.claimRef.name
+          toFieldPath: spec.forProvider.egress[0].userIdGroupPairs[0].groupIdRef.name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-rediscluster"
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.claimRef.name
+          toFieldPath: spec.forProvider.ingress[0].userIdGroupPairs[0].groupIdRef.name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-rediscluster"
 
         # Namespace
-        - type: FromCompositeFieldPath 
+        - type: FromCompositeFieldPath
           fromFieldPath: spec.claimRef.namespace
           toFieldPath: spec.writeConnectionSecretToRef.namespace
 
         # ProviderConfigRef
-        - type: FromCompositeFieldPath 
+        - type: FromCompositeFieldPath
           fromFieldPath: spec.providerConfigRef.name
           toFieldPath: spec.providerConfigRef.name
 
         # Port
-        - type: FromCompositeFieldPath 
+        - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.port
           toFieldPath: spec.forProvider.egress[0].fromPort
         - type: FromCompositeFieldPath
@@ -97,7 +115,7 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.port
           toFieldPath: spec.forProvider.ingress[0].fromPort
-        - type: FromCompositeFieldPath 
+        - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.port
           toFieldPath: spec.forProvider.ingress[0].toPort
 
@@ -127,11 +145,11 @@ spec:
         metadata: {}
         spec:
           forProvider:
-            description: placeholder
-            region: placeholder
+            description: description-placeholder
+            region: region-placeholder
             subnetIds: []
           providerConfigRef:
-            name: placeholder
+            name: provider-placeholder
           deletionPolicy: Delete
       patches:
         # Description
@@ -144,7 +162,7 @@ spec:
                 fmt: "CacheSubnetGroup for %s RedisCluster"
 
         # Name
-        - type: FromCompositeFieldPath 
+        - type: FromCompositeFieldPath
           fromFieldPath: spec.claimRef.name
           toFieldPath: metadata.annotations[crossplane.io/external-name]
           transforms:
@@ -153,7 +171,7 @@ spec:
                 fmt: "%s-rediscluster"
 
         # ProviderConfigRef
-        - type: FromCompositeFieldPath 
+        - type: FromCompositeFieldPath
           fromFieldPath: spec.providerConfigRef.name
           toFieldPath: spec.providerConfigRef.name
 
@@ -189,17 +207,17 @@ spec:
             engineVersion: 6.x
             numCacheClusters: 2
             port: 6380
-            region: placeholder
-            replicationGroupDescription: placeholder
+            region: region-placeholder
+            replicationGroupDescription: description-placeholder
             securityGroupIdSelector:
               matchControllerRef: true
             tags: []
             transitEncryptionEnabled: true
           writeConnectionSecretToRef:
-            namespace: placeholder
-            name: placeholder
+            namespace: namespace-placeholder
+            name: name-placeholder
           providerConfigRef:
-            name: placeholder
+            name: provider-placeholder
           deletionPolicy: Delete
       connectionDetails:
         - name: hostname
