@@ -8,6 +8,8 @@ metadata:
 spec:
   connectionSecretKeys:
     - kubeconfig
+    - cluster-ca
+    - apiserver-endpoint
   group: cluster.awsblueprints.io
   names:
     kind: XAmazonEks        # cluster scope type
