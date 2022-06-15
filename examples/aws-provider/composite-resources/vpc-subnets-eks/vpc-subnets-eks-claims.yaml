@@ -1,0 +1,90 @@
+# Run `kubectl apply -f vpc-subnets-eks-claims.yaml` to test this example once you bootstrap the EKS cluster with Crossplane and AWS Provider
+
+# This example resource creates the following resources through the xplane-vpc-subnets claim
+#     1. VPC
+#     2. Public Subnet
+#     3. Private Subnet
+#     4. Internet Gateway
+#     5. NAT Gateway
+#     6. EIP for NAT gateway
+#     7. Public Route Table for IGW
+#     8. Private Route Table for NAT GW
+#
+# and the following resources through the xplane-eks-cluster claim
+#     1. EKS Cluster
+#     2. EKS CLuster IAM Role
+#     3. Attaches EKS Cluster Policies to the IAM Role
+#     4. EKS Managed Node group
+#     5. IAM Role for EKS Managed Node group
+#     6. Attaches EKS Managed Node Policies to the IAM Role
+#
+# The 'networkId' parameters are used to dynamically configures EKS subnet selection.
+
+---
+apiVersion: network.awsblueprints.io/v1alpha1
+kind: vpcSubnet
+metadata:
+  name: xplane-vpc-subnets
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+      awsblueprints.io/network-id: "true"
+      service: vpcsubnet
+  resourceConfig:
+    providerConfigName: sandbox-account
+    region: eu-central-1
+  # networkId is propagated to subnet label 'network.awsblueprints.io/network-id'
+  networkId: dev-net
+  parameters:
+    #vpc input
+    vpc-Name: xplane-vpc
+    vpc-cidrBlock: "10.20.0.0/17"   # 32768 IPs
+    vpc-amazonProvidedIpv6CidrBlock: false
+    #public subnet1
+    publicSubnet1-cidrBlock: "10.20.0.0/21" # 2048 IPs
+    publicSubnet1-availabilityZone: eu-central-1a
+    #public subnet2
+    publicSubnet2-cidrBlock: "10.20.8.0/21" # 2048 IPs
+    publicSubnet2-availabilityZone: eu-central-1b
+    #public subnet3
+    publicSubnet3-cidrBlock: "10.20.16.0/21" # 2048 IPs
+    publicSubnet3-availabilityZone: eu-central-1c
+    #private subnet1
+    privateSubnet1-cidrBlock: "10.20.64.0/21" # 2048 IPs
+    privateSubnet1-availabilityZone: eu-central-1a
+    #private subnet2
+    privateSubnet2-cidrBlock: "10.20.72.0/21" # 2048 IPs
+    privateSubnet2-availabilityZone: eu-central-1b
+    #private subnet3
+    privateSubnet3-cidrBlock: "10.20.80.0/21" # 2048 IPs
+    privateSubnet3-availabilityZone: eu-central-1c
+---
+apiVersion: cluster.awsblueprints.io/v1alpha1
+kind: amazonEks
+metadata:
+  name: xplane-eks-cluster
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+      awsblueprints.io/subnet-selection: label
+      service: eks
+  resourceConfig:
+    providerConfigName: sandbox-account
+    region: eu-central-1
+  parameters:
+    #EKS Input parameters
+    version: "1.21"
+    endpointPrivateAccess: false
+    endpointPublicAccess: true
+    # networkId is used to select subnets through label 'network.awsblueprints.io/network-id'
+    networkId: dev-net
+  managedNodeGroups:
+    minSize: 2
+  writeConnectionSecretToRef:
+    name: xplane-eks-cluster

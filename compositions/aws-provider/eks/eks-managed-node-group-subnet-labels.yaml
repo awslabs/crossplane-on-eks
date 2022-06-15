@@ -83,9 +83,6 @@ spec:
 #          toFieldPath: status.eks.oidc
 #          policy:
 #            fromFieldPath: Optional
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.resourcesVpcConfig.vpcId
-          toFieldPath: status.vpcId
       connectionDetails:
         - name: cluster-ca
           fromConnectionSecretKey: clusterCA

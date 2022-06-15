@@ -24,13 +24,11 @@ spec:
     matchLabels:
       awsblueprints.io/provider: aws
       awsblueprints.io/environment: dev
-      awsblueprints.io/network-id: "true"
+      awsblueprints.io/network-id: "false"
       service: vpcsubnet
   resourceConfig:
     providerConfigName: aws-provider-config
     region: eu-west-1
-  # networkId is propagated to subnet label 'network.awsblueprints.io/network-id'
-  networkId: dev-net
   parameters:
     #vpc input
     vpc-Name: xplane-vpc
