@@ -16,7 +16,7 @@
 #----------------------------------------------------------------------------------
 # This example resource creates the following resources
 #     1. EKS Cluster
-#     2. EkS CLuster IAM Role
+#     2. EKS Cluster IAM Role
 #     3. Attaches EKS Cluster Policies to the IAM Role
 #     4. EKS Managed Node group
 #     5. IAM Role for EKS Managed Node group
@@ -33,6 +33,7 @@ spec:
     matchLabels:
       awsblueprints.io/provider: aws
       awsblueprints.io/environment: dev
+      awsblueprints.io/subnet-selection: id
       service: eks
   resourceConfig:
     providerConfigName: aws-provider-config

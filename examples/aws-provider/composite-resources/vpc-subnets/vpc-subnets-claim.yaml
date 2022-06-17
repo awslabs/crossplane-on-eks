@@ -24,6 +24,7 @@ spec:
     matchLabels:
       awsblueprints.io/provider: aws
       awsblueprints.io/environment: dev
+      awsblueprints.io/network-id: "false"
       service: vpcsubnet
   resourceConfig:
     providerConfigName: aws-provider-config

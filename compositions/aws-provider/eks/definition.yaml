@@ -57,13 +57,17 @@ spec:
                       type: boolean
                       default: true
                     subnetIds:
-                      description: EKS Cluster Subnet Id references
+                      description: EKS Cluster Subnet Id references. Unused in compositions that use label-based subnet lookup through the 'networkId' parameter
                       items:
                         type: string
                       type: array
+                      default: []
+                    networkId:
+                      description: Name of network to use for label-based subnet lookup (subnet label 'network.awsblueprints.io/network-id'). Unused in compositions that use explicit subnet Id through the 'subnetIds' parameter
+                      type: string
+                      default: ""
                   required:
                     - version
-                    - subnetIds
                 managedNodeGroups:
                   description: Managed Node Groups properties
                   type: object

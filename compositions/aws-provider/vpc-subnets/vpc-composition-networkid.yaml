@@ -4,11 +4,11 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: xvpcsubnets.network.awsblueprints.io
+  name: xvpcsubnets-networkid.network.awsblueprints.io
   labels:
     awsblueprints.io/provider: aws
     awsblueprints.io/environment: dev
-    awsblueprints.io/network-id: "false"
+    awsblueprints.io/network-id: "true"
     crossplane.io/xrd: xvpcsubnets.network.awsblueprints.io
     service: vpcsubnet
 spec:
@@ -32,6 +32,9 @@ spec:
 #        - type: FromCompositeFieldPath
 #          fromFieldPath: spec.resourceConfig.name
 #          toFieldPath: metadata.annotations[crossplane.io/external-name]
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.networkId
+          toFieldPath: metadata.labels[network.awsblueprints.io/network-id]
 
   resources:
     - name: vpc

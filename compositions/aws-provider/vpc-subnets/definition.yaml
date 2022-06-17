@@ -35,6 +35,10 @@ spec:
             spec:
               type: object
               properties:
+                networkId:
+                  description: ID of this network which other objects can use to reference it. VPC and subnets are labelled with this ID in label 'network.awsblueprints.io/network-id'
+                  type: string
+                  default: ""
                 parameters:
                   description: VPC Input parameters
                   type: object
