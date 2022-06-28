@@ -3,12 +3,11 @@ kind: RedisCluster
 metadata:
   name: rediscluster-example
 spec:
+  port: 6380
+  size: medium
+  subnetIds:
+    - subnet-abcd123
+    - subnet-123abcd
   resourceConfig:
-    port: 6380
     region: us-east-1
-    size: medium
-    subnetIds:
-      - subnet-abcd123
-      - subnet-123abcd
-  providerConfigRef:
-    name: my-aws-provider
+    providerConfigName: my-aws-provider

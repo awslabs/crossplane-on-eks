@@ -25,10 +25,11 @@ spec:
                 toPort: 6380
                 userIdGroupPairs:
                 - description: Allowing Cache port Outbound Access
-                  groupIdRef:
-                    name: name-placeholder
+                  groupIdSelector:
+                    matchControllerRef: true
                     policy:
                       resolution: Optional
+                      resolve: Always
             groupName: name-placeholder
             ingress:
               - ipProtocol: tcp
@@ -36,17 +37,20 @@ spec:
                 toPort: 6380
                 userIdGroupPairs:
                 - description: Allowing Cache port Inbound Access
-                  groupIdRef:
-                    name: name-placeholder
+                  groupIdSelector:
+                    matchControllerRef: true
                     policy:
                       resolution: Optional
+                      resolve: Always
             region: region-placeholder
             tags: []
+            vpcId: vpc-placeholder
           providerConfigRef:
             name: provider-placeholder
-          writeConnectionSecretToRef:
+          publishConnectionDetailsTo:
+            configRef:
+              name: vault
             name: name-placeholder
-            namespace: namespace-placeholder
           deletionPolicy: Delete
       patches:
         # Description
@@ -57,7 +61,6 @@ spec:
             - type: string
               string:
                 fmt: "SecurityGroup for %s RedisCluster"
-
         # Name
         - type: FromCompositeFieldPath
           fromFieldPath: spec.claimRef.name
@@ -68,7 +71,7 @@ spec:
                 fmt: "%s-rediscluster"
         - type: FromCompositeFieldPath
           fromFieldPath: spec.claimRef.name
-          toFieldPath: spec.writeConnectionSecretToRef.name
+          toFieldPath: spec.publishConnectionDetailsTo.name
           transforms:
             - type: string
               string:
@@ -80,50 +83,27 @@ spec:
             - type: string
               string:
                 fmt: "%s-rediscluster"
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.claimRef.name
-          toFieldPath: spec.forProvider.egress[0].userIdGroupPairs[0].groupIdRef.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-rediscluster"
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.claimRef.name
-          toFieldPath: spec.forProvider.ingress[0].userIdGroupPairs[0].groupIdRef.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-rediscluster"
-
-        # Namespace
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.claimRef.namespace
-          toFieldPath: spec.writeConnectionSecretToRef.namespace
-
         # ProviderConfigRef
         - type: FromCompositeFieldPath
           fromFieldPath: spec.providerConfigRef.name
           toFieldPath: spec.providerConfigRef.name
-
         # Port
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.port
+          fromFieldPath: spec.port
           toFieldPath: spec.forProvider.egress[0].fromPort
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.port
+          fromFieldPath: spec.port
           toFieldPath: spec.forProvider.egress[0].toPort
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.port
+          fromFieldPath: spec.port
           toFieldPath: spec.forProvider.ingress[0].fromPort
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.port
+          fromFieldPath: spec.port
           toFieldPath: spec.forProvider.ingress[0].toPort
-
         # Region
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.region
           toFieldPath: spec.forProvider.region
-
         # Tags
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.tags
@@ -132,9 +112,10 @@ spec:
             mergeOptions:
               appendSlice: true
               keepMapValues: true
-
-        # -----
-
+        # VPC
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.vpcId
+          toFieldPath: spec.forProvider.vpcId
         # Status
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.securityGroupID
@@ -160,7 +141,6 @@ spec:
             - type: string
               string:
                 fmt: "CacheSubnetGroup for %s RedisCluster"
-
         # Name
         - type: FromCompositeFieldPath
           fromFieldPath: spec.claimRef.name
@@ -169,26 +149,26 @@ spec:
             - type: string
               string:
                 fmt: "%s-rediscluster"
-
         # ProviderConfigRef
         - type: FromCompositeFieldPath
           fromFieldPath: spec.providerConfigRef.name
           toFieldPath: spec.providerConfigRef.name
-
         # Region
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.region
           toFieldPath: spec.forProvider.region
-
         # SubnetIDs
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.subnetIds
+          fromFieldPath: spec.subnetIds
           toFieldPath: spec.forProvider.subnetIds
           policy:
             mergeOptions:
               appendSlice: true
               keepMapValues: true
-
+        # Status
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.vpcId
+          toFieldPath: status.vpcId
     - base:
         apiVersion: cache.aws.crossplane.io/v1beta1
         kind: ReplicationGroup
@@ -213,8 +193,9 @@ spec:
               matchControllerRef: true
             tags: []
             transitEncryptionEnabled: true
-          writeConnectionSecretToRef:
-            namespace: namespace-placeholder
+          publishConnectionDetailsTo:
+            configRef:
+              name: vault
             name: name-placeholder
           providerConfigRef:
             name: provider-placeholder
@@ -233,11 +214,10 @@ spec:
             - type: string
               string:
                 fmt: "%s RedisCluster"
-
         # Name
         - type: FromCompositeFieldPath
           fromFieldPath: spec.claimRef.name
-          toFieldPath: spec.writeConnectionSecretToRef.name
+          toFieldPath: spec.publishConnectionDetailsTo.name
           transforms:
             - type: string
               string:
@@ -245,30 +225,21 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: spec.claimRef.name
           toFieldPath: metadata.annotations[crossplane.io/external-name]
-
-        # Namespace
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.claimRef.namespace
-          toFieldPath: spec.writeConnectionSecretToRef.namespace
-
         # Port
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.port
+          fromFieldPath: spec.port
           toFieldPath: spec.forProvider.port
-
         # ProviderConfigRef
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.providerConfigRef.name
+          fromFieldPath: spec.resourceConfig.providerConfigName
           toFieldPath: spec.providerConfigRef.name
-
         # Region
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.region
           toFieldPath: spec.forProvider.region
-
         # Size
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.size
+          fromFieldPath: spec.size
           toFieldPath: spec.forProvider.cacheNodeType
           transforms:
             - type: map
@@ -278,7 +249,7 @@ spec:
                 large: cache.m6g.large
                 xlarge: cache.m6g.large
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.size
+          fromFieldPath: spec.size
           toFieldPath: spec.forProvider.numCacheClusters
           transforms:
             - type: map
@@ -290,7 +261,6 @@ spec:
             - type: convert
               convert:
                 toType: int
-
         # Tags
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.tags
@@ -299,9 +269,6 @@ spec:
             mergeOptions:
               appendSlice: true
               keepMapValues: true
-
-        # -----
-
         # Status
         - type: ToCompositeFieldPath
           fromFieldPath: spec.claimRef.name
