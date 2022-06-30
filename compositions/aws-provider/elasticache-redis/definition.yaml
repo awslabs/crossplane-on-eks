@@ -79,7 +79,7 @@ spec:
                   - tags
                   type: object
               required:
-                - providerConfigRef
+                - subnetIds
                 - resourceConfig
               type: object
             status:

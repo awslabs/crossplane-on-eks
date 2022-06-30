@@ -75,17 +75,10 @@ spec:
           transforms:
             - type: string
               string:
-                fmt: "%s-rediscluster-sg"
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.claimRef.name
-          toFieldPath: metadata.annotations[crossplane.io/external-name]
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-rediscluster"
+                fmt: "%s-rediscluster/securitygroup"
         # ProviderConfigRef
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.providerConfigRef.name
+          fromFieldPath: spec.resourceConfig.providerConfigName
           toFieldPath: spec.providerConfigRef.name
         # Port
         - type: FromCompositeFieldPath
@@ -116,6 +109,8 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: status.vpcId
           toFieldPath: spec.forProvider.vpcId
+          policy:
+            fromFieldPath: Required
         # Status
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.securityGroupID
@@ -141,17 +136,9 @@ spec:
             - type: string
               string:
                 fmt: "CacheSubnetGroup for %s RedisCluster"
-        # Name
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.claimRef.name
-          toFieldPath: metadata.annotations[crossplane.io/external-name]
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-rediscluster"
         # ProviderConfigRef
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.providerConfigRef.name
+          fromFieldPath: spec.resourceConfig.providerConfigName
           toFieldPath: spec.providerConfigRef.name
         # Region
         - type: FromCompositeFieldPath
@@ -165,7 +152,7 @@ spec:
             mergeOptions:
               appendSlice: true
               keepMapValues: true
-        # Status
+        # VPCID
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.vpcId
           toFieldPath: status.vpcId
@@ -221,10 +208,7 @@ spec:
           transforms:
             - type: string
               string:
-                fmt: "%s-rediscluster"
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.claimRef.name
-          toFieldPath: metadata.annotations[crossplane.io/external-name]
+                fmt: "%s-rediscluster/replicationgroup"
         # Port
         - type: FromCompositeFieldPath
           fromFieldPath: spec.port
