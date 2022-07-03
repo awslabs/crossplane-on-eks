@@ -3,25 +3,14 @@
 
 variable "region" {
   description = "AWS region"
-  type = string
+  type        = string
+  default     = "us-east-1"
 }
 
-variable "tenant" {
+variable "name" {
+  description = "EKS Cluster Name and the VPC name"
   type        = string
-  description = "Account Name or unique account unique id e.g., apps or management or aws007"
-  default = "aws"
-}
-
-variable "environment" {
-  type        = string
-  description = "Environment area, e.g. prod or preprod "
-  default = "preprod"
-}
-
-variable "zone" {
-  type        = string
-  description = "zone, e.g. dev or qa or load or ops etc..."
-  default = "cplane"
+  default     = "aws-preprod-cplane"
 }
 
 variable "cluster_version" {
@@ -31,7 +20,13 @@ variable "cluster_version" {
 }
 
 variable "vpc_cidr" {
-  type = string
+  type        = string
   description = "VPC CIDR range"
-  default = "10.2.0.0/16"
+  default     = "10.2.0.0/16"
+}
+
+variable "tags" {
+  description = "Default tags"
+  default     = {}
+  type        = map(string)
 }

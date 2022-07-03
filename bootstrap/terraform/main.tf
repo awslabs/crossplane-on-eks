@@ -47,18 +47,13 @@ provider "kubectl" {
 # Local variables for your deployment
 #---------------------------------------------------------------
 locals {
-  tenant             = var.tenant         # AWS account name or unique id for tenant
-  environment        = var.environment    # Environment area eg., preprod or prod
-  zone               = var.zone           # Environment with in one sub_tenant or business unit
-  cluster_version    = var.cluster_version
-  azs  = data.aws_availability_zones.available.names
+  cluster_version = var.cluster_version
+  azs             = data.aws_availability_zones.available.names
 
-  vpc_cidr     = var.vpc_cidr
-  vpc_name     = join("-", [local.tenant, local.environment, local.zone, "vpc"])
-  cluster_name = join("-", [local.tenant, local.environment, local.zone, "eks"])
+  vpc_cidr        = var.vpc_cidr
+  vpc_name        = join("-", [var.name, "vpc"])
+  cluster_name    = join("-", [var.name, "eks"])
   node_group_name = "mng-ondemand"
-
-  terraform_version = "Terraform v1.0.1"
 }
 
 #---------------------------------------------------------------
@@ -96,27 +91,23 @@ module "aws_vpc" {
 # This module deploys EKS Cluster with one Managed group
 #---------------------------------------------------------------
 module "eks_blueprints" {
-  source = "git::https://github.com/aws-ia/terraform-aws-eks-blueprints.git?ref=v4.0.4"
-
-  tenant            = local.tenant
-  environment       = local.environment
-  zone              = local.zone
-  terraform_version = local.terraform_version
+  source = "github.com/aws-ia/terraform-aws-eks-blueprints"
 
   # EKS Cluster VPC and Subnet mandatory config
   vpc_id             = module.aws_vpc.vpc_id
   private_subnet_ids = module.aws_vpc.private_subnets
 
   # EKS CONTROL PLANE VARIABLES
-  create_eks         = true
+  create_eks      = true
   cluster_version = local.cluster_version
+  cluster_name    = local.cluster_name
 
   # EKS MANAGED NODE GROUPS
   managed_node_groups = {
     mg_4 = {
       node_group_name = local.node_group_name
       instance_types  = ["m5.xlarge"]
-      min_size        = "2"
+      min_size        = "1"
       subnet_ids      = module.aws_vpc.private_subnets
       additional_tags = {
         ExtraTag    = "m4-on-demand"
@@ -131,23 +122,23 @@ module "eks_blueprints" {
 # This module deploys Kubernetes add-ons
 #---------------------------------------------------------------
 module "kubernetes-addons" {
-  source         = "git::https://github.com/aws-ia/terraform-aws-eks-blueprints.git//modules/kubernetes-addons?ref=v4.0.4"
+  source         = "github.com/aws-ia/terraform-aws-eks-blueprints//modules/kubernetes-addons"
   eks_cluster_id = module.eks_blueprints.eks_cluster_id
 
   # Deploy Karpenter Autoscaler
-  enable_karpenter  = true
+  enable_karpenter = true
 
   # Deploy Crossplane
   enable_crossplane = true
 
   crossplane_helm_config = {
-    name                      = "crossplane"
-    chart                     = "crossplane"
-    repository                = "https://charts.crossplane.io/stable/"
-    version                   = "1.7.1"
-    namespace                 = "crossplane-system"
+    name       = "crossplane"
+    chart      = "crossplane"
+    repository = "https://charts.crossplane.io/stable/"
+    version    = "1.7.1"
+    namespace  = "crossplane-system"
     values = [templatefile("${path.module}/values.yaml", {
-      operating-system     = "linux"
+      operating-system = "linux"
     })]
   }
 
@@ -168,7 +159,7 @@ module "kubernetes-addons" {
   }
 
   #---------------------------------------------------------
-  # Crossplane Terrajest AWS Provider deployment
+  # Crossplane Terrajet AWS Provider deployment
   #   Creates ProviderConfig name as "jet-aws-provider-config"
   #---------------------------------------------------------
   crossplane_jet_aws_provider = {
@@ -187,9 +178,9 @@ module "kubernetes-addons" {
 data "kubectl_path_documents" "karpenter_provisioners" {
   pattern = "${path.module}/karpenter-provisioners/default-provisioner.yaml"
   vars = {
-    azs = join(",",local.azs)
+    azs                     = join(",", local.azs)
     iam-instance-profile-id = format("%s-%s", local.cluster_name, local.node_group_name)
-    eks-cluster-id = local.cluster_name
+    eks-cluster-id          = local.cluster_name
   }
 }
 
