@@ -14,7 +14,7 @@ spec:
     matchLabels:
       awsblueprints.io/provider: jet-aws
       awsblueprints.io/environment: dev
-      s3.awsblueprints.io/configuration: standard
+      s3.awsblueprints.io/configuration: with-kms
       crossplane.io/xrd: xs3buckets.jet.awsblueprints.io
       service: s3
   resourceConfig:

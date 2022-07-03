@@ -8,7 +8,7 @@ metadata:
   labels:
     awsblueprints.io/provider: jet-aws
     awsblueprints.io/environment: dev
-    s3.awsblueprints.io/configuration: standard
+    s3.awsblueprints.io/configuration: with-kms
     service: s3
 spec:
   writeConnectionSecretsToNamespace: crossplane-system
