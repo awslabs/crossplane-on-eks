@@ -9,7 +9,6 @@ metadata:
     awsblueprints.io/provider: jet-aws
     awsblueprints.io/environment: dev
     s3.awsblueprints.io/configuration: standard
-    crossplane.io/xrd: xs3buckets.jet.awsblueprints.io
     service: s3
 spec:
   writeConnectionSecretsToNamespace: crossplane-system
