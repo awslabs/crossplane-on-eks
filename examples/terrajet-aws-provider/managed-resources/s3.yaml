@@ -1,0 +1,23 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+# Run `kubectl apply -f s3.yaml` to test this example once you bootstrap the EKS cluster with Crossplane and Terrajet AWS Provider
+---
+apiVersion: s3.aws.jet.crossplane.io/v1alpha2
+kind: Bucket
+metadata:
+  name: jet-aws-provider-s3-bucket  # Name of the S3 bucket has to be unique
+spec:
+  forProvider:
+    acl: private
+    region: eu-west-1
+    forceDestroy: false
+    serverSideEncryptionConfiguration:
+      - rule:
+          - applyServerSideEncryptionByDefault:
+              - sseAlgorithm: AES256
+    tags:
+      Name: jet-mng-s3-bucket
+      awsblueprints.io/environment: dev
+  providerConfigRef:
+    name: jet-aws-provider-config

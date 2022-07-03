@@ -57,3 +57,21 @@ kubectl apply -f examples/aws-provider/managed-resources/vpc.yaml
 # Verify the resource. When provisioning is complete, you should see READY: True in the output
 kubectl get VPC aws-provider-vpc
 ```
+
+## Crossplane Kubernetes Provider
+
+The following example shows the creation of Namespace with Crossplane Kuberentes provider
+
+Note: [Kubernetes Provider](https://github.com/crossplane-contrib/provider-kubernetes) should be deployed as a pre-requisite for this example.
+Terraform and eksctl bootstrap scripts deploys kubernetes provider in EKS Cluster.
+
+```shell
+kubectl apply -f examples/kubernetes-provider/test-namespace.yaml
+
+# Verify the resource
+kubectl get namespaces  
+
+NAME                        STATUS   AGE
+crossplane-test-namespace   Active   81s
+
+```
