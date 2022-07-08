@@ -1,0 +1,14 @@
+apiVersion: awsblueprints.io/v1alpha1
+kind: RedisCluster
+metadata:
+  name: rediscluster-example
+spec:
+  port: 6380
+  size: medium
+  subnetIds:
+    - subnet-abcd1234
+    - subnet-1234abcd
+  resourceConfig:
+    region: us-east-1
+    providerConfigName: my-aws-provider
+    tags: []

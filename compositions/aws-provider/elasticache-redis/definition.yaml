@@ -1,0 +1,105 @@
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xredisclusters.awsblueprints.io
+spec:
+  group: awsblueprints.io
+  names:
+    kind: XRedisCluster
+    plural: xredisclusters
+  claimNames:
+    kind: RedisCluster
+    plural: redisclusters
+  versions:
+  - name: v1alpha1
+    served: true
+    referenceable: true
+    schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              description: RedisClusterSpec defines the desired state of RedisCluster
+              properties:
+                port:
+                  description: "Set the port of the AWS Redis Cluster to the value
+                    provided by this field (default: 6380)"
+                  type: integer
+                size:
+                  description: "Set the size of the AWS Redis Cluster to the value
+                    provided by this field
+
+                    small: cache-t4g-small, 2 nodes;
+                    medium: cache-t4g-medium, 2 nodes [default];
+                    large: cache-m6g-large, 2 nodes;
+                    xlarge: cache-m6g-large, 4 nodes;"
+                  enum:
+                    - small
+                    - medium
+                    - large
+                    - xlarge
+                  type: string
+                subnetIds:
+                  description: "List of Subnet IDs for the AWS Redis Cluster Cache Subnet Group."
+                  items:
+                    type: string
+                  type: array
+                resourceConfig:
+                  description: ResourceConfig defines general properties of this AWS resource.
+                  properties:
+                    deletionPolicy:
+                      description: Defaults to Delete
+                      enum:
+                      - Delete
+                      - Orphan
+                      type: string
+                    name:
+                      description: Set the name of this resource in AWS to the value provided by this field.
+                      type: string
+                    providerConfigName:
+                      type: string
+                    region:
+                      type: string
+                    tags:
+                      items:
+                        properties:
+                          key:
+                            type: string
+                          value:
+                            type: string
+                        required:
+                        - key
+                        - value
+                        type: object
+                      type: array
+                  required:
+                  - providerConfigName
+                  - region
+                  - tags
+                  type: object
+              required:
+                - subnetIds
+                - resourceConfig
+              type: object
+            status:
+              description: RedisClusterStatus defines the observed state of RedisCluster
+              properties:
+                cacheName:
+                  type: string
+                configurationEndpoint:
+                  description: ConfigurationEndpoint for this replication group
+                  properties:
+                    address:
+                      type: string
+                    port:
+                      type: integer
+                  type: object
+                securityGroupID:
+                  type: string
+                status:
+                  type: string
+                vpcId:
+                  type: string
+              type: object
+          type: object
