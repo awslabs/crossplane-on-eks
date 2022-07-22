@@ -19,6 +19,7 @@ Following command line tools:
 Note:
 - As of Crossplane 1.9.0, the support for external secret store is still in alpha state and may go under changes.
 - This assumes a use case for single-cluster multi-tenant. However, the underlying concepts discussed here should be applicable to multi-cluster setup as well.
+- This doc is based on the excellent [vault secret store guide](https://github.com/crossplane/crossplane/blob/master/docs/guides/vault-as-secret-store.md#prepare-vault) and [external vault configuration guide](https://learn.hashicorp.com/tutorials/vault/kubernetes-external-vault). Please check these guides out for more detailed information. 
 
 # Procedure
 

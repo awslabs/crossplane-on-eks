@@ -55,6 +55,12 @@ Compositions can be nested to further define and abstract application specific n
 
 - Take a quick tour of a [nested composition example](doc/nested-compositions.md)
 
+✅   Work with external secrets.
+
+Crossplane can be configured to publish secrets external to the cluster in which it runs. 
+
+- Try it out with [this guide](doc/multi-tenant.md)
+
 ## Learn More
 
 - [Amazon EKS](https://aws.amazon.com/eks/)
