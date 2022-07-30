@@ -61,6 +61,8 @@ Crossplane can be configured to publish secrets external to the cluster in which
 
 - Try it out with [this guide](doc/multi-tenant.md)
 
+✅   Checkout example [Gatekeeper configurations](./examples/gatekeeper/).
+
 ## Learn More
 
 - [Amazon EKS](https://aws.amazon.com/eks/)

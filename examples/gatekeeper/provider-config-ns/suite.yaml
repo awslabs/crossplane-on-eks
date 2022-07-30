@@ -1,0 +1,25 @@
+kind: Suite
+apiVersion: test.gatekeeper.sh/v1alpha1
+metadata:
+  name: block-namespace-mismatch
+tests:
+- name: block-namespace-mismatch
+  template: template.yaml
+  constraint: samples/constraint.yaml
+  cases:
+  - name: missing-claim-namespace
+    object: samples/missing_claim_disallowed.yaml
+    assertions:
+    - violations: yes
+  - name: provider-config-name-mismatch
+    object: samples/namespace_mismatch_disallowed.yaml
+    assertions:
+    - violations: yes
+  - name: allowed
+    object: samples/allowed.yaml
+    assertions:
+    - violations: no
+  - name: allowed-not-applicable
+    object: samples/not_applicable_allowed.yaml
+    assertions:
+    - violations: no
