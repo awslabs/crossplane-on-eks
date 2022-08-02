@@ -1,0 +1,17 @@
+apiVersion: s3.aws.crossplane.io/v1beta1
+kind: Bucket
+metadata:
+  annotations:
+    crossplane.io/composition-resource-name: s3-bucket
+  labels:
+    crossplane.io/claim-name: standard-object-storage
+    crossplane.io/claim-namespace: application1
+    crossplane.io/composite: standard-object-storage-zlss9
+  name: standard-object-storage-zlss9-tkqgs
+spec:
+  deletionPolicy: Delete
+  forProvider:
+    acl: private
+  providerConfigRef:
+    name: application1-provider-config
+
