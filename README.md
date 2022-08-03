@@ -59,7 +59,7 @@ Compositions can be nested to further define and abstract application specific n
 
 Crossplane can be configured to publish secrets external to the cluster in which it runs. 
 
-- Try it out with [this guide](doc/multi-tenant.md)
+- Try it out with [this guide](doc/vault-integration.md)
 
 ✅   Checkout example [Gatekeeper configurations](./examples/gatekeeper/).
 
