@@ -47,7 +47,7 @@ spec:
                     version:
                       description: Kubernetes Version
                       type: string
-                      enum: [ "1.21", "1.22" ]
+                      enum: [ "1.21", "1.22", "1.23" ]
                     endpointPrivateAccess:
                       description: endpointPrivateAccess
                       type: boolean
