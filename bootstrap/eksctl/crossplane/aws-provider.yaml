@@ -6,7 +6,7 @@ kind: Provider
 metadata:
   name: provider-aws
 spec:
-  package: "crossplane/provider-aws:v0.24.1"
+  package: "crossplane/provider-aws:v0.30.1"
   controllerConfigRef:
     name: provider-aws-config
 ---
