@@ -1,6 +1,6 @@
 # Debugging CompositeResourceDefinitions (XRD) and Compositions
 
-## General debugging step
+## General debugging steps
 
 Most error messages are logged to resources' event field. Whenever your Composite Resources are not getting provisioned, follow the following:
 1. Get the events for the root resource using `kubectl describe` or `kubectl get event`
@@ -46,7 +46,8 @@ The example application never reaches available state.
         Type:                  Ready
     Events:                    <none>
     ```
-2. No error in events. Find its cluster scoped resource.
+
+2. No error in events. Find its cluster scoped resource (composite resource).
     ```bash
     # kubectl get exampleapp example-application -o=jsonpath='{.spec.resourceRef}{" "}{.spec.resourceRefs}' | jq
 
@@ -118,3 +119,86 @@ Debugging Composition Definitions is similar to debugging Compositions.
     Warning  EstablishComposite  18s (x9 over 3m19s)    defined/compositeresourcedefinition.apiextensions.crossplane.io  cannot apply rendered composite resource CustomResourceDefinition: cannot create object: CustomResourceDefinition.apiextensions.k8s.io "testing.awsblueprints.io" is invalid: metadata.name: Invalid value: "testing.awsblueprints.io": must be spec.names.plural+"."+spec.group
     ```
 3. We see in the events that CRD cannot be generated for this XRD. In this case, we need to ensure the name is `spec.names.plural+"."+spec.group`
+
+
+### Providers
+
+There are two ways to install providers in Crossplane. Using `configuration.pkg.crossplane.io` and `provider.pkg.crossplane.io`. In this repository, we use `provider.pkg.crossplane.io`. 
+Note that if you define a `configuration.pkg.crossplane.io` object, Crossplane will create a `provider.pkg.crossplane.io` object. This object is managed by Crossplane. Please refer to [this guide](https://github.com/crossplane/crossplane/blob/master/docs/concepts/packages.md) for more information about Crossplane Packages.
+
+If you are experiencing provider issues, steps below are a good starting point. 
+
+1. Check the status of provider object. 
+    ```bash
+    # kubectl describe provider.pkg.crossplane.io provider-aws
+    Status:
+        Conditions:
+            Last Transition Time:  2022-08-04T16:19:44Z
+            Reason:                HealthyPackageRevision
+            Status:                True
+            Type:                  Healthy
+            Last Transition Time:  2022-08-04T16:14:29Z
+            Reason:                ActivePackageRevision
+            Status:                True
+            Type:                  Installed
+        Current Identifier:      crossplane/provider-aws:v0.29.0
+        Current Revision:        provider-aws-a2e16ca2fc1a
+    Events:
+        Type    Reason                  Age                      From                                 Message
+        ----    ------                  ----                     ----                                 -------
+        Normal  InstallPackageRevision  9m49s (x237 over 4d17h)  packages/provider.pkg.crossplane.io  Successfully installed package revision
+    ```
+    In the output above we see that this provider is healthy. To get more information about this provider, we can dig deeper. The `Current Revision` field let us know of our next object to look at. 
+
+
+2. When you create a provider object, Crossplane will create a `ProviderRevision` object based on the contents of the OCI image. In this example, we are specifying the OCI image to be `crossplane/provider-aws:v0.29.0`. This image contains a YAML file which defines many Kubernetes objects such as Deployment, ServiceAccount, and CRDs.
+The `ProviderRevision` object creates resources necessary for a provider to function based on the contents of the YAML file. To inspect what is deployed as part of the provider package, we inspect the ProviderRevision object. The `Current Revision` field above indicates which ProviderRevision object is currently used for this provider.
+
+    ```bash
+    # kubectl get providerrevision provider-aws-a2e16ca2fc1a
+
+    NAME                        HEALTHY   REVISION   IMAGE                             STATE    DEP-FOUND   DEP-INSTALLED   AGE
+    provider-aws-a2e16ca2fc1a   True      1          crossplane/provider-aws:v0.29.0   Active                               19d
+    ```
+
+    When you describe the object, you will find that many objects are managed by this same object. 
+    
+
+    ```bash
+    # kubectl describe providerrevision provider-aws-a2e16ca2fc1a
+
+    Status:
+        Controller Ref:
+            Name:  provider-aws-a2e16ca2fc1a
+        Object Refs:
+            API Version:  apiextensions.k8s.io/v1
+            Kind:         CustomResourceDefinition
+            Name:         natgateways.ec2.aws.crossplane.io
+            UID:          5c36d1bc-61b8-44f8-bca0-47e368af87a9
+            ....
+    Events:
+        Type    Reason             Age                    From                                         Message
+        ----    ------             ----                   ----                                         -------
+        Normal  SyncPackage        22m (x369 over 4d18h)  packages/providerrevision.pkg.crossplane.io  Successfully configured package revision
+        Normal  BindClusterRole    15m (x348 over 4d18h)  rbac/providerrevision.pkg.crossplane.io      Bound system ClusterRole to provider ServiceAccount(s)
+        Normal  ApplyClusterRoles  15m (x364 over 4d18h)  rbac/providerrevision.pkg.crossplane.io      Applied RBAC ClusterRoles
+    ```
+    
+    The event field will also indicate any issues that may have occurred during this process. 
+3. If you do not see any errors in the event field above, you should check if deployments and pods were provisioned successfully. As a part of the provider configuration process, a deployment is created:
+
+    ```bash
+    # kubectl get deployment -n crossplane-system
+
+    NAME                        READY   UP-TO-DATE   AVAILABLE   AGE
+    crossplane                  1/1     1            1           105d
+    crossplane-rbac-manager     1/1     1            1           105d
+    provider-aws-a2e16ca2fc1a   1/1     1            1           19d
+
+    # kubectl get pods -n crossplane-system
+    NAME                                         READY   STATUS    RESTARTS   AGE
+    crossplane-54db688c8d-qng6b                  2/2     Running   0          4d19h
+    crossplane-rbac-manager-5776c9fbf4-wn5rj     1/1     Running   0          4d19h
+    provider-aws-a2e16ca2fc1a-776769ccbd-4dqml   1/1     Running   0          4d23h
+    ```
+    If there are any pods failing, check its logs and remedy the problem.
