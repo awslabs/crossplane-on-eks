@@ -6,7 +6,7 @@ kind: Provider
 metadata:
   name: provider-jet-aws
 spec:
-  package: crossplane/provider-jet-aws:v0.4.1
+  package: crossplane/provider-jet-aws:v0.5.0-preview
   controllerConfigRef:
     name: jet-aws-controller-config
 

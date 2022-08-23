@@ -6,7 +6,7 @@ kind: ClusterConfig
 metadata:
   name: crossplane-ssp
   region: us-west-2
-  version: "1.21"
+  version: "1.23"
 fargateProfiles:
   - name: kube-system
     selectors:
