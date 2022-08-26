@@ -5,10 +5,10 @@ Welcome to the AWS Crossplane Blueprints.
 
 ## Introduction
 [AWS](https://aws.amazon.com/) Crossplane Blueprints is an open source repo to bootstrap EKS Clusters
-and provision AWS resources with a library of [Crossplane Compositions (XRs)](https://crossplane.io/docs/v1.6/concepts/composition.html) with Composite Resource Definitions (XRDs).
+and provision AWS resources with a library of [Crossplane Compositions (XRs)](https://crossplane.io/docs/master/concepts/composition.html) with Composite Resource Definitions (XRDs).
 
 Compositions in this repository enable platform teams to define and offer bespoke AWS infrastructure APIs to the teams of application developers based on
-predefined [Composite Resources (XRs)](https://crossplane.io/docs/v1.6/concepts/composition.html), encompassing one or more of AWS [Managed Resources (MRs)](https://crossplane.io/docs/v1.6/concepts/managed-resources.html)
+predefined [Composite Resources (XRs)](https://crossplane.io/docs/master/concepts/composition.html), encompassing one or more of AWS [Managed Resources (MRs)](https://crossplane.io/docs/master/concepts/managed-resources.html)
 
 ## Features
 
@@ -17,8 +17,8 @@ predefined [Composite Resources (XRs)](https://crossplane.io/docs/v1.6/concepts/
 ✅   [AWS Provider](https://github.com/crossplane/provider-aws) - Crossplane Compositions for AWS Services \
 ✅   [Terrajet AWS Provider](https://github.com/crossplane-contrib/provider-jet-aws) - Crossplane Compositions for AWS Services \
 ✅   [AWS IRSA on EKS](https://github.com/crossplane/provider-aws/blob/master/AUTHENTICATION.md#using-iam-roles-for-serviceaccounts) - AWS Provider Config with IRSA enabled  \
-✅   Example deployment patterns for [Composite Resources (XRs)](https://crossplane.io/docs/v1.6/concepts/composition.html) for AWS Provider and Terrajet AWS Provider\
-✅   Example deployment patterns for [Crossplane Managed Resources (MRs)](https://crossplane.io/docs/v1.6/concepts/managed-resources.html)
+✅   Example deployment patterns for [Composite Resources (XRs)](https://crossplane.io/docs/master/concepts/composition.html) for AWS Provider and Terrajet AWS Provider\
+✅   Example deployment patterns for [Crossplane Managed Resources (MRs)](https://crossplane.io/docs/master/concepts/managed-resources.html)
 
 ## Getting Started
 
