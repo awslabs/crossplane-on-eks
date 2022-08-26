@@ -19,10 +19,8 @@ spec:
       referenceable: true
       schema:
         openAPIV3Schema:
-          description: Table is the Schema for the tables API
           properties:
             spec:
-              description: TableSpec defines the desired state of Table
               properties:
                 imageUri: 
                   type: string
@@ -33,6 +31,10 @@ spec:
                 handler:
                   type: string
                 permissionsBoundaryArn:
+                  type: string
+                bucketName:
+                  type: string
+                bucketKey:
                   type: string
                 resourceConfig:
                   description: ResourceConfig defines general properties of this AWS
