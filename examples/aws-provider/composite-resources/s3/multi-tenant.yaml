@@ -8,6 +8,8 @@ spec:
       awsblueprints.io/provider: aws
       awsblueprints.io/environment: dev
       s3.awsblueprints.io/configuration: standard-multi-tenant
+  writeConnectionSecretToRef:
+    name: bucket-info
   resourceConfig:
     providerConfigName: invalid
     region: us-west-2

@@ -12,6 +12,8 @@ spec:
       awsblueprints.io/provider: aws
       awsblueprints.io/environment: dev
       s3.awsblueprints.io/configuration: standard
+  writeConnectionSecretToRef:
+    name: bucket-info
   resourceConfig:
     providerConfigName: aws-provider-config
     region: us-west-2
