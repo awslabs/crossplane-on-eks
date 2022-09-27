@@ -1,5 +1,26 @@
 # Debugging CompositeResourceDefinitions (XRD) and Compositions
 
+## Composite resources and claim overview
+
+```mermaid
+    flowchart LR
+    subgraph "Some namespace"
+        direction LR
+        XRC["Claim"]
+    end
+    
+    subgraph "Cluster Scoped"
+        direction LR
+        XR("Composite Resource")
+        MR1("Managed Resource \n(e.g. RDS instance)")
+        MR2("Managed Resouce \n(e.g. IAM Role)")
+    end
+    XR --> |"spec.resourceRef"| MR1
+    XR --> |"spec.resourceRef"| MR2
+    XRC --> |"spec.resourceRef"| XR
+
+```
+
 ## General debugging steps
 
 Most error messages are logged to resources' event field. Whenever your Composite Resources are not getting provisioned, follow the following:
