@@ -3,3 +3,4 @@
 .terraform/
 kubeconfig_*
 local_tf_state/
+*.xpkg
