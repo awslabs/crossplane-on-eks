@@ -46,12 +46,12 @@ Each folder contains a Crossplane configuration [package](https://crossplane.io/
 This is how you build and push the crossplane-aws-blueprints configuration package:
 ```shell
 cd aws-provider
-export REPO=<some-oci-repository>
+export REPO=example-docker/crossplane-aws-blueprints
 kubectl crossplane build configuration
-kubectl crossplane push configuration $REPO/crossplane-aws-blueprints:v0.0.1
+kubectl crossplane push configuration $REPO:v0.0.1
 ```
 
 And this is how you would install that package on to your control plane:
 ```shell
-kubectl crossplane install configuration $REPO/crossplane-aws-blueprints:v0.0.1
+kubectl crossplane install configuration $REPO:v0.0.1
 ```
