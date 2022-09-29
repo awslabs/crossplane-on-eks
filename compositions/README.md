@@ -62,5 +62,5 @@ kind: Configuration
 metadata:
   name: crossplane-aws-blueprints
 spec:
-  package: example-docker/crossplane-aws-blueprints/upbound/crossplane-aws-blueprints:v0.0.1
+  package: example-docker/crossplane-aws-blueprints:v0.0.1
 ```
