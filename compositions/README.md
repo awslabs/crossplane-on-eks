@@ -55,3 +55,12 @@ And this is how you would install that package on to your control plane:
 ```shell
 kubectl crossplane install configuration $REPO:v0.0.1
 ```
+or apply a configuration declaration:
+```yaml
+apiVersion: pkg.crossplane.io/v1
+kind: Configuration
+metadata:
+  name: crossplane-aws-blueprints
+spec:
+  package: example-docker/crossplane-aws-blueprints/upbound/crossplane-aws-blueprints:v0.0.1
+```
