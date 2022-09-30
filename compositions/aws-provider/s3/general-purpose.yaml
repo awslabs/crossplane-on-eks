@@ -43,7 +43,6 @@ spec:
           deletionPolicy: Delete
           forProvider:
             acl: private
-            locationConstraint: us-west-2
             publicAccessBlockConfiguration:
               blockPublicAcls: true
               blockPublicPolicy: true
@@ -63,6 +62,9 @@ spec:
             mergeOptions:
               appendSlice: true
               keepMapValues: true
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.locationConstraint
         - fromFieldPath: spec.writeConnectionSecretToRef.namespace
           toFieldPath: spec.writeConnectionSecretToRef.namespace
         - type: ToCompositeFieldPath
