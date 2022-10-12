@@ -51,3 +51,4 @@ spec:
   writeConnectionSecretToRef:
     name: be95b67b-30ca-4f58-9ac2-6232927eab11-bucket
     namespace: application4
+

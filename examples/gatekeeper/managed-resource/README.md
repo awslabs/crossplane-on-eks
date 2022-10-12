@@ -1,11 +1,11 @@
-### Provider Config name enforcement based on namespace
+### Block Managed Resource creation that is not part of a composition
 
-This example Gatekeeper policy enforces provider config name based on namespaces. For example, if the claim is created in a namespace called `test`, the provider config name used for this managed resource should be `test-provider-config`. See the [template file](./template.yaml) and the [constraint file](./samples/constraint.yaml) for more details.
+This example Gatekeeper policy denies requests for managed resources if they are not part of a composite resource.
 
 Examples and test cases are available under the `samples` directory. Tests can be ran using the [gator cli](https://open-policy-agent.github.io/gatekeeper/website/docs/gator/). 
 
 To run tests for this example run: 
 ```bash
-cd examples/gatekeeper/provider-config-ns/
+cd examples/gatekeeper/managed-resource/
 gator verify . -v
 ```
