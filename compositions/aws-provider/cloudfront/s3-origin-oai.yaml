@@ -1,0 +1,185 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: s3origin.awsblueprints.io
+  labels:
+    awsblueprints.io/environment: dev
+spec:
+  publishConnectionDetailsWithStoreConfigRef:
+    name: default
+  compositeTypeRef:
+    apiVersion: awsblueprints.io/v1alpha1
+    kind: XCDN
+  patchSets:
+    - name: common-fields
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.deletionPolicy
+          toFieldPath: spec.deletionPolicy
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.name
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+  resources:
+    - name: distribution
+      base:
+        apiVersion: cloudfront.aws.crossplane.io/v1alpha1
+        kind: Distribution
+        spec:
+          forProvider:
+            distributionConfig:
+              enabled: true
+              comment: example cloudfront distribution
+              defaultRootObject: index.html
+              defaultCacheBehavior:
+                targetOriginID: s3Origin
+                viewerProtocolPolicy: redirect-to-https
+                minTTL: 0
+                forwardedValues:
+                  cookies:
+                    forward: none
+                  queryString: false
+              origins:
+                  items:
+                    - domainName: to-be-patched
+                      id: s3Origin
+                      s3OriginConfig:
+                        originAccessIdentity: to-be-patched
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - fromFieldPath: metadata.uid
+          toFieldPath: spec.publishConnectionDetailsTo.name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-distribution"
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.oaiId
+          toFieldPath: spec.forProvider.distributionConfig.origins.items[0].s3OriginConfig.originAccessIdentity
+          transforms:
+            - type: string
+              string:
+                fmt: "origin-access-identity/cloudfront/%s"
+          policy:
+            fromFieldPath: Required
+        - type: CombineFromComposite
+          toFieldPath: spec.forProvider.distributionConfig.origins.items[0].domainName
+          policy:
+              fromFieldPath: Required
+          combine:
+            variables:
+            - fromFieldPath: status.bucketName
+            - fromFieldPath: spec.resourceConfig.region
+            strategy: string
+            string:
+              fmt: "%s.s3.%s.amazonaws.com"
+    - name: oai
+      base:
+        apiVersion: cloudfront.aws.crossplane.io/v1alpha1
+        kind: CloudFrontOriginAccessIdentity
+        spec:
+          forProvider:
+            cloudFrontOriginAccessIdentityConfig:
+              comment: "example OAI"
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - fromFieldPath: metadata.uid
+          toFieldPath: spec.publishConnectionDetailsTo.name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-oai"
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.cloudFrontOriginAccessIdentity.id
+          toFieldPath: status.oaiId
+    - name: bucket-policy
+      base:
+        apiVersion: s3.aws.crossplane.io/v1alpha3
+        kind: BucketPolicy
+        spec:
+          forProvider:
+            bucketNameSelector:
+              matchControllerRef: true
+            rawPolicy: to-be-patched
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - fromFieldPath: metadata.uid
+          toFieldPath: spec.publishConnectionDetailsTo.name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-bucket-policy"
+        - type: CombineFromComposite
+          toFieldPath: spec.forProvider.rawPolicy
+          policy:
+              fromFieldPath: Required
+          combine:
+            variables:
+            - fromFieldPath: status.oaiId
+            - fromFieldPath: status.bucketArn
+            strategy: string
+            string:
+              fmt: |
+                {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Principal": {
+                            "AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity %s"
+                        },
+                        "Action": "s3:GetObject",
+                        "Resource": "%s/*"
+                    }
+                  ]
+                }
+    - name: s3-bucket
+      base:
+        apiVersion: s3.aws.crossplane.io/v1beta1
+        kind: Bucket
+        spec:
+          deletionPolicy: Delete
+          forProvider:
+            acl: private
+            serverSideEncryptionConfiguration:
+              rules:
+                - applyServerSideEncryptionByDefault:
+                    sseAlgorithm: AES256
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tagging.tagSet
+          policy:
+            mergeOptions:
+              appendSlice: true
+              keepMapValues: true
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.locationConstraint
+        - fromFieldPath: spec.writeConnectionSecretToRef.namespace
+          toFieldPath: spec.writeConnectionSecretToRef.namespace
+        - type: ToCompositeFieldPath
+          fromFieldPath: metadata.annotations[crossplane.io/external-name]
+          toFieldPath: status.bucketName
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.arn
+          toFieldPath: status.bucketArn
+        - fromFieldPath: metadata.uid
+          toFieldPath: spec.publishConnectionDetailsTo.name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-bucket"
