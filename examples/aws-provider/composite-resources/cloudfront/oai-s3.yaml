@@ -1,0 +1,22 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: awsblueprints.io/v1alpha1
+kind: CDN
+metadata:
+  name: test-cdn
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/environment: dev
+  writeConnectionSecretToRef:
+    name: cdn-info
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: us-west-2
+    tags:
+      - key: env
+        value: test
+      - key: anotherKey
+        value: anotherValue
