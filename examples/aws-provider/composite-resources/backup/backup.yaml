@@ -1,0 +1,24 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: awsblueprints.io/v1alpha1
+kind: Backup
+metadata:
+  name: backup
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+  accountId: "123456789"
+  eksOIDC: "oidc.eks.eu-west-1.amazonaws.com/id/123456789A446538BDEA5AE78F3A68"
+  permissionsBoundaryArn: "arn:aws:iam::123456789:policy/crossplaneBoundary"
+  resourceConfig:
+    providerConfigName: default
+    region: eu-west-1
+    tags:
+      - key: env
+        value: dev
+      - key: backup
+        value: control-plane

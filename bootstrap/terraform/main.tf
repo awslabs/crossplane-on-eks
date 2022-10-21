@@ -209,3 +209,22 @@ resource "kubectl_manifest" "kubernetes_provider" {
 
   depends_on = [module.kubernetes-addons]
 }
+
+#---------------------------------------------------------
+# Crossplane Helm Provider deployment
+# Creates ProviderConfig name as "helm-provider-config"
+#---------------------------------------------------------
+data "kubectl_path_documents" "helm_provider_manifests" {
+  pattern = "${path.module}/crossplane-providers/helm-provider.yaml"
+  vars = {
+    package-version = "crossplanecontrib/provider-helm:v0.12.0"
+    service-account = "crossplane-provider-helm"
+  }
+}
+
+resource "kubectl_manifest" "kubernetes_provider" {
+  count     = length(data.kubectl_path_documents.helm_provider_manifests.documents)
+  yaml_body = element(data.kubectl_path_documents.helm_provider_manifests.documents, count.index)
+
+  depends_on = [module.kubernetes-addons]
+}

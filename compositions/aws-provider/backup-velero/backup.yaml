@@ -1,0 +1,254 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: backup.awsblueprints.io
+  labels:
+    awsblueprints.io/provider: aws
+    awsblueprints.io/environment: dev
+spec:
+  compositeTypeRef:
+    apiVersion: awsblueprints.io/v1alpha1
+    kind: XBackup
+  patchSets:
+    - name: common-fields
+      patches:
+        - fromFieldPath: spec.resourceConfig
+          toFieldPath: spec.resourceConfig
+          policy:
+            mergeOptions:
+              keepMapValues: true
+
+    # ToDo(haarchri): https://github.com/crossplane/crossplane/issues/3139
+    # - name: bucket-status
+    #   patches:
+    #     - type: ToCompositeFieldPath
+    #       fromFieldPath: status.bucketArn
+    #       toFieldPath: status.backupBucket.bucketArn
+    #       policy:
+    #         fromFieldPath: Optional
+    #     - fromFieldPath: status.bucketName
+    #       toFieldPath: status.backupBucket.bucketName
+    #       type: ToCompositeFieldPath
+    #       policy:
+    #         fromFieldPath: Optional
+
+    - name: chart-status
+      patches:
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider
+          toFieldPath: status.backupInformations.release
+          policy:
+            fromFieldPath: Optional
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.failed
+          toFieldPath: status.backupInformations.releaseFailed
+          policy:
+            fromFieldPath: Optional
+
+    - name: chart-parameters
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+          toFieldPath: spec.forProvider.namespace
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.backupBucket.roleArn
+          toFieldPath: "spec.forProvider.values.serviceAccount.server.annotations['eks.amazonaws.com/role-arn']"
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.backupBucket.bucketName
+          toFieldPath: "spec.forProvider.values.configuration.backupStorageLocation.bucket"
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: "spec.forProvider.values.configuration.backupStorageLocation.config.region"
+
+  resources:
+    - name: XObjectStorage
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: XObjectStorage
+        spec:
+          compositionSelector:
+            matchLabels:
+              awsblueprints.io/provider: aws
+              awsblueprints.io/environment: dev
+              s3.awsblueprints.io/configuration: standard
+          writeConnectionSecretToRef:
+            name: bucket-info
+            namespace: crossplane-system
+          resourceConfig:
+            providerConfigName: ""
+            region: ""
+            tags:
+              - key: env
+                value: test
+              - key: anotherKey
+                value: anotherValue
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        # ToDo(haarchri): https://github.com/crossplane/crossplane/issues/3139
+        # - type: PatchSet
+        #   patchSetName: bucket-status
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.bucketArn
+          toFieldPath: status.backupBucket.bucketArn
+          policy:
+            fromFieldPath: Optional
+        - fromFieldPath: status.bucketName
+          toFieldPath: status.backupBucket.bucketName
+          type: ToCompositeFieldPath
+          policy:
+            fromFieldPath: Optional
+
+    - name: read-policy
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: IAMPolicy
+        spec:
+          compositionSelector:
+            matchLabels:
+              awsblueprints.io/provider: aws
+              awsblueprints.io/environment: dev
+              iam.awsblueprints.io/policy-type: read
+              iam.awsblueprints.io/service: backup-velero
+          resourceArn: ""
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.policyArn
+          toFieldPath: status.backupBucket.readPolicyArn
+        - fromFieldPath: status.backupBucket.bucketArn
+          toFieldPath: spec.resourceArn
+
+    - name: write-policy
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: IAMPolicy
+        spec:
+          compositionSelector:
+            matchLabels:
+              awsblueprints.io/provider: aws
+              awsblueprints.io/environment: dev
+              iam.awsblueprints.io/policy-type: write
+              iam.awsblueprints.io/service: backup-velero
+          resourceArn: ""
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.policyArn
+          toFieldPath: status.backupBucket.writePolicyArn
+        - fromFieldPath: status.backupBucket.bucketArn
+          toFieldPath: spec.resourceArn
+
+    - name: XIRSA
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: XIRSA
+        spec:
+          awsAccountID: ""
+          eksOIDC: ""
+          permissionsBoundaryArn: ""
+          policyArns:
+            - ""
+            - ""
+          serviceAccountName: "velero"
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.accountId
+          toFieldPath: spec.awsAccountID
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.eksOIDC
+          toFieldPath: spec.eksOIDC
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.permissionsBoundaryArn
+          toFieldPath: spec.permissionsBoundaryArn
+        - fromFieldPath: status.backupBucket.readPolicyArn
+          toFieldPath: spec.policyArns[0]
+        - fromFieldPath: status.backupBucket.writePolicyArn
+          toFieldPath: spec.policyArns[1]
+        - fromFieldPath: status.roleArn
+          toFieldPath: status.backupBucket.roleArn
+          type: ToCompositeFieldPath
+          policy:
+            fromFieldPath: Optional
+
+    - name: VeleroChart
+      base:
+        apiVersion: helm.crossplane.io/v1beta1
+        kind: Release
+        spec:
+          forProvider:
+            chart:
+              name: velero
+              repository: https://vmware-tanzu.github.io/helm-charts
+              version: 2.32.1
+            values:
+              image:
+                tag: v1.9.2
+              serviceAccount:
+                server:
+                  create: true
+
+              initContainers:
+                - name: velero-plugin-for-aws
+                  image: velero/velero-plugin-for-aws:v1.2.0
+                  imagePullPolicy: IfNotPresent
+                  volumeMounts:
+                    - mountPath: /target
+                      name: plugins
+
+              upgradeCRDs: true
+              cleanUpCRDs: false
+
+              configuration:
+                provider: aws
+                backupStorageLocation:
+                  config: {}
+                features: EnableAPIGroupVersions
+              credentials:
+                useSecret: false
+
+              snapshotsEnabled: false
+              deployRestic: false
+
+              schedules:
+                hourly:
+                  schedule: "@every 1h"
+                  template:
+                    ttl: "48h"
+                    includeClusterResources: true
+                    excludedNamespaces:
+                      - 'kube-system'
+                    excludedResources:
+                      - 'pods'
+                daily:
+                  schedule: "@every 24h"
+                  template:
+                    ttl: "720h"
+                    includeClusterResources: true
+                    excludedNamespaces:
+                      - 'kube-system'
+                    excludedResources:
+                      - 'pods'
+                monthly:
+                  schedule: "@monthly"
+                  template:
+                    ttl: "8760h"
+                    includeClusterResources: true
+                    excludedNamespaces:
+                      - 'kube-system'
+                    excludedResources:
+                      - 'pods'
+      patches:
+        - type: PatchSet
+          patchSetName: chart-status
+        - type: PatchSet
+          patchSetName: chart-parameters
+        - fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name

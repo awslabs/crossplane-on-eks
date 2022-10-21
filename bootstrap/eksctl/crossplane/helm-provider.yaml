@@ -1,0 +1,41 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-helm
+spec:
+  package: "crossplanecontrib/provider-helm:v0.12.0"
+  controllerConfigRef:
+    name: crossplane-provider-helm
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: crossplane-provider-helm
+  namespace: crossplane-system
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: crossplane-provider-helm
+subjects:
+- kind: ServiceAccount
+  name: crossplane-provider-helm
+  namespace: crossplane-system
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+apiVersion: pkg.crossplane.io/v1alpha1
+kind: ControllerConfig
+metadata:
+  name: crossplane-provider-helm
+spec:
+  serviceAccountName: crossplane-provider-helm
