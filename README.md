@@ -1,10 +1,10 @@
-# AWS Blueprints for Crossplane
-> **Note**: AWS Blueprints for Crossplane is under active development and should be considered a pre-production framework.
+# Blueprints for Crossplane on Amazon EKS
+> **Note**: AWS Blueprints for Crossplane on Amazon Elastic Kubernetes Service is under active development and should be considered a pre-production framework.
 
 Welcome to the AWS Crossplane Blueprints.
 
 ## Introduction
-[AWS](https://aws.amazon.com/) Crossplane Blueprints is an open source repo to bootstrap EKS Clusters
+[AWS](https://aws.amazon.com/) Crossplane Blueprints is an open source repo to bootstrap Amazon Elastic Kubernetes Service Clusters.
 and provision AWS resources with a library of [Crossplane Compositions (XRs)](https://crossplane.io/docs/master/concepts/composition.html) with Composite Resource Definitions (XRDs).
 
 Compositions in this repository enable platform teams to define and offer bespoke AWS infrastructure APIs to the teams of application developers based on
@@ -88,4 +88,4 @@ See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more inform
 
 ## License
 
-This library is licensed under the MIT-0 License. See the LICENSE file.
+This library is licensed under the Apache 2.0 License.
