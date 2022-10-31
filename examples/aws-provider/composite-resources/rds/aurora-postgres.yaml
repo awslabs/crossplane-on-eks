@@ -1,5 +1,5 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-# SPDX-License-Identifier: MIT-0
+# SPDX-License-Identifier: Apache-2.0
 
 # Update spec.subnetIds and spec.vpcId fields before use.
 # The Kubernetes secret below is used to create the master user password for RDS. Unfortunately, auto generated passwords are not supported by RDS cluster yet.

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: MIT-0
+# SPDX-License-Identifier: Apache-2.0
 
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
