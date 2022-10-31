@@ -1,5 +1,5 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-# SPDX-License-Identifier: MIT-0
+# SPDX-License-Identifier: Apache-2.0
 
 #  Composition and Definition path -> compositions/terrajet-aws-provider/s3
 #  This composition creates KMS key and applies to S3 bucket by default
