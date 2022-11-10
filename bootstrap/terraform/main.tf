@@ -57,10 +57,10 @@ locals {
 }
 
 #---------------------------------------------------------------
-# This aws_vpc module creates VPC, 3 Private Subnets, 3 Public Subnets, IGW, Single NAT gateway
+# This vpc module creates VPC, 3 Private Subnets, 3 Public Subnets, IGW, Single NAT gateway
 # You can comment or remove module if you already have an existing VPC and Subnets. You must add public_subnet_tags, private_subnet_tags to your existing VPC
 #---------------------------------------------------------------
-module "aws_vpc" {
+module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "v3.2.0"
 
@@ -77,13 +77,11 @@ module "aws_vpc" {
   single_nat_gateway   = true
 
   public_subnet_tags = {
-    "kubernetes.io/cluster/${local.cluster_name}" = "shared"
-    "kubernetes.io/role/elb"                      = "1"
+    "kubernetes.io/role/elb" = "1"
   }
 
   private_subnet_tags = {
-    "kubernetes.io/cluster/${local.cluster_name}" = "shared"
-    "kubernetes.io/role/internal-elb"             = "1"
+    "kubernetes.io/role/internal-elb" = "1"
   }
 }
 
@@ -94,8 +92,8 @@ module "eks_blueprints" {
   source = "github.com/aws-ia/terraform-aws-eks-blueprints"
 
   # EKS Cluster VPC and Subnet mandatory config
-  vpc_id             = module.aws_vpc.vpc_id
-  private_subnet_ids = module.aws_vpc.private_subnets
+  vpc_id             = module.vpc.vpc_id
+  private_subnet_ids = module.vpc.private_subnets
 
   # EKS CONTROL PLANE VARIABLES
   create_eks      = true
@@ -104,14 +102,14 @@ module "eks_blueprints" {
 
   # EKS MANAGED NODE GROUPS
   managed_node_groups = {
-    mg_4 = {
+    mg_5 = {
       node_group_name = local.node_group_name
       instance_types  = ["m5.xlarge"]
       min_size        = "1"
-      subnet_ids      = module.aws_vpc.private_subnets
+      subnet_ids      = module.vpc.private_subnets
       additional_tags = {
-        ExtraTag    = "m4-on-demand"
-        Name        = "m4-on-demand"
+        ExtraTag    = "m5-on-demand"
+        Name        = "m5-on-demand"
         subnet_type = "private"
       }
     }
@@ -121,7 +119,7 @@ module "eks_blueprints" {
 #---------------------------------------------------------------
 # This module deploys Kubernetes add-ons
 #---------------------------------------------------------------
-module "kubernetes-addons" {
+module "eks_blueprints_kubernetes_addons" {
   source         = "github.com/aws-ia/terraform-aws-eks-blueprints//modules/kubernetes-addons"
   eks_cluster_id = module.eks_blueprints.eks_cluster_id
 
@@ -135,7 +133,7 @@ module "kubernetes-addons" {
     name       = "crossplane"
     chart      = "crossplane"
     repository = "https://charts.crossplane.io/stable/"
-    version    = "1.7.1"
+    version    = "1.10.1"
     namespace  = "crossplane-system"
     values = [templatefile("${path.module}/values.yaml", {
       operating-system = "linux"
@@ -154,7 +152,7 @@ module "kubernetes-addons" {
   #---------------------------------------------------------
   crossplane_aws_provider = {
     enable                   = true
-    provider_aws_version     = "v0.27.0"
+    provider_aws_version     = "v0.33.0"
     additional_irsa_policies = ["arn:aws:iam::aws:policy/AdministratorAccess"]
   }
 
@@ -168,8 +166,16 @@ module "kubernetes-addons" {
     additional_irsa_policies = ["arn:aws:iam::aws:policy/AdministratorAccess"]
   }
 
-  depends_on = [module.eks_blueprints.managed_node_groups]
+  #---------------------------------------------------------
+  # Crossplane Kubernetes Provider deployment
+  #   Creates ProviderConfig name as "kubernetes-provider-config"
+  #---------------------------------------------------------
+  crossplane_kubernetes_provider = {
+    enable                      = true
+    provider_kubernetes_version = "v0.5.0"
+  }
 
+  depends_on = [module.eks_blueprints.managed_node_groups]
 }
 
 #---------------------------------------------------------
@@ -188,24 +194,5 @@ resource "kubectl_manifest" "karpenter_provisioner" {
   for_each  = toset(data.kubectl_path_documents.karpenter_provisioners.documents)
   yaml_body = each.value
 
-  depends_on = [module.kubernetes-addons]
-}
-
-#---------------------------------------------------------
-# Crossplane Kubernetes Provider deployment
-# Creates ProviderConfig name as "kubernetes-provider-config"
-#---------------------------------------------------------
-data "kubectl_path_documents" "kubernetes_provider_manifests" {
-  pattern = "${path.module}/crossplane-providers/kubernetes-provider.yaml"
-  vars = {
-    package-version = "crossplane/provider-kubernetes:v0.3.0"
-    service-account = "crossplane-provider-kubernetes"
-  }
-}
-
-resource "kubectl_manifest" "kubernetes_provider" {
-  count     = length(data.kubectl_path_documents.kubernetes_provider_manifests.documents)
-  yaml_body = element(data.kubectl_path_documents.kubernetes_provider_manifests.documents, count.index)
-
-  depends_on = [module.kubernetes-addons]
+  depends_on = [module.eks_blueprints_kubernetes_addons]
 }
