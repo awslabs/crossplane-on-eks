@@ -6,7 +6,7 @@ kind: Composition
 metadata:
   name: irsa-exact.awsblueprints.io
 spec:
-  writeConnectionSecretsToNamespace: default
+  writeConnectionSecretsToNamespace: crossplane-system
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
     kind: XIRSA
@@ -37,6 +37,8 @@ spec:
           toFieldPath: spec.forProvider.permissionsBoundary
         - type: CombineFromComposite
           toFieldPath: spec.forProvider.assumeRolePolicyDocument
+          policy:
+            fromFieldPath: Required
           combine:
             variables:
             - fromFieldPath: spec.awsAccountID
