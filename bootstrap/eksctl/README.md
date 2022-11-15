@@ -73,7 +73,6 @@ kubectl get sa -n crossplane-system
 kubectl get sa -n crossplane-system
 NAME                               SECRETS   AGE
 provider-aws-f78664a342f1          1         52m
-provider-jet-aws-b42c59584ad8      1         56m
 ```
 Update the trust relationship as follows:
 ```json
@@ -102,7 +101,6 @@ Annotate the service account to use IRSA.
 
 ```
 sed -i.bak "s/ACCOUNT_ID/${ACCOUNT_ID}/g" crossplane/aws-provider.yaml
-sed -i.bak "s/ACCOUNT_ID/${ACCOUNT_ID}/g" crossplane/jet-aws-provider.yaml
 ```
 
 ## Install Crossplane
@@ -122,12 +120,10 @@ helm install crossplane --namespace crossplane-system --version 1.10.1 crossplan
 # wait for the provider CRD to be ready.
 kubectl wait --for condition=established --timeout=300s crd/providers.pkg.crossplane.io
 kubectl apply -f crossplane/aws-provider.yaml
-kubectl apply -f crossplane/jet-aws-provider.yaml
 
 # wait for the AWS provider CRD to be ready.
 kubectl wait --for condition=established --timeout=300s crd/providerconfigs.aws.crossplane.io
 kubectl apply -f crossplane/aws-provider-config.yaml
-kubectl apply -f crossplane/jet-aws-provider-config.yaml
 ```
 
 ### Kustomize
