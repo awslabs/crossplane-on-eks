@@ -62,7 +62,7 @@ locals {
 #---------------------------------------------------------------
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "v3.2.0"
+  version = "~> 3.0"
 
   name = local.vpc_name
   cidr = local.vpc_cidr
@@ -89,7 +89,7 @@ module "vpc" {
 # This module deploys EKS Cluster with one Managed group
 #---------------------------------------------------------------
 module "eks_blueprints" {
-  source = "github.com/aws-ia/terraform-aws-eks-blueprints"
+  source = "github.com/csantanapr/terraform-aws-eks-blueprints?ref=crossplane-updates-11-28"
 
   # EKS Cluster VPC and Subnet mandatory config
   vpc_id             = module.vpc.vpc_id
@@ -104,12 +104,12 @@ module "eks_blueprints" {
   managed_node_groups = {
     mg_5 = {
       node_group_name = local.node_group_name
-      instance_types  = ["m5.xlarge"]
+      instance_types  = ["t3.small"]
       min_size        = "1"
       subnet_ids      = module.vpc.private_subnets
       additional_tags = {
-        ExtraTag    = "m5-on-demand"
-        Name        = "m5-on-demand"
+        ExtraTag    = "t3-on-demand"
+        Name        = "t3-on-demand"
         subnet_type = "private"
       }
     }
@@ -120,7 +120,8 @@ module "eks_blueprints" {
 # This module deploys Kubernetes add-ons
 #---------------------------------------------------------------
 module "eks_blueprints_kubernetes_addons" {
-  source         = "github.com/aws-ia/terraform-aws-eks-blueprints//modules/kubernetes-addons"
+  #source         = "github.com/aws-ia/terraform-aws-eks-blueprints//modules/kubernetes-addons"
+  source         = "github.com/csantanapr/terraform-aws-eks-blueprints//modules/kubernetes-addons?ref=crossplane-updates-11-28"
   eks_cluster_id = module.eks_blueprints.eks_cluster_id
 
   # Deploy Karpenter Autoscaler
@@ -128,17 +129,6 @@ module "eks_blueprints_kubernetes_addons" {
 
   # Deploy Crossplane
   enable_crossplane = true
-
-  crossplane_helm_config = {
-    name       = "crossplane"
-    chart      = "crossplane"
-    repository = "https://charts.crossplane.io/stable/"
-    version    = "1.10.1"
-    namespace  = "crossplane-system"
-    values = [templatefile("${path.module}/values.yaml", {
-      operating-system = "linux"
-    })]
-  }
 
   # Deploy Crossplane AWS Providers
 
@@ -152,18 +142,12 @@ module "eks_blueprints_kubernetes_addons" {
   #---------------------------------------------------------
   crossplane_aws_provider = {
     enable                   = true
-    provider_aws_version     = "v0.33.0"
+    provider_aws_version     = "v0.34.0"
     additional_irsa_policies = ["arn:aws:iam::aws:policy/AdministratorAccess"]
-  }
-
-  #---------------------------------------------------------
-  # Crossplane Terrajet AWS Provider deployment
-  #   Creates ProviderConfig name as "jet-aws-provider-config"
-  #---------------------------------------------------------
-  crossplane_jet_aws_provider = {
-    enable                   = true
-    provider_aws_version     = "v0.4.2"
-    additional_irsa_policies = ["arn:aws:iam::aws:policy/AdministratorAccess"]
+    name                     = "aws-provider"
+    service_account          = "aws-provider"
+    provider_config          = "default"
+    controller_config        = "aws-controller-config"
   }
 
   #---------------------------------------------------------
@@ -173,6 +157,11 @@ module "eks_blueprints_kubernetes_addons" {
   crossplane_kubernetes_provider = {
     enable                      = true
     provider_kubernetes_version = "v0.5.0"
+    name                        = "kubernetes-provider"
+    service_account             = "kubernetes-provider"
+    provider_config             = "default"
+    controller_config           = "kubernetes-controller-config"
+    cluster_role                = "cluster-admin"
   }
 
   depends_on = [module.eks_blueprints.managed_node_groups]
