@@ -2,13 +2,57 @@
 
 Compositions can be nested within a composition. Take a look at the example-application defined in the `compositions/aws-provider/example-application` directory. The Composition contains Compositions defined in other directories and creates a DynamoDB table, IAM policies for the table, a Kubernetes service account, and a IAM role for service accounts (IRSA). This pattern is very powerful. It let you define your abstraction based on someone else's prior work.
 
-An example yaml file to deploy this Composition is available at  `examples/aws-provider/composite-resources/example-application/example-application.yaml`.  
+An example yaml file to deploy this Composition is available at  `compositions/aws-provider/example-application/example-application.yaml`.  
 
 Let’s take a look at how this example application can be deployed. 
+
+Install the [Composite Resource Definition](https://crossplane.io/docs/master/concepts/terminology.html#composite-resource-definition) and [Composition](https://crossplane.io/docs/master/concepts/terminology.html#composition)
+
+```bash
+kubectl apply -f compositions/aws-provider/example-application
+kubectl apply -f compositions/aws-provider/dynamodb
+kubectl apply -f compositions/aws-provider/iam-policy
+kubectl apply -f compositions/aws-provider/irsa
+```
+
+Edit the file [examples/aws-provider/composite-resources/example-application/example-application.yaml](examples/aws-provider/composite-resources/example-application/example-application.yaml)
+
+Replace the values for `accountId`, `eksOIDC` and `permissionsBoundaryArn`
+
+To get the `accountId` use the following command:
+```bash
+aws sts get-caller-identity --query Account --output text
+```
+To get the `eksOIDC` use the following command:
+```bash
+aws eks describe-cluster --name crossplane-blueprints --query "cluster.identity.oidc.issuer" --output text | sed -e "s/^https:\/\///"
+```
+
+> If you used terraform create the policy
+```bash
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+sed -i.bak "s/ACCOUNT_ID/${ACCOUNT_ID}/g" bootstrap/eksctl/permission-boundary.json
+aws iam create-policy \
+    --policy-name crossplaneBoundary \
+    --policy-document file://bootstrap/eksctl/permission-boundary.json
+```
+
+Replace the account id in `permissionsBoundaryArn` value
+
 
 ```bash
 kubectl create ns example-app
 # namespace/example-app created
+```
+
+```bash
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
+OIDC_PROVIDER=$(aws eks describe-cluster --name crossplane-blueprints --query "cluster.identity.oidc.issuer" --output text | sed -e "s/^https:\/\///")
+
+PERMISSION_BOUNDARY_ARN="arn:aws:iam::${ACCOUNT_ID}:policy/crossplaneBoundary"
+
+eval "echo \"$(cat examples/aws-provider/composite-resources/example-application/example-application.yaml)\""
 
 kubectl apply -f examples/aws-provider/composite-resources/example-application/example-application.yaml
 # exampleapp.awsblueprints.io/example-application created
@@ -16,14 +60,24 @@ kubectl apply -f examples/aws-provider/composite-resources/example-application/e
 
 You can look at the example application object, but it doesn’t tell you much about what is happening. Let’s dig deeper. 
 ```bash
-# kubectl get exampleapp -n example-app example-application -o=jsonpath='{.spec.resourceRef}'
-{"apiVersion":"awsblueprints.io/v1alpha1","kind":"XExampleApp","name":"example-application-8x9fr"}
+kubectl get exampleapp -n example-app example-application -o=jsonpath='{.spec.resourceRef}'
+```
+Expected output:
+```json
+{
+  "apiVersion":"awsblueprints.io/v1alpha1",
+  "kind":"XExampleApp",
+  "name":"example-application-8x9fr"
+}
 ```
 By looking at the spec.resourceRef field, you can see which cluster wide object this object created.
 Let’s see what resources are created in the cluster wide object. 
 
 ```bash
-# kubectl get XExampleApp example-application-8x9fr -o=jsonpath='{.spec.resourceRefs}' | jq
+kubectl get XExampleApp -o=jsonpath='{.items[].spec.resourceRefs}' | jq
+```
+Expected output:
+```json
 [
   {
     "apiVersion": "awsblueprints.io/v1alpha1",
@@ -58,8 +112,10 @@ We see that it has five sub objects. Notice the first object is the XDynamoDBTab
 Let’s take a look at the XIRSA object. As the name implies, this object is responsible for setting up EKS IRSA for the application pod to use. 
 
 ```bash
-
-# kubectl get XIRSA example-application-8x9fr-r7dzn -o jsonpath='{.spec.resourceRefs}' | jq
+kubectl get XIRSA -o=jsonpath='{.items[].spec.resourceRefs}' | jq
+```
+Expected output:
+```json
 [
   {
     "apiVersion": "iam.aws.crossplane.io/v1beta1",
@@ -87,7 +143,10 @@ Let’s take a look at the XIRSA object. As the name implies, this object is res
 As you can see, it created an IAM Role and attached policies.  It also created a Kubernetes service account as represented by the last element. If you look at the created service account, it has the necessary properties for IRSA to function. 
 
 ```bash
-# kubectl get sa -n example-app example-app -o yaml
+kubectl get sa -n example-app example-app -o yaml
+```
+Expected output:
+```yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
