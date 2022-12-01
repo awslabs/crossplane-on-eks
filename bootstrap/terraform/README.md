@@ -58,10 +58,10 @@ terraform init
 ```
 
 #### Step3: Run Terraform PLAN
-Verify the resources created by this execution
+Review the values in [variables.tf](variables.tf)
+Verify the resources to be created by this execution
 
 ```shell script
-export AWS_REGION=<ENTER YOUR REGION>   # Select your own region
 terraform plan
 ```
 
@@ -97,9 +97,10 @@ kubectl get pods -n crossplane-system
 The following command destroys the resources created by `terraform apply`
 
 Step1: Delete resources created by Crossplane
+This depends which examples you did on the cluster
 
 Step2: Terraform Destroy
 
-```shell script
+```bash
 ./destroy.sh
 ```
