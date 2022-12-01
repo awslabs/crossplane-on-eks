@@ -86,13 +86,13 @@ module "eks_blueprints" {
   #source         = "github.com/aws-ia/terraform-aws-eks-blueprints//modules/kubernetes-addons"
   source = "github.com/csantanapr/terraform-aws-eks-blueprints//modules/kubernetes-addons?ref=crossplane-updates-11-28"
 
-  eks_cluster_id       = module.eks_blueprints.eks_cluster_id
-  eks_cluster_endpoint = module.eks_blueprints.eks_cluster_endpoint
-  eks_oidc_provider    = module.eks_blueprints.oidc_provider
-  eks_cluster_version  = module.eks_blueprints.eks_cluster_version
+  #eks_cluster_id       = module.eks_blueprints.eks_cluster_id
+  #eks_cluster_endpoint = module.eks_blueprints.eks_cluster_endpoint
+  #eks_oidc_provider    = module.eks_blueprints.oidc_provider
+  #eks_cluster_version  = module.eks_blueprints.eks_cluster_version
 
   # Wait on the data plane to be up
-  data_plane_wait_arn = module.eks_blueprints.managed_node_group_arn[0]
+  #data_plane_wait_arn = module.eks_blueprints.managed_node_group_arn[0]
 
   # Deploy Crossplane
   enable_crossplane = true
@@ -109,6 +109,7 @@ module "eks_blueprints" {
   #---------------------------------------------------------
   crossplane_kubernetes_provider = local.crossplane_kubernetes_provider
 
+  depends_on = [module.eks_blueprints.managed_node_groups]
 }
 
 
