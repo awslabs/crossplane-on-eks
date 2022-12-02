@@ -1,0 +1,25 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: awsblueprints.io/v1alpha1
+kind: ExampleApp
+metadata:
+  name: example-application
+  namespace: example-app
+spec:
+  writeConnectionSecretToRef:
+    name: example-application-secrets
+  resourceConfig:
+    providerConfigName: default
+    region: us-west-2
+    tags:
+      - key: env
+        value: test
+      - key: anotherKey
+        value: anotherValue
+  accountId: "${ACCOUNT_ID}"
+  eksOIDC: "${OIDC_PROVIDER}"
+  permissionsBoundaryArn: "${PERMISSION_BOUNDARY_ARN}"
+  tableSpec:
+    hashKeyName: id
+    hashKeyType: S
