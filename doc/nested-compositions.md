@@ -21,7 +21,12 @@ aws iam create-policy \
     --policy-document file://bootstrap/eksctl/permission-boundary.json
 ```
 
-Deploy the example application substituting some values
+Create the namespace for the example
+```
+kubectl create ns example-app
+```
+
+Request a DynamoDB table for your application
 ```bash
 export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
@@ -29,9 +34,33 @@ export OIDC_PROVIDER=$(aws eks describe-cluster --name crossplane-blueprints --q
 
 export PERMISSION_BOUNDARY_ARN="arn:aws:iam::${ACCOUNT_ID}:policy/crossplaneBoundary"
 
-envsubst < examples/aws-provider/composite-resources/example-application/example-application.yaml | kubectl apply -f -
+envsubst < examples/aws-provider/composite-resources/example-application/example-application-db.yaml | kubectl apply -f -
 
 # exampleapp.awsblueprints.io/example-application created
+```
+
+Wait for the DynamoDBExample to be ready 
+```bash
+kubectl wait ExampleApp example-application --for=condition=Ready --timeout=5m -n example-app
+```
+
+Verify the secret values that were configured for the application
+```bash
+echo "region=$(kubectl get secret example-application-secrets -o go-template='{{.data.region|base64decode}}' -n example-app)"
+
+echo "tableArn=$(kubectl get secret example-application-secrets -o go-template='{{.data.tableArn|base64decode}}' -n example-app)"
+
+echo "tableName=$(kubectl get secret example-application-secrets -o go-template='{{.data.tableName|base64decode}}' -n example-app)"
+```
+
+Verify the service account annotation is configured with IRSA role, this will allow the Pod to assume this role to access the database.
+```bash
+echo "role=$(kubectl get sa example-app  -o jsonpath='{.metadata.annotations.eks\.amazonaws\.com/role-arn}' -n example-app)"
+```
+
+Deploy your application to leverage the DynamoDB
+```bash
+kubectl apply -f examples/aws-provider/composite-resources/example-application/example-application-app.yaml
 ```
 
 You can look at the example application object, but it doesn’t tell you much about what is happening. Let’s dig deeper. 
@@ -162,4 +191,11 @@ Expected output:
         "MaxSessionDuration": 3600
     }
 ] 
+```
+
+## Clean up
+```bash
+kubectl delete deployment example-app -n example-app
+kubectl delete ExampleApp example-application -n example-app
+kubectl delete -k compositions
 ```
