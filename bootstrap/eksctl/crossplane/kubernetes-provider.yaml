@@ -4,7 +4,7 @@
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
-  name: provider-kubernetes
+  name: default
 spec:
   package: "crossplane/provider-kubernetes:v0.3.0"
   controllerConfigRef:
