@@ -16,7 +16,7 @@ predefined [Composite Resources (XRs)](https://crossplane.io/docs/master/concept
 ✅   Bootstrap [Amazon EKS](https://aws.amazon.com/eks/) Cluster and Crossplane with [eksctl](https://eksctl.io/) \
 ✅   [AWS Provider](https://github.com/crossplane/provider-aws) - Crossplane Compositions for AWS Services \
 ✅   [AWS IRSA on EKS](https://github.com/crossplane/provider-aws/blob/master/AUTHENTICATION.md#using-iam-roles-for-serviceaccounts) - AWS Provider Config with IRSA enabled  \
-✅   Example deployment patterns for [Composite Resources (XRs)](https://crossplane.io/docs/master/concepts/composition.html) for AWS Provider and Terrajet AWS Provider\
+✅   Example deployment patterns for [Composite Resources (XRs)](https://crossplane.io/docs/master/concepts/composition.html) for AWS Provider \
 ✅   Example deployment patterns for [Crossplane Managed Resources (MRs)](https://crossplane.io/docs/master/concepts/managed-resources.html)
 
 ## Getting Started
