@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 apiVersion: awsblueprints.io/v1alpha1
-kind: ExampleApp
+kind: DynamoDBExample
 metadata:
-  name: example-application
+  name: example-app
   namespace: example-app
 spec:
   writeConnectionSecretToRef:

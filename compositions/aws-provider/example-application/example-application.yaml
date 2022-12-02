@@ -11,7 +11,7 @@ spec:
   writeConnectionSecretsToNamespace: crossplane-system
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
-    kind: XExampleApp
+    kind: XDynamoDBExample
   patchSets:
     - name: common-fields
       patches:

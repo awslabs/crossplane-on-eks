@@ -4,15 +4,15 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: xexampleapps.awsblueprints.io
+  name: xdynamodbexamples.awsblueprints.io
 spec:
   group: awsblueprints.io
   names:
-    kind: XExampleApp
-    plural: xexampleapps
+    kind: XDynamoDBExample
+    plural: xdynamodbexamples
   claimNames:
-    kind: ExampleApp
-    plural: exampleapps
+    kind: DynamoDBExample
+    plural: dynamodbexamples
   connectionSecretKeys:
     - region
     - tableName
