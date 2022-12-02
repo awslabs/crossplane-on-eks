@@ -9,10 +9,7 @@ Let’s take a look at how this example application can be deployed.
 Install the [Composite Resource Definition](https://crossplane.io/docs/master/concepts/terminology.html#composite-resource-definition) and [Composition](https://crossplane.io/docs/master/concepts/terminology.html#composition)
 
 ```bash
-kubectl apply -f compositions/aws-provider/example-application
-kubectl apply -f compositions/aws-provider/dynamodb
-kubectl apply -f compositions/aws-provider/iam-policy
-kubectl apply -f compositions/aws-provider/irsa
+kubectl apply -k compositions
 ```
 
 > If you used terraform to the cluster then create the policy
