@@ -87,12 +87,6 @@ module "eks_blueprints" {
   source = "github.com/csantanapr/terraform-aws-eks-blueprints//modules/kubernetes-addons?ref=crossplane-updates-11-28"
 
   eks_cluster_id       = module.eks_blueprints.eks_cluster_id
-  #eks_cluster_endpoint = module.eks_blueprints.eks_cluster_endpoint
-  #eks_oidc_provider    = module.eks_blueprints.oidc_provider
-  #eks_cluster_version  = module.eks_blueprints.eks_cluster_version
-
-  # Wait on the data plane to be up
-  #data_plane_wait_arn = module.eks_blueprints.managed_node_group_arn[0]
 
   # Deploy Crossplane
   enable_crossplane = true
@@ -131,8 +125,6 @@ module "vpc" {
   enable_nat_gateway   = true
   single_nat_gateway   = true
   enable_dns_hostnames = true
-
-  create_igw           = true
 
   # Manage so we can name
   manage_default_network_acl    = true
