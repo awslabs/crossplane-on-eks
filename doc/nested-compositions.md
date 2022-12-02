@@ -2,15 +2,19 @@
 
 Compositions can be nested within a composition. Take a look at the example-application defined in the `compositions/aws-provider/example-application` directory. The Composition contains Compositions defined in other directories and creates a DynamoDB table, IAM policies for the table, a Kubernetes service account, and a IAM role for service accounts (IRSA). This pattern is very powerful. It let you define your abstraction based on someone else's prior work.
 
-An example yaml file to deploy this Composition is available at  `compositions/aws-provider/example-application/example-application.yaml`.  
+An example yaml file to deploy this Composition is available at  `compositions/aws-provider/example-application/example-application-db.yaml`.  
 
 Let’s take a look at how this example application can be deployed. 
+
+## Install Composition and Composite
 
 Install the [Composite Resource Definition](https://crossplane.io/docs/master/concepts/terminology.html#composite-resource-definition) and [Composition](https://crossplane.io/docs/master/concepts/terminology.html#composition)
 
 ```bash
 kubectl apply -k compositions
 ```
+
+## Deploy DynamoDB and Application
 
 > If you used terraform to the cluster then create the policy
 ```bash
@@ -62,6 +66,19 @@ Deploy your application to leverage the DynamoDB
 ```bash
 kubectl apply -f examples/aws-provider/composite-resources/example-application/example-application-app.yaml
 ```
+
+Watch the logs of the application
+```bash
+kubectl logs -n example-app deployment/example-app --timestamps=true -f
+```
+The application puts an item into the table and 2 minutes later removes the item, this runs in a loop.
+```
+putting item
+removing item
+```
+Use `Ctrl+C` to exit logs.
+
+## Deep Dive
 
 You can look at the example application object, but it doesn’t tell you much about what is happening. Let’s dig deeper. 
 ```bash
