@@ -15,20 +15,7 @@ kubectl apply -f compositions/aws-provider/iam-policy
 kubectl apply -f compositions/aws-provider/irsa
 ```
 
-Edit the file [examples/aws-provider/composite-resources/example-application/example-application.yaml](examples/aws-provider/composite-resources/example-application/example-application.yaml)
-
-Replace the values for `accountId`, `eksOIDC` and `permissionsBoundaryArn`
-
-To get the `accountId` use the following command:
-```bash
-aws sts get-caller-identity --query Account --output text
-```
-To get the `eksOIDC` use the following command:
-```bash
-aws eks describe-cluster --name crossplane-blueprints --query "cluster.identity.oidc.issuer" --output text | sed -e "s/^https:\/\///"
-```
-
-> If you used terraform create the policy
+> If you used terraform to the cluster then create the policy
 ```bash
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 sed -i.bak "s/ACCOUNT_ID/${ACCOUNT_ID}/g" bootstrap/eksctl/permission-boundary.json
@@ -37,24 +24,22 @@ aws iam create-policy \
     --policy-document file://bootstrap/eksctl/permission-boundary.json
 ```
 
-Replace the account id in `permissionsBoundaryArn` value
-
-
+Create the namespace for the example
 ```bash
 kubectl create ns example-app
 # namespace/example-app created
 ```
 
+Deploy the example application substituting some values
 ```bash
-ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
-OIDC_PROVIDER=$(aws eks describe-cluster --name crossplane-blueprints --query "cluster.identity.oidc.issuer" --output text | sed -e "s/^https:\/\///")
+export OIDC_PROVIDER=$(aws eks describe-cluster --name crossplane-blueprints --query "cluster.identity.oidc.issuer" --output text | sed -e "s/^https:\/\///")
 
-PERMISSION_BOUNDARY_ARN="arn:aws:iam::${ACCOUNT_ID}:policy/crossplaneBoundary"
+export PERMISSION_BOUNDARY_ARN="arn:aws:iam::${ACCOUNT_ID}:policy/crossplaneBoundary"
 
-eval "echo \"$(cat examples/aws-provider/composite-resources/example-application/example-application.yaml)\""
+envsubst < examples/aws-provider/composite-resources/example-application/example-application.yaml | kubectl apply -f -
 
-kubectl apply -f examples/aws-provider/composite-resources/example-application/example-application.yaml
 # exampleapp.awsblueprints.io/example-application created
 ```
 
@@ -153,10 +138,14 @@ metadata:
   annotations:
     eks.amazonaws.com/role-arn: arn:aws:iam::123456789:role/example-application-8x9fr-nwgbh
 ```
-You can examine the IAM Role as well.
 
+You can examine the IAM Role as well.
 ```bash
-# aws iam list-roles --query 'Roles[?starts_with(RoleName, `example-application`) == `true`]'
+aws iam list-roles --query 'Roles[?starts_with(RoleName, `example-application`) == `true`]'
+```
+
+Expected output:
+```json
 [
     {
         "Path": "/",
