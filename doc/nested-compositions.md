@@ -24,12 +24,6 @@ aws iam create-policy \
     --policy-document file://bootstrap/eksctl/permission-boundary.json
 ```
 
-Create the namespace for the example
-```bash
-kubectl create ns example-app
-# namespace/example-app created
-```
-
 Deploy the example application substituting some values
 ```bash
 export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)

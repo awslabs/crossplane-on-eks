@@ -1,6 +1,10 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
-
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: example-app
+---
 apiVersion: awsblueprints.io/v1alpha1
 kind: ExampleApp
 metadata:
@@ -9,6 +13,8 @@ metadata:
 spec:
   writeConnectionSecretToRef:
     name: example-application-secrets
+  resourceConfig:
+    providerConfigName: default
     region: us-west-2
     tags:
       - key: env
