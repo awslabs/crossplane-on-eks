@@ -10,5 +10,5 @@ spec:
     - subnet-1234abcd
   resourceConfig:
     region: us-east-1
-    providerConfigName: my-aws-provider
+    providerConfigName: default
     tags: []

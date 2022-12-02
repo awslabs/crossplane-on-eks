@@ -34,7 +34,7 @@ spec:
       awsblueprints.io/network-id: "true"
       service: vpcsubnet
   resourceConfig:
-    providerConfigName: sandbox-account
+    providerConfigName: default
     region: eu-central-1
   # networkId is propagated to subnet label 'network.awsblueprints.io/network-id'
   networkId: dev-net
@@ -75,7 +75,7 @@ spec:
       awsblueprints.io/subnet-selection: label
       service: eks
   resourceConfig:
-    providerConfigName: sandbox-account
+    providerConfigName: default
     region: eu-central-1
   parameters:
     #EKS Input parameters

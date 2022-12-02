@@ -16,7 +16,7 @@ spec:
       service: vpc
       compute: managedamazon-vpc
   resourceConfig:
-    providerConfigName: aws-provider-config
+    providerConfigName: default
     region: eu-west-1
   parameters:
     vpcName: aws-provider-vpc

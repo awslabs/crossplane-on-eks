@@ -36,7 +36,7 @@ spec:
       awsblueprints.io/subnet-selection: id
       service: eks
   resourceConfig:
-    providerConfigName: aws-provider-config
+    providerConfigName: default
     region: eu-west-1
   parameters:
     #EKS Input parameters

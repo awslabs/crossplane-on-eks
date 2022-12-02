@@ -13,7 +13,7 @@ spec:
   writeConnectionSecretToRef:
     name: cdn-info
   resourceConfig:
-    providerConfigName: aws-provider-config
+    providerConfigName: default
     region: us-west-2
     tags:
       - key: env
