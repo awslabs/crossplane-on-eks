@@ -1,8 +1,0 @@
-apiVersion: s3.aws.crossplane.io/v1beta1
-kind: Bucket
-metadata:
-  name: test-channel-bucket
-spec:
-  forProvider:
-    locationConstraint: us-east-1
-    acl: private
