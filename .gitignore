@@ -13,3 +13,5 @@ kubeconfig_*
 *.tfstate
 *.tfstate.*
 *.tfplan
+
+cluster-keys.json

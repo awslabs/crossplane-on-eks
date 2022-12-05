@@ -5,7 +5,6 @@ apiVersion: kubernetes.crossplane.io/v1alpha1
 kind: ProviderConfig
 metadata:
   name: default
-  namespace: crossplane-system
 spec:
   credentials:
     source: InjectedIdentity
