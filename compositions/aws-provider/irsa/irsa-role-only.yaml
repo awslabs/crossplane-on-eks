@@ -4,7 +4,10 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: irsa-exact.awsblueprints.io
+  name: irsa-role-only.awsblueprints.io
+  labels:
+    awsblueprints.io/environment: dev
+    awsblueprints.io/type: role-only
 spec:
   writeConnectionSecretsToNamespace: crossplane-system
   compositeTypeRef:
@@ -36,6 +39,16 @@ spec:
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.arn
           toFieldPath: status.roleArn
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.arn
+          toFieldPath: status.roleName
+          transforms:
+            - type: string
+              string:
+                type: Regexp
+                regexp:
+                  match: 'arn:aws:iam::\d+:role/(.*)'
+                  group: 1  
         - type: FromCompositeFieldPath
           fromFieldPath: spec.permissionsBoundaryArn
           toFieldPath: spec.forProvider.permissionsBoundary
@@ -63,64 +76,10 @@ spec:
                       },
                       "Action": "sts:AssumeRoleWithWebIdentity",
                       "Condition": {
-                        "StringEquals": {
+                        "StringLike": {
                           "%s:sub": "system:serviceaccount:%s:%s"
                         }
                       }
                     }
                   ]
                 }
-    - name: policy-attachment-1
-      base:
-        apiVersion: iam.aws.crossplane.io/v1beta1
-        kind: RolePolicyAttachment
-        spec:
-          forProvider:
-            policyArn: ""
-            roleNameSelector:
-              matchControllerRef: true
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.policyArns[0]
-          toFieldPath: spec.forProvider.policyArn
-    - name: policy-attachment-2
-      base:
-        apiVersion: iam.aws.crossplane.io/v1beta1
-        kind: RolePolicyAttachment
-        spec:
-          forProvider:
-            policyArn: ""
-            roleNameSelector:
-              matchControllerRef: true
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.policyArns[1]
-          toFieldPath: spec.forProvider.policyArn
-    - name: service-account
-      base:
-        apiVersion: kubernetes.crossplane.io/v1alpha1
-        kind: Object
-        spec:
-          forProvider:
-            manifest:
-              apiVersion: v1
-              kind: ServiceAccount
-              metadata:
-                name: ""
-                namespace: default
-                annotations:
-                  eks.amazonaws.com/role-arn: ""
-      patches:
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
-          toFieldPath: spec.forProvider.manifest.metadata.namespace
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.serviceAccountName
-          toFieldPath: spec.forProvider.manifest.metadata.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.roleArn
-          toFieldPath: spec.forProvider.manifest.metadata.annotations[eks.amazonaws.com/role-arn]
