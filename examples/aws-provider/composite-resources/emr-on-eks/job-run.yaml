@@ -1,0 +1,31 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# Must create a namespace called test1 before. e.g. kubectl create ns test1
+# Must create a Virtual Cluster.
+apiVersion: awsblueprints.io/v1alpha1
+kind: EMRContainer
+metadata:
+  name: test-job-run
+  namespace: test1
+spec:
+  # compositeDeletePolicy: Foreground
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/environment: dev
+      awsblueprints.io/type: job-run
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: us-west-2
+    tags:
+      - key: env
+        value: test
+      - key: anotherKey
+        value: anotherValue
+  eksOIDC: oidc.eks.us-west-2.amazonaws.com/id/abcdefbgsdfaslkdfjaioejfo12j2ioj31ilo # Change me
+  permissionsBoundaryArn: arn:aws:iam::1234567:policy/crossplaneBoundary # optional.
+  jobParams:
+    # must be s3.
+    sparkEntryPoint: s3://us-west-2.elasticmapreduce/emr-containers/samples/wordcount/scripts/wordcount.py # This is an example script available to the public.
+    sparkSubmitParameters: "--conf spark.executor.instances=2 --conf spark.executor.memory=1G --conf spark.executor.cores=1 --conf spark.driver.cores=1"
+    virtualClusterId: "i335bgltdcjhlfbkak5120202" # Change me

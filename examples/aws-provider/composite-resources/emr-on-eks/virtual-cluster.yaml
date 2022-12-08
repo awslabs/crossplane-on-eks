@@ -1,0 +1,19 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# Must create a namespace called test1 before. e.g. kubectl create ns test1
+apiVersion: awsblueprints.io/v1alpha1
+kind: EMRContainer
+metadata:
+  name: test-virtual-cluster
+  namespace: test1
+spec:
+  # compositeDeletePolicy: Foreground
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/environment: dev
+      awsblueprints.io/type: virtual-cluster
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: us-west-2
+  eksClusterName: crossplane-argo-vault-2 # This is the name of your EKS cluster in which you'd like to create your virtual cluster.
