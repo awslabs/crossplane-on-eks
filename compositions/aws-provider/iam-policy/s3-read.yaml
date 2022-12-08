@@ -1,0 +1,104 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: read-s3.iampolicy.awsblueprints.io
+  labels:
+    iam.awsblueprints.io/policy-type: read
+    iam.awsblueprints.io/service: s3-bucket
+    iam.awsblueprints.io/attach-policy: "true"
+spec:
+  writeConnectionSecretsToNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: awsblueprints.io/v1alpha1
+    kind: IAMPolicy
+  patchSets:
+    - name: common-fields
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.deletionPolicy
+          toFieldPath: spec.deletionPolicy
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.name
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            mergeOptions:
+              appendSlice: true
+              keepMapValues: true
+  resources:
+    - name: read-policy
+      base:
+        apiVersion: iam.aws.crossplane.io/v1beta1
+        kind: Policy
+        spec:
+          deletionPolicy: Delete
+          forProvider:
+            name: ""
+            document: ""
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: ToCompositeFieldPath
+          fromFieldPath: metadata.annotations[crossplane.io/external-name]
+          toFieldPath: status.policyArn
+        - type: CombineFromComposite
+          toFieldPath: spec.forProvider.name
+          combine:
+            variables:
+              - fromFieldPath: metadata.name
+            strategy: string
+            string:
+              fmt: "%s-s3-bucket-read"
+        - type: CombineFromComposite
+          toFieldPath: spec.forProvider.document
+          combine:
+            variables:
+            - fromFieldPath: spec.resourceArn
+            - fromFieldPath: spec.resourceArn
+            strategy: string
+            string:
+              fmt: |
+                {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "s3:GetObject",
+                        "s3:ListBucket",
+                        "s3:GetBucketLocation",
+                        "s3:GetObjectVersion",
+                        "s3:GetLifecycleConfiguration"
+                      ],
+                      "Resource": [
+                        "%s",
+                        "%s/*"
+                      ]
+                    }
+                  ]
+                }
+    - name: policy-attachment
+      base:
+        apiVersion: iam.aws.crossplane.io/v1beta1
+        kind: RolePolicyAttachment
+        spec:
+          deletionPolicy: Delete
+          forProvider:
+            policyArnSelector:
+              matchControllerRef: true
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.roleName
+          toFieldPath: spec.forProvider.roleName
+          policy:
+            fromFieldPath: Required

@@ -23,6 +23,8 @@ spec:
               properties:
                 resourceArn:
                   type: string
+                roleName:
+                  type: string
                 resourceConfig:
                   description: ResourceConfig defines general properties of this AWS
                     resource.
