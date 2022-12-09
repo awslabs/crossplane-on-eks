@@ -2,53 +2,134 @@
 
 Compositions can be nested within a composition. Take a look at the example-application defined in the `compositions/aws-provider/example-application` directory. The Composition contains Compositions defined in other directories and creates a DynamoDB table, IAM policies for the table, a Kubernetes service account, and a IAM role for service accounts (IRSA). This pattern is very powerful. It let you define your abstraction based on someone else's prior work.
 
-An example yaml file to deploy this Composition is available at  `examples/aws-provider/composite-resources/example-application/example-application.yaml`.  
+An example yaml file to deploy this Composition is available at  `compositions/aws-provider/example-application/example-application-db.yaml`.  
 
 Let’s take a look at how this example application can be deployed. 
 
+## Install Composition and Composite
+
+Install the [Composite Resource Definition](https://crossplane.io/docs/master/concepts/terminology.html#composite-resource-definition) and [Composition](https://crossplane.io/docs/master/concepts/terminology.html#composition)
+
+Build, package, push, and install the Blueprints Crossplane package followign the instructions [here](../compositions/README.md) or run the following commands to install from source
+
+```bash
+kubectl apply -f compositions/aws-provider/dynamodb
+kubectl apply -f compositions/aws-provider/iam-policy
+kubectl apply -f compositions/aws-provider/irsa
+kubectl apply -f compositions/aws-provider/example-application
+```
+
+## Deploy DynamoDB and Application
+
+> NOTE: If you used terraform to provision the EKS cluster then create the policy
+```bash
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+sed -i.bak "s/ACCOUNT_ID/${ACCOUNT_ID}/g" bootstrap/eksctl/permission-boundary.json
+aws iam create-policy \
+    --policy-name crossplaneBoundary \
+    --policy-document file://bootstrap/eksctl/permission-boundary.json
+```
+
+Create the namespace for the example
 ```bash
 kubectl create ns example-app
-# namespace/example-app created
-
-kubectl apply -f examples/aws-provider/composite-resources/example-application/example-application.yaml
-# exampleapp.awsblueprints.io/example-application created
 ```
+
+Request a DynamoDB table for your application
+```bash
+export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
+export OIDC_PROVIDER=$(aws eks describe-cluster --name crossplane-blueprints --query "cluster.identity.oidc.issuer" --output text | sed -e "s/^https:\/\///")
+
+export PERMISSION_BOUNDARY_ARN="arn:aws:iam::${ACCOUNT_ID}:policy/crossplaneBoundary"
+
+envsubst < examples/aws-provider/composite-resources/example-application/example-application-db.yaml | kubectl apply -f -
+
+# dynamodbexample.awsblueprints.io/example-app created
+```
+
+Wait for the DynamoDBExample to be ready 
+```bash
+kubectl wait DynamoDBExample example-app --for=condition=Ready --timeout=5m -n example-app
+```
+
+Verify the secret values that were configured for the application are present
+```bash
+echo "region=$(kubectl get secret example-application-secrets -o go-template='{{.data.region|base64decode}}' -n example-app)"
+
+echo "tableArn=$(kubectl get secret example-application-secrets -o go-template='{{.data.tableArn|base64decode}}' -n example-app)"
+
+echo "tableName=$(kubectl get secret example-application-secrets -o go-template='{{.data.tableName|base64decode}}' -n example-app)"
+```
+
+Verify the service account annotation is configured with IRSA role, this will allow the Pod to assume this role to access the database.
+```bash
+echo "role=$(kubectl get sa example-app  -o jsonpath='{.metadata.annotations.eks\.amazonaws\.com/role-arn}' -n example-app)"
+```
+
+Deploy your application to leverage the DynamoDB
+```bash
+kubectl apply -f examples/aws-provider/composite-resources/example-application/example-application-app.yaml
+```
+
+Watch the logs of the application
+```bash
+kubectl logs -n example-app deployment/example-app --timestamps=true -f
+```
+The application puts an item into the table and 2 minutes later removes the item, this runs in a loop.
+```
+putting item
+removing item
+```
+Use `Ctrl+C` to exit logs.
+
+## Deep Dive
 
 You can look at the example application object, but it doesn’t tell you much about what is happening. Let’s dig deeper. 
 ```bash
-# kubectl get exampleapp -n example-app example-application -o=jsonpath='{.spec.resourceRef}'
-{"apiVersion":"awsblueprints.io/v1alpha1","kind":"XExampleApp","name":"example-application-8x9fr"}
+kubectl get exampleapp -n example-app example-app -o=jsonpath='{.spec.resourceRef}'
+```
+Expected output:
+```json
+{
+  "apiVersion":"awsblueprints.io/v1alpha1",
+  "kind":"XDynamoDBExample",
+  "name":"example-app-8x9fr"
+}
 ```
 By looking at the spec.resourceRef field, you can see which cluster wide object this object created.
 Let’s see what resources are created in the cluster wide object. 
 
 ```bash
-# kubectl get XExampleApp example-application-8x9fr -o=jsonpath='{.spec.resourceRefs}' | jq
+kubectl get XDynamoDBExample -o=jsonpath='{.items[].spec.resourceRefs}' | jq
+```
+Expected output:
+```json
 [
   {
     "apiVersion": "awsblueprints.io/v1alpha1",
     "kind": "XDynamoDBTable",
-    "name": "example-application-8x9fr-svxxg"
+    "name": "example-app-8x9fr-svxxg"
   },
   {
     "apiVersion": "awsblueprints.io/v1alpha1",
     "kind": "IAMPolicy",
-    "name": "example-application-8x9fr-w9fgb"
+    "name": "example-app-8x9fr-w9fgb"
   },
   {
     "apiVersion": "awsblueprints.io/v1alpha1",
     "kind": "IAMPolicy",
-    "name": "example-application-8x9fr-r5hzx"
+    "name": "example-app-8x9fr-r5hzx"
   },
   {
     "apiVersion": "awsblueprints.io/v1alpha1",
     "kind": "XIRSA",
-    "name": "example-application-8x9fr-r7dzn"
+    "name": "example-app-8x9fr-r7dzn"
   },
   {
     "apiVersion": "kubernetes.crossplane.io/v1alpha1",
     "kind": "Object",
-    "name": "example-application-8x9fr-bv7tl"
+    "name": "example-app-8x9fr-bv7tl"
   }
 ]
 ```
@@ -58,28 +139,30 @@ We see that it has five sub objects. Notice the first object is the XDynamoDBTab
 Let’s take a look at the XIRSA object. As the name implies, this object is responsible for setting up EKS IRSA for the application pod to use. 
 
 ```bash
-
-# kubectl get XIRSA example-application-8x9fr-r7dzn -o jsonpath='{.spec.resourceRefs}' | jq
+kubectl get XIRSA -o=jsonpath='{.items[].spec.resourceRefs}' | jq
+```
+Expected output:
+```json
 [
   {
     "apiVersion": "iam.aws.crossplane.io/v1beta1",
     "kind": "Role",
-    "name": "example-application-8x9fr-nwgbh"
+    "name": "example-app-8x9fr-nwgbh"
   },
   {
     "apiVersion": "iam.aws.crossplane.io/v1beta1",
     "kind": "RolePolicyAttachment",
-    "name": "example-application-8x9fr-n6g8q"
+    "name": "example-app-8x9fr-n6g8q"
   },
   {
     "apiVersion": "iam.aws.crossplane.io/v1beta1",
     "kind": "RolePolicyAttachment",
-    "name": "example-application-8x9fr-kzrsg"
+    "name": "example-app-8x9fr-kzrsg"
   },
   {
     "apiVersion": "kubernetes.crossplane.io/v1alpha1",
     "kind": "Object",
-    "name": "example-application-8x9fr-bzfr6"
+    "name": "example-app-8x9fr-bzfr6"
   }
 ]
 ```
@@ -87,22 +170,29 @@ Let’s take a look at the XIRSA object. As the name implies, this object is res
 As you can see, it created an IAM Role and attached policies.  It also created a Kubernetes service account as represented by the last element. If you look at the created service account, it has the necessary properties for IRSA to function. 
 
 ```bash
-# kubectl get sa -n example-app example-app -o yaml
+kubectl get sa -n example-app example-app -o yaml
+```
+Expected output:
+```yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::123456789:role/example-application-8x9fr-nwgbh
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789:role/example-app-8x9fr-nwgbh
 ```
-You can examine the IAM Role as well.
 
+You can examine the IAM Role as well.
 ```bash
-# aws iam list-roles --query 'Roles[?starts_with(RoleName, `example-application`) == `true`]'
+aws iam list-roles --query 'Roles[?starts_with(RoleName, `example-app`) == `true`]'
+```
+
+Expected output:
+```json
 [
     {
         "Path": "/",
-        "RoleName": "example-application-8x9fr-nwgbh",
-        "Arn": "arn:aws:iam::1234569091:role/example-application-8x9fr-nwgbh",
+        "RoleName": "example-app-8x9fr-nwgbh",
+        "Arn": "arn:aws:iam::1234569091:role/example-app-8x9fr-nwgbh",
         "AssumeRolePolicyDocument": {
             "Version": "2012-10-17",
             "Statement": [
@@ -123,4 +213,11 @@ You can examine the IAM Role as well.
         "MaxSessionDuration": 3600
     }
 ] 
+```
+
+## Clean up
+```bash
+kubectl delete deployment example-app -n example-app
+kubectl delete DynamoDBExample example-app -n example-app
+kubectl delete -k compositions
 ```

@@ -2,24 +2,24 @@
 # SPDX-License-Identifier: Apache-2.0
 
 apiVersion: awsblueprints.io/v1alpha1
-kind: ExampleApp
+kind: DynamoDBExample
 metadata:
-  name: example-application
+  name: example-app
   namespace: example-app
 spec:
   writeConnectionSecretToRef:
     name: example-application-secrets
   resourceConfig:
-    providerConfigName: aws-provider-config
+    providerConfigName: default
     region: us-west-2
     tags:
       - key: env
         value: test
       - key: anotherKey
         value: anotherValue
-  accountId: "123456789"
-  eksOIDC: "oidc.eks.us-west-2.amazonaws.com/id/123456789ABCDEFG"
-  permissionsBoundaryArn: "arn:aws:iam::123456789:policy/crossplaneBoundary"
+  accountId: "${ACCOUNT_ID}"
+  eksOIDC: "${OIDC_PROVIDER}"
+  permissionsBoundaryArn: "${PERMISSION_BOUNDARY_ARN}"
   tableSpec:
     hashKeyName: id
     hashKeyType: S
