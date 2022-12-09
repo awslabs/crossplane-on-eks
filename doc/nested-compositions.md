@@ -4,6 +4,11 @@ Compositions can be nested within a composition. Take a look at the example-appl
 
 An example yaml file to deploy this Composition is available at  `examples/aws-provider/composite-resources/example-application/example-application.yaml`.  
 
+You can install the local compositions and composites using the following command
+```bash
+kubectl -k compositions
+```
+
 Let’s take a look at how this example application can be deployed. 
 
 ```bash
