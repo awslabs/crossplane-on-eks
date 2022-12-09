@@ -13,11 +13,8 @@ spec:
   patchSets:
     - name: common-fields
       patches:
-        - fromFieldPath: spec.resourceConfig
-          toFieldPath: spec.resourceConfig
-          policy:
-            mergeOptions:
-              keepMapValues: true
+        - fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
   resources:
     - name: iam-role
       base:
