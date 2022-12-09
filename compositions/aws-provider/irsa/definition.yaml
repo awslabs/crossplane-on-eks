@@ -74,13 +74,15 @@ spec:
               required:
               - awsAccountID
               - eksOIDC
-              - policyArns
+              - serviceAccountName
               - resourceConfig
               type: object
             status:
               description: IRSAStatus defines the observed state of IRSA
               properties:
                 roleArn:
+                  type: string
+                roleName:
                   type: string
               type: object
           type: object
