@@ -98,7 +98,6 @@ Step1: Delete resources created by Crossplane
 
 Step2: Terraform Destroy
 
-```shell script
-cd bootstrap/terraform/
-terraform destroy --auto-approve
+```bash
+./destroy.sh
 ```
