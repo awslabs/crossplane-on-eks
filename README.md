@@ -15,9 +15,8 @@ predefined [Composite Resources (XRs)](https://crossplane.io/docs/master/concept
 ✅   Bootstrap [Amazon EKS](https://aws.amazon.com/eks/) Cluster and Crossplane with [Terraform](https://www.terraform.io/) \
 ✅   Bootstrap [Amazon EKS](https://aws.amazon.com/eks/) Cluster and Crossplane with [eksctl](https://eksctl.io/) \
 ✅   [AWS Provider](https://github.com/crossplane/provider-aws) - Crossplane Compositions for AWS Services \
-✅   [Terrajet AWS Provider](https://github.com/crossplane-contrib/provider-jet-aws) - Crossplane Compositions for AWS Services \
 ✅   [AWS IRSA on EKS](https://github.com/crossplane/provider-aws/blob/master/AUTHENTICATION.md#using-iam-roles-for-serviceaccounts) - AWS Provider Config with IRSA enabled  \
-✅   Example deployment patterns for [Composite Resources (XRs)](https://crossplane.io/docs/master/concepts/composition.html) for AWS Provider and Terrajet AWS Provider\
+✅   Example deployment patterns for [Composite Resources (XRs)](https://crossplane.io/docs/master/concepts/composition.html) for AWS Provider\
 ✅   Example deployment patterns for [Crossplane Managed Resources (MRs)](https://crossplane.io/docs/master/concepts/managed-resources.html)
 
 ## Getting Started
@@ -32,13 +31,10 @@ Checkout the following README for full deployment configuration
 
 ✅   Configure the EKS cluster
 
-Depending on whether you want to use the jet provider or the default provider
-for AWS, you need to install one or both of the crossplane providers on the EKS
-cluster. You will also need to enable IRSA support for your EKS cluster for the
-necessary permissions to spin up other AWS services. Refer to the bootstrap README for this configuration.
+Enable IRSA support for your EKS cluster for the necessary permissions to spin up other AWS services.
+Refer to the bootstrap README for this configuration.
 
  - [AWS Provider](https://github.com/crossplane/provider-aws) - Crossplane Compositions for AWS Services
- - [Terrajet AWS Provider](https://github.com/crossplane-contrib/provider-jet-aws) - Crossplane Compositions for AWS Services
 
 ✅   Deploy the Examples
 
@@ -69,8 +65,6 @@ Crossplane can be configured to publish secrets external to the cluster in which
 - [Crossplane](https://crossplane.io/)
 - [AWS Provider](https://github.com/crossplane/provider-aws) for Crossplane
   - [API Docs](https://doc.crds.dev/github.com/crossplane/provider-aws) provider-aws
-- [Terrajet](https://github.com/crossplane/terrajet) [AWS provider](https://github.com/crossplane-contrib/provider-jet-aws) for Crossplane
-  - [API Docs](https://doc.crds.dev/github.com/crossplane-contrib/provider-jet-aws) provider-jet-aws
 
 ## Debugging
 For debugging Compositions, CompositionResourceDefinitions, etc, [please see the debugging guide](doc/debugging.md).

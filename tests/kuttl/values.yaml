@@ -1,5 +1,4 @@
 provider:
   packages:
     - crossplane/provider-aws:v0.24.1
-    - crossplane/provider-jet-aws:v0.4.1
     - crossplane/provider-kubernetes:v0.2.0

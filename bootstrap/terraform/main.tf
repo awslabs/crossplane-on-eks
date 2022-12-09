@@ -156,15 +156,6 @@ module "eks_blueprints_kubernetes_addons" {
     additional_irsa_policies = ["arn:aws:iam::aws:policy/AdministratorAccess"]
   }
 
-  #---------------------------------------------------------
-  # Crossplane Terrajet AWS Provider deployment
-  #   Creates ProviderConfig name as "jet-aws-provider-config"
-  #---------------------------------------------------------
-  crossplane_jet_aws_provider = {
-    enable                   = true
-    provider_aws_version     = "v0.4.2"
-    additional_irsa_policies = ["arn:aws:iam::aws:policy/AdministratorAccess"]
-  }
 
   #---------------------------------------------------------
   # Crossplane Kubernetes Provider deployment
