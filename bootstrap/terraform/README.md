@@ -6,7 +6,6 @@ This example deploys the following components
 - Creates EKS Cluster Control plane with one managed node group
 - Crossplane Add-on to EKS Cluster
 - AWS Provider for Crossplane
-- Terrajet AWS Provider for Crossplane
 - Kubernetes Provider for Crossplane
 
 ## Crossplane Deployment Design
@@ -29,8 +28,7 @@ graph TD;
     ManagedNodeGroup-->|enable_crossplane=true|id2([Crossplane]);
     subgraph Kubernetes Add-ons
     id2([Crossplane])-.->|crossplane_aws_provider.enable=true|id3([AWS-Provider]);
-    id2([Crossplane])-.->|crossplane_jet_aws_provider.enable=true|id4([Terrajet-AWS-Provider]);
-    id2([Crossplane])-.->|crossplane_kubernetes_provider.enable=true|id5([Kubernetes-Provider]);
+    id2([Crossplane])-.->|crossplane_kubernetes_provider.enable=true|id4([Kubernetes-Provider]);
     end
     end
 ```
