@@ -57,7 +57,7 @@ spec:
     - name: read-policy
       base:
         apiVersion: awsblueprints.io/v1alpha1
-        kind: IAMPolicy
+        kind: XIAMPolicy
         spec:
           compositionSelector:
             matchLabels:
@@ -77,7 +77,7 @@ spec:
     - name: write-policy
       base:
         apiVersion: awsblueprints.io/v1alpha1
-        kind: IAMPolicy
+        kind: XIAMPolicy
         spec:
           compositionSelector:
             matchLabels:
