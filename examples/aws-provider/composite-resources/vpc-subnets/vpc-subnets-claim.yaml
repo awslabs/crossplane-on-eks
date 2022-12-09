@@ -27,7 +27,6 @@ spec:
       awsblueprints.io/network-id: "false"
       service: vpcsubnet
   resourceConfig:
-    providerConfigName: aws-provider-config
     region: eu-west-1
   parameters:
     #vpc input

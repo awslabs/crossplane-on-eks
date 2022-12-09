@@ -58,7 +58,6 @@ spec:
                         type: object
                       type: array
                   required:
-                  - providerConfigName
                   - region
                   - tags
                   type: object

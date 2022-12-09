@@ -10,7 +10,6 @@ spec:
   writeConnectionSecretToRef:
     name: example-application-secrets
   resourceConfig:
-    providerConfigName: aws-provider-config
     region: us-west-2
     tags:
       - key: env

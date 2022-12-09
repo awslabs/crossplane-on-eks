@@ -16,7 +16,6 @@ spec:
   writeConnectionSecretToRef:
     name: test-table-on-demand-partition-key
   resourceConfig:
-    providerConfigName: aws-provider-config
     region: us-west-2
     tags:
       - key: env

@@ -132,7 +132,6 @@ spec:
                       type: string
 
                   required:
-                    - providerConfigName
                     - region
               required:
                 - parameters

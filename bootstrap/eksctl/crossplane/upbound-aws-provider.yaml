@@ -6,7 +6,7 @@ kind: Provider
 metadata:
   name: provider-aws
 spec:
-  package: "xpkg.upbound.io/upbound/provider-aws:v0.20.0"
+  package: "xpkg.upbound.io/upbound/provider-aws:v0.22.0"
   controllerConfigRef:
     name: upbound-provider-aws
 ---
