@@ -14,6 +14,11 @@ Deploys VPC Composition file and XRD definition file
 kubectl apply -f compositions/aws-provider/vpc
 ```
 
+You can also deploy all Compositions and XRD by running
+```shell
+kubectl -k compositions
+```
+
 ### Deploy Application example
 Deploys VPC claim resource which uses the above composition.
 
