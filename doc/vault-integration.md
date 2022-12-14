@@ -68,8 +68,6 @@ sudo systemctl start vault.service
 export VAULT_ADDR='http://127.0.0.1:8200'
 # This command will print out unseal keys and the root token.
 vault operator init
-# record the token
-export VAULT_TOKEN="<REPLACE>"
 vault operator unseal # do this three times. each time with a different unseal key.
 vault secrets enable -path=secret kv-v2
 vault auth enable kubernetes
