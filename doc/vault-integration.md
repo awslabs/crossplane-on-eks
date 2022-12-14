@@ -225,7 +225,7 @@ Since we created a provider config named `application1-provider-config`, we shou
 
 ```bash
 #create namespace
-kubectl create ns application1
+kubectl create ns application1 || true
 # create in new namespace
 kubectl apply -n application1 -f examples/aws-provider/composite-resources/s3/multi-tenant.yaml
 
