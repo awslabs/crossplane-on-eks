@@ -6,9 +6,6 @@ kind: CompositeResourceDefinition
 metadata:
   name: xiampolicies.awsblueprints.io
 spec:
-  claimNames:
-    kind: IAMPolicy
-    plural: iampolicies
   group: awsblueprints.io
   names:
     kind: XIAMPolicy
