@@ -53,7 +53,7 @@ sudo systemctl enable vault.service
 # create a configuration file for vault. NOTE: this creates a vault service with TLS disabled. 
 # This is done to make the configuration step easy to follow only. TLS should be enabled for real workloads.
 cat <<< 'ui = true
-disable_mlock = true
+
 storage "file" {
   path = "/opt/vault/data"
 }
