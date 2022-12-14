@@ -4,6 +4,8 @@ Compositions can be nested within a composition. Take a look at the example-appl
 
 An example yaml file to deploy this Composition is available at  `examples/aws-provider/composite-resources/example-application/example-application.yaml`.  
 
+Install the AWS Compositions and XRDs following the instructions in [compositions/README.md](../compositions/README.md)
+
 Let’s take a look at how this example application can be deployed. 
 
 ```bash
