@@ -9,7 +9,6 @@ metadata:
     awsblueprints.io/environment: dev
     awsblueprints.io/type: role-only
 spec:
-  writeConnectionSecretsToNamespace: crossplane-system
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
     kind: XIRSA
