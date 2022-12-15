@@ -15,7 +15,7 @@ spec:
       dynamodb.awsblueprints.io/pkType: composite
       dynamodb.awsblueprints.io/secondaryIndex: local
       dynamodb.awsblueprints.io/secondaryIndexCount: "1"
-  writeConnectionSecretToRef:
+  publishConnectionDetailsTo:
     name: test-table-on-demand-partition-key-lsi
   resourceConfig:
     providerConfigName: aws-provider-config
