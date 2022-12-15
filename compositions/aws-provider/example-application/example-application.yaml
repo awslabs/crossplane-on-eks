@@ -8,7 +8,6 @@ metadata:
   labels:
     awsblueprints.io/environment: dev
 spec:
-  writeConnectionSecretsToNamespace: crossplane-system
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
     kind: XExampleApp
@@ -54,6 +53,9 @@ spec:
         - type: ToCompositeFieldPath
           fromFieldPath: spec.tableSpec.hashKeyType
           toFieldPath: spec.tableIndex.hashKeyType
+        - type: ToCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: status.xDynamoDBTableObjectName
     - name: read-policy
       base:
         apiVersion: awsblueprints.io/v1alpha1
@@ -99,6 +101,8 @@ spec:
         apiVersion: awsblueprints.io/v1alpha1
         kind: XIRSA
         spec:
+          compositionRef:
+            name: irsa-exact.awsblueprints.io
           awsAccountID: ""
           eksOIDC: ""
           permissionsBoundaryArn: ""
@@ -122,11 +126,22 @@ spec:
           toFieldPath: spec.policyArns[0]
         - fromFieldPath: status.writePolicyArn
           toFieldPath: spec.policyArns[1]
+        - type: ToCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: status.xirsaObjectName
     - name: example-app
       base:
         apiVersion: kubernetes.crossplane.io/v1alpha1
         kind: Object
         spec:
+          # Not strictly required but is here as an example.
+          references:
+            - dependsOn:
+                apiVersion: awsblueprints.io/v1alpha1
+                kind: XIRSA
+            - dependsOn:
+                apiVersion: awsblueprints.io/v1alpha1
+                kind: XDynamoDBTable
           forProvider:
             manifest:
               apiVersion: apps/v1
@@ -172,3 +187,9 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
           toFieldPath: spec.forProvider.manifest.metadata.namespace
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.xirsaObjectName
+          toFieldPath: spec.references[0].dependsOn.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.xDynamoDBTableObjectName
+          toFieldPath: spec.references[1].dependsOn.name
