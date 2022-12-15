@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 apiVersion: awsblueprints.io/v1alpha1
-kind: IAMPolicy
+kind: XIAMPolicy
 metadata:
   name: iam-dynamodb-read
   namespace: default

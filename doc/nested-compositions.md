@@ -34,12 +34,12 @@ Let’s see what resources are created in the cluster wide object.
   },
   {
     "apiVersion": "awsblueprints.io/v1alpha1",
-    "kind": "IAMPolicy",
+    "kind": "XIAMPolicy",
     "name": "example-application-8x9fr-w9fgb"
   },
   {
     "apiVersion": "awsblueprints.io/v1alpha1",
-    "kind": "IAMPolicy",
+    "kind": "XIAMPolicy",
     "name": "example-application-8x9fr-r5hzx"
   },
   {

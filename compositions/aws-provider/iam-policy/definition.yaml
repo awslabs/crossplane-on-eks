@@ -4,12 +4,12 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: iampolicies.awsblueprints.io
+  name: xiampolicies.awsblueprints.io
 spec:
   group: awsblueprints.io
   names:
-    kind: IAMPolicy
-    plural: iampolicies
+    kind: XIAMPolicy
+    plural: xiampolicies
   versions:
     - name: v1alpha1
       served: true

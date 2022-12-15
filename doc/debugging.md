@@ -103,12 +103,12 @@ The example application never reaches available state.
         },
         {
             "apiVersion": "awsblueprints.io/v1alpha1",
-            "kind": "IAMPolicy",
+            "kind": "XIAMPolicy",
             "name": "example-application-xqlsz-lp9wt"
         },
         {
             "apiVersion": "awsblueprints.io/v1alpha1",
-            "kind": "IAMPolicy",
+            "kind": "XIAMPolicy",
             "name": "example-application-xqlsz-btwkn"
         },
         {
