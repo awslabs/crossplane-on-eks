@@ -33,9 +33,38 @@ locals {
   cluster_version = var.cluster_version
   cluster_name    = local.name
   
-  crossplane_helm_config = var.crossplane_helm_config
-  crossplane_aws_provider = var.crossplane_aws_provider
-  crossplane_kubernetes_provider = var.crossplane_kubernetes_provider
+  crossplane_helm_config =  {
+    #  name       = "crossplane"
+    #  chart      = "crossplane"
+    #  repository = "https://charts.crossplane.io/stable/"
+    version       = "1.10.1"
+    #  namespace  = "crossplane-system"
+    #  values = [templatefile("${path.module}/values.yaml", {
+    #    operating-system = "linux"
+    #  })]
+  }
+
+  # NOTE: Crossplane requires Admin like permissions to create and update resources similar to Terraform deploy role.
+  # This example config uses AdministratorAccess for demo purpose only, but you should select a policy with the minimum permissions required to provision your resources
+  crossplane_aws_provider = {
+    enable                     = true
+    provider_aws_version       = "v0.34.0"
+    additional_irsa_policies   = ["arn:aws:iam::aws:policy/AdministratorAccess"]
+    # name                     = "aws-provider"
+    # service_account          = "aws-provider"
+    # provider_config          = "default"
+    # controller_config        = "aws-controller-config"
+  }
+  
+  crossplane_kubernetes_provider = {
+    enable                         = true
+    provider_kubernetes_version    = "v0.5.0"
+    #  name                        = "kubernetes-provider"
+    #  service_account             = "kubernetes-provider"
+    #  provider_config             = "default"
+    #  controller_config           = "kubernetes-controller-config"
+    #  cluster_role                = "cluster-admin"
+  }
   
   vpc_name        = local.name
   vpc_cidr = "10.0.0.0/16"
@@ -52,7 +81,7 @@ locals {
 #---------------------------------------------------------------
 
 module "eks_blueprints" {
-  source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.18.0"
+  source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.18.1"
 
   # EKS CONTROL PLANE VARIABLES
   cluster_name    = local.cluster_name
@@ -67,7 +96,7 @@ module "eks_blueprints" {
     mg = {
       node_group_name = "managed-on-demand"
       instance_types  = ["t3.small"]
-      desired_size    = 2
+      min_size    = 2
       subnet_ids      = module.vpc.private_subnets
     }
   }
@@ -80,7 +109,7 @@ module "eks_blueprints" {
 #---------------------------------------------------------------
 
  module "eks_blueprints_kubernetes_addons" {
-  source         = "github.com/aws-ia/terraform-aws-eks-blueprints//modules/kubernetes-addons?ref=v4.18.0"
+  source         = "github.com/aws-ia/terraform-aws-eks-blueprints//modules/kubernetes-addons?ref=v4.18.1"
 
   eks_cluster_id       = module.eks_blueprints.eks_cluster_id
 
