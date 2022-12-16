@@ -1,7 +1,17 @@
 .idea/
-.terraform.lock.hcl
-.terraform/
 kubeconfig_*
-local_tf_state/
 *.xpkg
 .DS_Store
+
+# Local .terraform directories
+**/.terraform/*
+
+# Terraform lockfile
+.terraform.lock.hcl
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+*.tfplan
+
+cluster-keys.json
