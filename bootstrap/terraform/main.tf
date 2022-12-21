@@ -81,7 +81,7 @@ locals {
 #---------------------------------------------------------------
 
 module "eks_blueprints" {
-  source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.18.1"
+  source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.19.0"
 
   # EKS CONTROL PLANE VARIABLES
   cluster_name    = local.cluster_name
@@ -109,7 +109,7 @@ module "eks_blueprints" {
 #---------------------------------------------------------------
 
 module "eks_blueprints_kubernetes_addons" {
-  source = "github.com/aws-ia/terraform-aws-eks-blueprints//modules/kubernetes-addons?ref=v4.18.1"
+  source = "github.com/aws-ia/terraform-aws-eks-blueprints//modules/kubernetes-addons?ref=v4.19.0"
 
   eks_cluster_id = module.eks_blueprints.eks_cluster_id
 
