@@ -43,14 +43,16 @@ Commands below assumes the VM is an Ubuntu instance.
 
 #### Install Vault
 Run the following commands in your VM.
+
+Install vault on Ubuntu following the vault [docs](https://developer.hashicorp.com/vault/tutorials/getting-started/getting-started-install)
+
+Configure vault
 ```bash
-# install vault and enable the service
-sudo apt update && sudo apt install vault
 sudo systemctl enable vault.service
 
 # create a configuration file for vault. NOTE: this creates a vault service with TLS disabled. 
 # This is done to make the configuration step easy to follow only. TLS should be enabled for real workloads.
-cat <<< "ui = true
+cat <<< 'ui = true
 
 storage "file" {
   path = "/opt/vault/data"
@@ -59,7 +61,7 @@ storage "file" {
 listener "tcp" {
   address = "0.0.0.0:8200"
   tls_disable = 1
-}" | sudo -u vault tee /etc/vault.d/vault.hcl > /dev/null
+}' | sudo -u vault tee /etc/vault.d/vault.hcl > /dev/null
 
 sudo systemctl start vault.service
 
@@ -110,7 +112,7 @@ path "secret/data/crossplane-system*" {
 path "secret/metadata/crossplane-system*" {
     capabilities = ["create", "read", "update", "delete"]
 }
-EOF``
+EOF
 
 vault write auth/kubernetes/role/crossplane \
     bound_service_account_names="*" \
@@ -149,7 +151,7 @@ Crossplane must be configured with external secret store support. In addition, t
 ```bash
 kubectl create ns crossplane-system
 helm upgrade --install crossplane crossplane-stable/crossplane --namespace crossplane-system \
-  --version 1.9.0 \
+  --version 1.10.0 \
   --set 'args={--enable-external-secret-stores}' \
   --set-string customAnnotations."vault\.hashicorp\.com/agent-inject"=true \
   --set-string customAnnotations."vault\.hashicorp\.com/agent-inject-token"=true \
@@ -222,7 +224,10 @@ In the [claim file](../examples/aws-provider/composite-resources/s3/multi-tenant
 Since we created a provider config named `application1-provider-config`, we should be able to create a claim in namespace called application1. 
 
 ```bash
-kubectl apply -n application1 examples/aws-provider/composite-resources/s3/multi-tenant.yaml
+#create namespace
+kubectl create ns application1 || true
+# create in new namespace
+kubectl apply -n application1 -f examples/aws-provider/composite-resources/s3/multi-tenant.yaml
 
 kubectl -n application1 get objectstorage
 # NAME                      READY   CONNECTION-SECRET   AGE
@@ -300,7 +305,7 @@ This is because the pod is created in the default namespace and the Vault policy
 
 Try creating the pod in the correct namespace.
 
-```
+```bash
 echo 'apiVersion: v1
 kind: Pod
 metadata:
