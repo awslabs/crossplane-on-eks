@@ -1,0 +1,143 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# Note that this composition requires the aws-auth ConfigMap to be updated accordingly before it can be used. The CM is not part of any composition because it's strictly one per EKS cluster. See the documentation for updating the CM: https://docs.aws.amazon.com/emr/latest/EMR-on-EKS-DevelopmentGuide/setting-up-cluster-access.html
+# Essentially you need to have something like this:
+#
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: aws-auth
+# data:
+#   mapRoles: |
+#     - rolearn: arn:aws:iam::123456:role/AWSServiceRoleForAmazonEMRContainers
+#       username: emr-containers
+#     ...
+# 
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: virtual-cluste.emr-containers.awsblueprints.io
+  labels:
+    awsblueprints.io/environment: dev
+    awsblueprints.io/type: virtual-cluster
+spec:
+  publishConnectionDetailsWithStoreConfigRef:
+    name: default
+  compositeTypeRef:
+    apiVersion: awsblueprints.io/v1alpha1
+    kind: XEMRContainer
+  patchSets:
+    - name: common-fields
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.deletionPolicy
+          toFieldPath: spec.deletionPolicy
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.name
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+    - name: namespace
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+          toFieldPath: spec.forProvider.manifest.metadata.namespace
+          policy:
+            fromFieldPath: Required
+  resources:
+    - name: role
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: rbac.authorization.k8s.io/v1
+              kind: Role
+              metadata:
+                name: emr-containers
+                namespace: ""
+              rules:
+                - apiGroups: [""]
+                  resources: ["namespaces"]
+                  verbs: ["get"]
+                - apiGroups: [""]
+                  resources: ["serviceaccounts", "services", "configmaps", "events", "pods", "pods/log"]
+                  verbs: ["get", "list", "watch", "describe", "create", "edit", "delete", "deletecollection", "annotate", "patch", "label"]
+                - apiGroups: [""]
+                  resources: ["secrets"]
+                  verbs: ["create", "patch", "delete", "watch"]
+                - apiGroups: ["apps"]
+                  resources: ["statefulsets", "deployments"]
+                  verbs: ["get", "list", "watch", "describe", "create", "edit", "delete", "annotate", "patch", "label"]
+                - apiGroups: ["batch"]
+                  resources: ["jobs"]
+                  verbs: ["get", "list", "watch", "describe", "create", "edit", "delete", "annotate", "patch", "label"]
+                - apiGroups: ["extensions"]
+                  resources: ["ingresses"]
+                  verbs: ["get", "list", "watch", "describe", "create", "edit", "delete", "annotate", "patch", "label"]
+                - apiGroups: ["rbac.authorization.k8s.io"]
+                  resources: ["roles", "rolebindings"]
+                  verbs: ["get", "list", "watch", "describe", "create", "edit", "delete", "deletecollection", "annotate", "patch", "label"]
+      patches:
+        - type: PatchSet
+          patchSetName: namespace
+    - name: role-binding
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: rbac.authorization.k8s.io/v1
+              kind: RoleBinding
+              metadata:
+                name: emr-containers
+                namespace: ""
+              subjects:
+              - kind: User
+                name: emr-containers
+                apiGroup: rbac.authorization.k8s.io
+              roleRef:
+                kind: Role
+                name: emr-containers
+                apiGroup: rbac.authorization.k8s.io
+      patches:
+        - type: PatchSet
+          patchSetName: namespace
+    - name: virtual-cluster
+      base:
+        apiVersion: emrcontainers.aws.crossplane.io/v1alpha1
+        kind: VirtualCluster
+        spec:
+          forProvider:
+            tags:
+              key: value
+              key2: value2
+            containerProvider:
+              id: ""
+              type_: EKS
+              info:
+                eksInfo:
+                  namespace: ""
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+          toFieldPath: spec.forProvider.containerProvider.info.eksInfo.namespace
+          policy:
+            fromFieldPath: Required
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.eksClusterName
+          toFieldPath: spec.forProvider.containerProvider.id
+          policy:
+            fromFieldPath: Required
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.id
+          toFieldPath: status.virtualClusterId

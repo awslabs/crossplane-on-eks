@@ -1,0 +1,108 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xemrcontainers.awsblueprints.io
+spec:
+  claimNames:
+    kind: EMRContainer
+    plural: emrcontainers
+  group: awsblueprints.io
+  names:
+    kind: XEMRContainer
+    plural: xemrcontainers
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                resourceConfig:
+                  description: ResourceConfig defines general properties of this AWS resource.
+                  properties:
+                    deletionPolicy:
+                      description: Defaults to Delete
+                      enum:
+                      - Delete
+                      - Orphan
+                      type: string
+                    name:
+                      description: Set the name of this resource in AWS to the value
+                        provided by this field.
+                      type: string
+                    providerConfigName:
+                      type: string
+                    region:
+                      type: string
+                    tags:
+                      items:
+                        properties:
+                          key:
+                            type: string
+                          value:
+                            type: string
+                        required:
+                        - key
+                        - value
+                        type: object
+                      type: array
+                  required:
+                  - providerConfigName
+                  - region
+                  type: object
+                eksClusterName:
+                  type: string
+                eksOIDC:
+                  type: string
+                virtualClusterId:
+                  type: string
+                permissionsBoundaryArn:
+                  type: string
+                jobParams:
+                  type: object
+                  properties:
+                    release:
+                      type: string
+                      default: emr-6.4.0-latest
+                    sparkEntryPoint:
+                      type: string
+                    sparkEntryPointArgs:
+                      type: array
+                      items:
+                        type: string
+                    sparkSubmitParameters:
+                      type: string
+                    virtualClusterId:
+                      type: string
+                  required:
+                    - sparkEntryPoint
+                    - sparkSubmitParameters
+                    - virtualClusterId
+              required:
+                - resourceConfig
+              type: object
+            status:
+              properties:
+                virtualClusterId:
+                  type: string
+                roleName:
+                  type: string
+                roleArn:
+                  type: string
+                bucketName:
+                  type: string
+                bucketArn:
+                  type: string
+                accountId:
+                  type: string
+                readPolicyArn:
+                  type: string
+                writePolicyArn:
+                  type: string
+              type: object
+          type: object

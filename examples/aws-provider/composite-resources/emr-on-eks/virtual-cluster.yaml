@@ -1,0 +1,32 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# Must create a namespace called test1 before. e.g. kubectl create ns test1
+# Note that this composition requires the aws-auth ConfigMap to be updated accordingly before it can be used. The CM is not part of any composition because it's strictly one per EKS cluster. See the documentation for updating the CM: https://docs.aws.amazon.com/emr/latest/EMR-on-EKS-DevelopmentGuide/setting-up-cluster-access.html
+# Essentially you need to have something like this:
+#
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: aws-auth
+# data:
+#   mapRoles: |
+#     - rolearn: arn:aws:iam::123456:role/AWSServiceRoleForAmazonEMRContainers
+#       username: emr-containers
+#     ...
+# 
+apiVersion: awsblueprints.io/v1alpha1
+kind: EMRContainer
+metadata:
+  name: test-virtual-cluster
+  namespace: test1
+spec:
+  # compositeDeletePolicy: Foreground
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/environment: dev
+      awsblueprints.io/type: virtual-cluster
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: us-west-2
+  eksClusterName: crossplane-argo-vault-2 # This is the name of your EKS cluster in which you'd like to create your virtual cluster.
