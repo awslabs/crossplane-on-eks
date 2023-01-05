@@ -11,7 +11,6 @@ metadata:
     dynamodb.awsblueprints.io/capacity: on-demand
     dynamodb.awsblueprints.io/pkType: composite
 spec:
-  writeConnectionSecretsToNamespace: crossplane-system
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
     kind: XDynamoDBTable
@@ -33,10 +32,12 @@ spec:
   resources:
     - name: table
       connectionDetails:
-        - name: tableName
-          fromConnectionSecretKey: tableName
-        - name: tableArn
-          fromConnectionSecretKey: tableArn
+        - type: FromFieldPath
+          name: tableName
+          fromFieldPath: status.atProvider.tableName
+        - type: FromFieldPath
+          name: tableArn
+          fromFieldPath: status.atProvider.tableARN
         - type: FromFieldPath
           name: region
           fromFieldPath: spec.forProvider.region
@@ -44,9 +45,6 @@ spec:
         apiVersion: dynamodb.aws.crossplane.io/v1alpha1
         kind: Table
         spec:
-          writeConnectionSecretToRef:
-            namespace: crossplane-system
-            name: ""
           deletionPolicy: Delete
           forProvider:
             attributeDefinitions:
@@ -73,14 +71,6 @@ spec:
             mergeOptions:
               appendSlice: true
               keepMapValues: true
-        - fromFieldPath: spec.writeConnectionSecretToRef.namespace
-          toFieldPath: spec.writeConnectionSecretToRef.namespace
-        - fromFieldPath: metadata.uid
-          toFieldPath: spec.writeConnectionSecretToRef.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-dynamodb-table"
         - type: FromCompositeFieldPath
           fromFieldPath: spec.tableIndex.hashKeyName
           toFieldPath: spec.forProvider.attributeDefinitions[0].attributeName

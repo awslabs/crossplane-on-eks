@@ -15,7 +15,7 @@ spec:
       dynamodb.awsblueprints.io/pkType: composite
       dynamodb.awsblueprints.io/secondaryIndex: global
       dynamodb.awsblueprints.io/secondaryIndexCount: "1"
-  writeConnectionSecretToRef:
+  publishConnectionDetailsTo:
     name: test-table-provisioned-composite-key-gsi
   resourceConfig:
     providerConfigName: aws-provider-config

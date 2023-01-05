@@ -13,7 +13,7 @@ spec:
       awsblueprints.io/environment: dev
       dynamodb.awsblueprints.io/capacity: on-demand
       dynamodb.awsblueprints.io/pkType: composite
-  writeConnectionSecretToRef:
+  publishConnectionDetailsTo:
     name: test-table-on-demand-composite-key
   resourceConfig:
     providerConfigName: aws-provider-config
