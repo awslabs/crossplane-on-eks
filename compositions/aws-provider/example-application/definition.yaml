@@ -97,5 +97,9 @@ spec:
                   type: string
                 writePolicyArn:
                   type: string
+                xirsaObjectName:
+                  type: string
+                xDynamoDBTableObjectName:
+                  type: string
               type: object
           type: object
