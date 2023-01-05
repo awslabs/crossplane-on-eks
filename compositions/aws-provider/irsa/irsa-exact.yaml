@@ -6,7 +6,6 @@ kind: Composition
 metadata:
   name: irsa-exact.awsblueprints.io
 spec:
-  writeConnectionSecretsToNamespace: crossplane-system
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
     kind: XIRSA
@@ -124,3 +123,5 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: status.roleArn
           toFieldPath: spec.forProvider.manifest.metadata.annotations[eks.amazonaws.com/role-arn]
+          policy:
+            fromFieldPath: Required
