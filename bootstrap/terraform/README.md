@@ -90,6 +90,10 @@ kubectl get nodes
 ```shell script
 kubectl get pods -n crossplane-system
 ```
+#### Step8: Verify the names of the providerConfig resources for all providers installed
+```shell script
+kubectl get provider
+```
 
 ## How to Destroy
 The following command destroys the resources created by `terraform apply`
