@@ -90,6 +90,30 @@ kubectl get nodes
 ```shell script
 kubectl get pods -n crossplane-system
 ```
+#### Step8: Verify the names provider and provider configs
+Run the following command to get the list of providers:
+```shell script
+kubectl get providers
+```
+The expected output looks like this:
+```
+NAME                  INSTALLED   HEALTHY   PACKAGE                                                         AGE
+aws-provider          True        True      xpkg.upbound.io/crossplane-contrib/provider-aws:v0.34.0         36m
+kubernetes-provider   True        True      xpkg.upbound.io/crossplane-contrib/provider-kubernetes:v0.5.0   36m
+```
+Run the following commands to get the list of provider configs:
+```shell script
+kubectl get provider
+```
+The expected output looks like this:
+```
+NAME                                                   AGE
+providerconfig.aws.crossplane.io/aws-provider-config   36m
+
+NAME                                                                 AGE
+providerconfig.kubernetes.crossplane.io/kubernetes-provider-config   36m
+```
+
 
 ## How to Destroy
 The following command destroys the resources created by `terraform apply`
