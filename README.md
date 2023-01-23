@@ -69,13 +69,6 @@ Crossplane can be configured to publish secrets external to the cluster in which
 ## Debugging
 For debugging Compositions, CompositionResourceDefinitions, etc, [please see the debugging guide](doc/debugging.md).
 
-## Maintainers
-This repo is maintained by AWS OSS team:
-
- - [Manabu McCloskey](https://github.com/nabuskey)
- - [Vara Bonthu](https://github.com/vara-bonthu)
- - [Nima Kaviani](https://github.com/nimakaviani)
-
 ## Security
 
 See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
