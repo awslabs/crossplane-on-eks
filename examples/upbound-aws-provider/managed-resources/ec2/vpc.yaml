@@ -1,0 +1,14 @@
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: VPC
+metadata:
+  name: my-vpc
+  annotations:
+    crossplane.io/external-name: vpc-prod
+  labels:
+    testing.upbound.io/example-name: vpc
+spec:
+  forProvider:
+    cidrBlock: 10.0.0.0/16
+    region: us-west-2
+  providerConfigRef:
+    name: aws-provider-config

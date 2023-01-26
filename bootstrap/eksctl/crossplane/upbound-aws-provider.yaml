@@ -4,16 +4,16 @@
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
-  name: provider-aws
+  name: provider-aws-upbound
 spec:
-  package: "xpkg.upbound.io/upbound/provider-aws:v0.20.0"
+  package: "xpkg.upbound.io/upbound/provider-aws:v0.27.0"
   controllerConfigRef:
-    name: upbound-provider-aws
+    name: provider-aws-upbound
 ---
 apiVersion: pkg.crossplane.io/v1alpha1
 kind: ControllerConfig
 metadata:
-  name: upbound-provider-aws
+  name: provider-aws-upbound
   annotations:
     eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/crossplane-provider-aws # Enter your IAM Role ARN
 

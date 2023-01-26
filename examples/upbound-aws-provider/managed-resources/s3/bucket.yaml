@@ -1,0 +1,15 @@
+apiVersion: s3.aws.upbound.io/v1beta1
+kind: Bucket
+metadata:
+  name: my-bucket
+  annotations:
+    crossplane.io/external-name: aws-provider-upbound-s3-bucket
+  labels:
+    testing.upbound.io/example-name: s3
+spec:
+  forProvider:
+    region: us-west-2
+    tags:
+      Name: SampleBucket
+  providerConfigRef:
+    name: aws-provider-config
