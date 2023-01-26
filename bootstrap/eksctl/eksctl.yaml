@@ -6,10 +6,10 @@ kind: ClusterConfig
 metadata:
   name: crossplane-blueprints
   region: us-west-2
-  version: "1.23"
+  version: "1.24"
 managedNodeGroups:
   - name: managed-ng-1
-    instanceType: m5.large
+    instanceType: t3.small
     minSize: 2
     maxSize: 3
 iam:

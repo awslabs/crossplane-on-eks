@@ -70,7 +70,7 @@ The need for `provider-*` comes from the fact that crossplane appends random suf
 If you would like to tighten this further, you can modify the trust relationship with the exact service account name after the service account is created. For example:
 ```bash
 kubectl get sa -n crossplane-system
-kubectl get sa -n crossplane-system
+
 NAME                               SECRETS   AGE
 provider-aws-f78664a342f1          1         52m
 ```
@@ -99,32 +99,93 @@ See the [IRSA documentation](https://docs.aws.amazon.com/eks/latest/userguide/cr
 ### IAM roles for service accounts (IRSA)
 Annotate the service account to use IRSA.
 
-```
+```bash
 sed -i.bak "s/ACCOUNT_ID/${ACCOUNT_ID}/g" crossplane/aws-provider.yaml
+sed -i.bak "s/ACCOUNT_ID/${ACCOUNT_ID}/g" crossplane/upbound-aws-provider.yaml
 ```
 
 ## Install Crossplane
 
 ### Helm
 
-```bash
-kubectl create namespace crossplane-system
 
+#### (Option 1) Install [Crossplane community helm chart](https://github.com/crossplane/crossplane/tree/master/cluster/charts/crossplane)
+```bash
 helm repo add crossplane-stable https://charts.crossplane.io/stable
 helm repo update
 
-helm install crossplane --namespace crossplane-system --version 1.10.1 crossplane-stable/crossplane
+helm install crossplane crossplane-stable/crossplane /
+--namespace crossplane-system \
+--create-namespace \
+--version 1.10.2 # Get the latest version from https://github.com/crossplane/crossplane/releases
+```
+
+#### (Option 2) Install Crossplane using [Upbound Universal Crossplane (UXP) helm chart](https://github.com/upbound/universal-crossplane/tree/main/cluster/charts/universal-crossplane)
+
+```bash
+helm repo add upbound-stable https://charts.upbound.io/stable
+helm repo update
+
+helm install crossplane upbound-stable/universal-crossplane \
+--namespace crossplane-system \
+--create-namespace \
+--version 1.10.2-up.1 # Get the latest version from https://github.com/upbound/universal-crossplane/releases
+
+```
+> Note: Upbound install documentation use namespace `upbound-system`, we use `corssplane-system` to be compatible with the examples in this repository and easier to switch from crossplane upstream to upbound downstream.
+
+
+### Install Crossplane Providers
+
+```bash
+# wait for the Crossplane provider CRD to be ready.
+kubectl wait --for condition=established --timeout=300s crd/providers.pkg.crossplane.io
+kubectl apply -f crossplane/aws-provider.yaml
+kubectl apply -f crossplane/upbound-aws-provider.yaml
+kubectl apply -f crossplane/kubernetes-provider.yaml
 ```
 
 ```bash
-# wait for the provider CRD to be ready.
-kubectl wait --for condition=established --timeout=300s crd/providers.pkg.crossplane.io
-kubectl apply -f crossplane/aws-provider.yaml
-
-# wait for the AWS provider CRD to be ready.
+# wait for the AWS OSS provider CRD to be ready.
 kubectl wait --for condition=established --timeout=300s crd/providerconfigs.aws.crossplane.io
 kubectl apply -f crossplane/aws-provider-config.yaml
 ```
 
+```bash
+# wait for the AWS Upbound provider CRD to be ready.
+kubectl wait --for condition=established --timeout=300s crd/providerconfigs.aws.upbound.io
+kubectl apply -f crossplane/upbound-aws-provider-config.yaml
+```
+
+```bash
+# wait for the Kubernetes provider CRD to be ready
+kubectl wait --for condition=established --timeout=300s crd/providerconfigs.kubernetes.crossplane.io
+kubectl apply -f crossplane/kubernetes-provider-config.yaml
+```
+
 ### Kustomize
 Note that Kustomize still relies on Crossplane helm chart because Crossplane doesn't have a published Kustomize base.
+
+
+## Uninstall
+
+### Uninstall Crossplane Providers
+
+
+```bash
+# Delete the providerconfig
+kubectl delete -f crossplane/aws-provider-config.yaml
+kubectl delete -f crossplane/upbound-aws-provider-config.yaml
+kubectl delete -f crossplane/kubernetes-provider-config.yaml
+
+# Delete the provider and provider controller config
+kubectl delete -f crossplane/aws-provider.yaml
+kubectl delete -f crossplane/upbound-aws-provider.yaml
+kubectl delete -f crossplane/kubernetes-provider.yaml
+```
+
+### Uninstall Crossplane
+
+```bash
+helm uninstall crossplane -n crossplane-system
+```
