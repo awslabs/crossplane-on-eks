@@ -109,7 +109,7 @@ sed -i.bak "s/ACCOUNT_ID/${ACCOUNT_ID}/g" crossplane/upbound-aws-provider.yaml
 ### Helm
 
 
-#### (Option 1) Install Crossplane upstream helm chart
+#### (Option 1) Install [Crossplane community helm chart](https://github.com/crossplane/crossplane/tree/master/cluster/charts/crossplane)
 ```bash
 helm repo add crossplane-stable https://charts.crossplane.io/stable
 helm repo update
