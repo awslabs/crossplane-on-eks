@@ -120,7 +120,7 @@ helm install crossplane crossplane-stable/crossplane /
 --version 1.10.2
 ```
 
-#### (Option 2) Install Crossplane using downstream Upbound
+#### (Option 2) Install Crossplane using [Upbound Universal Crossplane (UXP) helm chart](https://github.com/upbound/universal-crossplane/tree/main/cluster/charts/universal-crossplane)
 
 ```bash
 helm repo add upbound-stable https://charts.upbound.io/stable
