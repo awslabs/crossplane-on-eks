@@ -61,7 +61,7 @@ terraform init
 Verify the resources created by this execution
 
 ```shell script
-export AWS_REGION=<ENTER YOUR REGION>   # Select your own region
+export TF_VAR_region=<ENTER YOUR REGION>   # Select your own region
 terraform plan
 ```
 
