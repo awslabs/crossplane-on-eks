@@ -97,7 +97,8 @@ module "eks_blueprints_kubernetes_addons" {
   # Crossplane community AWS Provider deployment
   #---------------------------------------------------------
   crossplane_aws_provider = {
-    enable = true
+    enable                = true
+    provider_config = "aws-provider-config"
     # to override the default irsa policy:
     # additional_irsa_policies = ["arn:aws:iam::aws:policy/AmazonS3FullAccess"]
   }
