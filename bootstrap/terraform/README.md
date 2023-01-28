@@ -28,7 +28,9 @@ graph TD;
     ManagedNodeGroup-->|enable_crossplane=true|id2([Crossplane]);
     subgraph Kubernetes Add-ons
     id2([Crossplane])-.->|crossplane_aws_provider.enable=true|id3([AWS-Provider]);
-    id2([Crossplane])-.->|crossplane_kubernetes_provider.enable=true|id4([Kubernetes-Provider]);
+    id2([Crossplane])-.->|crossplane_upbound_aws_provider.enable=true|id4([Upbound-AWS-Provider]);
+    id2([Crossplane])-.->|crossplane_kubernetes_provider.enable=true|id5([Kubernetes-Provider]);
+    id2([Crossplane])-.->|crossplane_helm_provider.enable=true|id6([Helm-Provider]);
     end
     end
 ```
@@ -59,7 +61,7 @@ terraform init
 Verify the resources created by this execution
 
 ```shell script
-export AWS_REGION=<ENTER YOUR REGION>   # Select your own region
+export TF_VAR_region=<ENTER YOUR REGION>   # Select your own region
 terraform plan
 ```
 
@@ -98,8 +100,10 @@ kubectl get providers
 The expected output looks like this:
 ```
 NAME                  INSTALLED   HEALTHY   PACKAGE                                                         AGE
-aws-provider          True        True      xpkg.upbound.io/crossplane-contrib/provider-aws:v0.34.0         36m
-kubernetes-provider   True        True      xpkg.upbound.io/crossplane-contrib/provider-kubernetes:v0.5.0   36m
+aws-provider          True        True      xpkg.upbound.io/crossplane-contrib/provider-aws:v0.36.0         36m
+kubernetes-provider   True        True      xpkg.upbound.io/crossplane-contrib/provider-kubernetes:v0.6.0   36m
+provider-helm         True        True      xpkg.upbound.io/crossplane-contrib/provider-helm:v0.13.0        36m
+upbound-aws-provider  True        True      xpkg.upbound.io/upbound/provider-aws:v0.27.0                    36m
 ```
 Run the following commands to get the list of provider configs:
 ```shell script
@@ -109,6 +113,9 @@ The expected output looks like this:
 ```
 NAME                                                   AGE
 providerconfig.aws.crossplane.io/aws-provider-config   36m
+
+NAME                                        AGE
+providerconfig.helm.crossplane.io/default   36m
 
 NAME                                                                 AGE
 providerconfig.kubernetes.crossplane.io/kubernetes-provider-config   36m
