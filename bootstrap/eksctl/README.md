@@ -114,7 +114,7 @@ sed -i.bak "s/ACCOUNT_ID/${ACCOUNT_ID}/g" crossplane/upbound-aws-provider.yaml
 helm repo add crossplane-stable https://charts.crossplane.io/stable
 helm repo update
 
-helm install crossplane crossplane-stable/crossplane /
+helm install crossplane crossplane-stable/crossplane \
 --namespace crossplane-system \
 --create-namespace \
 --version 1.10.2 # Get the latest version from https://github.com/crossplane/crossplane/releases
