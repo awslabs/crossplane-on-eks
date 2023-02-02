@@ -18,6 +18,22 @@ RDS supports applying these changes immediately instead of waiting for a schedul
 
 One of most notable problems is that updates made to certain fields could trigger database restarts. Developers may not know which fields would cause restarts because they are not familiar with underlying technologies. You could document potentially dangerous fields, but it is not enough to reliably stop it from happening. 
 
+
+## Parameter Groups
+[Parameter Groups](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_WorkingWithParamGroups.html) define how the underlying database engine is configured. For example you may wish to change the `binlog_cache_size` configuration value for your MySQL database. 
+
+In Parameter Groups, there are two types of parameters: dynamic and static.
+Dynamic parameters do not require a restart for their values to be applied to the running instance / cluster.  Static parameters require a restart for their values to be applied. Additionally, dynamic parameters support specifying how changes to them are applied. When `immediate` is specified the changes to dynamic parameters are applied immediately. When `pending-reboot` is specified, the changes to dynamic parameters are applied during next restart or during the next maintenance window, whichever is earlier. 
+
+Since static parameters do not support `immediate` apply option, specifying this in your composition could lead to some unexpected error. Therefore, extra care should be taken when exposing this resource to your end users. End users may not be aware of underlying engine specifications.
+
+This effectively means there are a few general approaches to managing RDS configuration changes. 
+1. You want to ensure that parameter group values in running cluster / instance match what is defined in your Git repository with no delay. The only sure way to ensure that is restarting the cluster/ instance during the reconciliation process. 
+2. You can wait for parameter group changes to be applied during the next maintenance window. This means you may need to wait maximum 7 days for the changes to be applied. 
+3. The change does not have to be applied immediately but it needs to happen sooner than 7 days. This requires a separate workflow to restart cluster / instance. 
+
+For reference, problems encountered during parameter group update in ACK and Terraform are discussed in [this issue](https://github.com/aws-controllers-k8s/community/issues/869) and [this blog post](https://tech.instacart.com/terraforming-rds-part-3-9d81a7e2047f). 
+
 ## Solutions
 
 ### Check during PR
@@ -72,7 +88,7 @@ flowchart LR
 In the example above, no check is performed during PR. During admission into the Kubernetes cluster, a validating controller will lookup config map which contain ticket number and validate the request is valid. If no ticket number associated with this change is approved, it's rejected with provided reason. 
 
 ## Blue Green deployment
-RDS added native support for blue green deployment. This allows for safer database updates because RDS manages the process of creating an alternate instance and copying data over to it.
+RDS added native support for blue green deployment. This allows for safer database updates because RDS manages the process of creating an alternate instance, copying data over to it, and shifting traffic to it.
 
 As of writing this doc, neither providers support this functionality. Because the functionality is available in [Terraform](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance#blue_green_update), the Upbound official provider should be able to support this in the future.
 In addition, this functionality is supported for MariaDB and MySQL only.
