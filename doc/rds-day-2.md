@@ -16,11 +16,13 @@ This approach is fundamentally different from GitOps. In GitOps, when a change i
 
 RDS supports applying these changes immediately instead of waiting for a scheduled maintenance window, and when using Crossplane AWS providers, they have the option to apply changes immediately as well. This is the option that should be used when using RDS with GitOps. However this leads to problems when enabling self service model where developers can provision resources on their own. 
 
-One of most notable problems is that updates made to certain fields could trigger database restarts. Developers may not know which fields would cause restarts because they are not familiar with underlying technologies. You could document potentially dangerous fields, but it is not enough to reliably stop it from happening. 
+One of most notable problems is that updates made to certain fields could trigger database restarts. Developers may not know which fields would cause restarts because they are not familiar with underlying technologies. You could document potentially dangerous fields, but it is not enough to reliably stop it from happening.
+
+The main goal of this document is to provide guidance on how to provide guardrails for end users when managing RDS resources through Crossplane.
 
 
 ## Parameter Groups
-[Parameter Groups](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_WorkingWithParamGroups.html) define how the underlying database engine is configured. For example you may wish to change the `binlog_cache_size` configuration value for your MySQL database. 
+[Parameter Groups](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_WorkingWithParamGroups.html) define how the underlying database engine is configured. For example you may wish to change the `binlog_cache_size` configuration value for your MySQL database. It is also important to note that parameter groups can be used on multiple 
 
 In Parameter Groups, there are two types of parameters: dynamic and static.
 Dynamic parameters do not require a restart for their values to be applied to the running instance / cluster.  Static parameters require a restart for their values to be applied. Additionally, dynamic parameters support specifying how changes to them are applied. When `immediate` is specified the changes to dynamic parameters are applied immediately. When `pending-reboot` is specified, the changes to dynamic parameters are applied during next restart or during the next maintenance window, whichever is earlier. 
@@ -28,9 +30,9 @@ Dynamic parameters do not require a restart for their values to be applied to th
 Since static parameters do not support `immediate` apply option, specifying this in your composition could lead to some unexpected error. Therefore, extra care should be taken when exposing this resource to your end users. End users may not be aware of underlying engine specifications.
 
 Summarizing everything above effectively means there are a few general approaches to managing RDS configuration changes. 
-1. You want to ensure that parameter group values in running cluster / instance match what is defined in your Git repository with no delay. The only sure way to ensure that is restarting the cluster/ instance during the reconciliation process. 
-3. You can wait for parameter group changes to be applied during the next maintenance window. This means you may need to wait maximum 7 days for the changes to be applied. 
-4. The change does not have to be applied immediately but it needs to happen sooner than 7 days. This requires a separate workflow to restart cluster / instance. 
+1. You want to ensure that parameter group values in the running cluster / instance match what is defined in your Git repository with no delay. The only certain way do this is by restarting the cluster/ instance during the reconciliation process. 
+2. You can wait for parameter group changes to be applied during the next maintenance window. This means you may need to wait maximum 7 days for the changes to be applied. 
+3. The change does not have to be applied immediately but it needs to happen sooner than 7 days. This requires a separate workflow to restart cluster / instance. 
 
 
 
@@ -41,17 +43,24 @@ For reference, problems encountered during parameter group update in ACK and Ter
 ### Check during PR
 Use Pull Request as a checkpoint and ensure developers are aware of potential consequences of the changes. An example process may look something like the following. 
 
-
 ```mermaid
-flowchart LR
-    FieldDefinitions(Fields that need restarting)
-    StepFiles(Get changed files)
-    StepCheck(Check if fields that require restart changed)
+flowchart TD
     Comment(Comment on PR)
+
+    subgraph Workflow
+        GetChangedFiles(Get changed files)
+        GetChangedFiles(Get changed files)
+        StepCheck(Will this cause a restart?)
+    end
+
+    subgraph Data Source 
+        FieldDefinitions(Fields that need restarting)
+    end 
+
     FieldDefinitions <--reference--> StepCheck
 
-    PR(PR Created) --> CR(Does this need DB Restart) --need restart--> StepFiles --> StepCheck --> Comment --> Approval --> Merge
-    CR --no restart--> Approval
+    PR(PR Created) --trigger--> GetChangedFiles --> StepCheck --yes--> Comment --> Approval(Wait for Approval) --> Merge --> GitOps(GitOps Tooling)
+    StepCheck--no--> Approval 
 ```
 
 In this example, whenever a pull request is created, a workflow is executed and a comment is created on the PR warning the developers of potential impacts. When developers approve the PR, it implies that they are aware of consequences.
@@ -63,13 +72,13 @@ In this approach, it is important for the check mechanisms to work reliably. It'
 
 ### Check at runtime
 
-#### Approach 1 
 Another approach is to deny such operation at runtime using a policy engine and/or custom validating web hook unless certain conditions are met. This means problems with RDS configuration is communicated to the developers through their GitOps tooling by providing reasons for denial.
+
+#### Approach 1 
 
 ```mermaid
 flowchart LR
     subgraph Kubernetes
-        ConfigMap(ConfigMap w/ ticket numbers)
         ValidatingController(Policy Engine / Validating controller)
     end 
 
@@ -84,11 +93,11 @@ flowchart LR
     GitOps(GitOps tooling)
 
     PR(PR Merged) --> GitOps --> ValidatingController
-    ValidatingController --reference--> ConfigMap
+    ValidatingController --check--> Ticketing
     ValidatingController --deny and provide reason--> GitOps
-    Approved --push--> ConfigMap
 ```
-In the example above, no check is performed during PR. During admission into the Kubernetes cluster, a validating controller will lookup config map which contain ticket number and validate the request is valid. If no ticket number associated with this change is approved, it's rejected with provided reason. 
+
+In the example above, no check is performed during PR. During admission into the Kubernetes cluster, a validating controller will reach out to the ticketing system and verify if this change is approved. If no ticket associated with this change is approved, it's rejected with provided reason. 
 
 #### Approach 2
 
@@ -123,7 +132,7 @@ flowchart LR
 ```
 In this example, developer creates a ticket in the ticketing system and annotates the infrastructure claim with the ticket number. The admission controller checks if the change affects fields that require approval. If approval is required, the change is denied until the ticket is approved and the reason is given back to the GitOps tooling. 
 
-Once the ticket is approved, a config map is created with the ticket number as its name or as one of annotations. Next time the GitOps tooling attempts to apply manifests, the admission controller sees the ConfigMap is now created and allows it to be deployed. Once it is deployed, the ConfigMap can be marked for deletion. In both approaches, there is no need for read access to the ticketing system. 
+Once the ticket is approved, a config map is created with the ticket number as its name or as one of annotations. Next time the GitOps tooling attempts to apply manifests, the admission controller sees the ConfigMap is now created and allows it to be deployed. Once it is deployed, the ConfigMap can be marked for deletion. In this approach, there is no need for read access to the ticketing system. 
 
 
 ## Blue Green deployment
