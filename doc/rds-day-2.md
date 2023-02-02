@@ -27,10 +27,12 @@ Dynamic parameters do not require a restart for their values to be applied to th
 
 Since static parameters do not support `immediate` apply option, specifying this in your composition could lead to some unexpected error. Therefore, extra care should be taken when exposing this resource to your end users. End users may not be aware of underlying engine specifications.
 
-This effectively means there are a few general approaches to managing RDS configuration changes. 
+Summarizing everything above effectively means there are a few general approaches to managing RDS configuration changes. 
 1. You want to ensure that parameter group values in running cluster / instance match what is defined in your Git repository with no delay. The only sure way to ensure that is restarting the cluster/ instance during the reconciliation process. 
-2. You can wait for parameter group changes to be applied during the next maintenance window. This means you may need to wait maximum 7 days for the changes to be applied. 
-3. The change does not have to be applied immediately but it needs to happen sooner than 7 days. This requires a separate workflow to restart cluster / instance. 
+3. You can wait for parameter group changes to be applied during the next maintenance window. This means you may need to wait maximum 7 days for the changes to be applied. 
+4. The change does not have to be applied immediately but it needs to happen sooner than 7 days. This requires a separate workflow to restart cluster / instance. 
+
+
 
 For reference, problems encountered during parameter group update in ACK and Terraform are discussed in [this issue](https://github.com/aws-controllers-k8s/community/issues/869) and [this blog post](https://tech.instacart.com/terraforming-rds-part-3-9d81a7e2047f). 
 
@@ -61,6 +63,7 @@ In this approach, it is important for the check mechanisms to work reliably. It'
 
 ### Check at runtime
 
+#### Approach 1 
 Another approach is to deny such operation at runtime using a policy engine and/or custom validating web hook unless certain conditions are met. This means problems with RDS configuration is communicated to the developers through their GitOps tooling by providing reasons for denial.
 
 ```mermaid
@@ -86,6 +89,42 @@ flowchart LR
     Approved --push--> ConfigMap
 ```
 In the example above, no check is performed during PR. During admission into the Kubernetes cluster, a validating controller will lookup config map which contain ticket number and validate the request is valid. If no ticket number associated with this change is approved, it's rejected with provided reason. 
+
+#### Approach 2
+
+```mermaid
+flowchart LR
+    subgraph Kubernetes
+        ConfigMap(ConfigMap w/ ticket numbers)
+        ValidatingController(Policy Engine / Validating controller)
+    end 
+
+    subgraph Git
+        subgraph PR
+            Claim
+            Manifests(Other Manifests)
+        end
+    end
+
+    subgraph Ticketing
+       Approved(Approved Changes)
+    end
+    
+    User
+    GitOps(GitOps tooling)
+
+    User --Create Ticket--> Ticketing
+    User --Annoate with ticket number--> Claim
+    PR(PR Merged) --> GitOps --> ValidatingController
+    ValidatingController --reference--> ConfigMap
+    ValidatingController --deny if not approved \n and provide reason--> GitOps
+    Approved --create when the ticket \n is approved--> ConfigMap
+    
+```
+In this example, developer creates a ticket in the ticketing system and annotates the infrastructure claim with the ticket number. The admission controller checks if the change affects fields that require approval. If approval is required, the change is denied until the ticket is approved and the reason is given back to the GitOps tooling. 
+
+Once the ticket is approved, a config map is created with the ticket number as its name or as one of annotations. Next time the GitOps tooling attempts to apply manifests, the admission controller sees the ConfigMap is now created and allows it to be deployed. Once it is deployed, the ConfigMap can be marked for deletion. In both approaches, there is no need for read access to the ticketing system. 
+
 
 ## Blue Green deployment
 RDS added native support for blue green deployment. This allows for safer database updates because RDS manages the process of creating an alternate instance, copying data over to it, and shifting traffic to it.
