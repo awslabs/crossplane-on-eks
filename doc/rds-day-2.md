@@ -72,12 +72,27 @@ flowchart LR
 In the example above, no check is performed during PR. During admission into the Kubernetes cluster, a validating controller will lookup config map which contain ticket number and validate the request is valid. If no ticket number associated with this change is approved, it's rejected with provided reason. 
 
 ## Blue Green deployment
-RDS added native support for blue green deployment. This allows for safer database updates.
+RDS added native support for blue green deployment. This allows for safer database updates because RDS manages the process of creating an alternate instance and copying data over to it.
+
 As of writing this doc, neither providers support this functionality. Because the functionality is available in [Terraform](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance#blue_green_update), the Upbound official provider should be able to support this in the future.
 In addition, this functionality is supported for MariaDB and MySQL only.
 
+## Major version upgrade 
+Talk about:
+- Upgrading from backups
+- Backup strategy / frequency
+- Specify snapshots when creating new instances
+
+## Break glass scenarios
+- How to stop Crossplane from reconciling specific resources
+- How to stop Crossplane aws provider all together
+
+
 # References
 https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
+
 https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/modify-multi-az-db-cluster.html
+
 https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/blue-green-deployments-overview.html
+
 https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance#blue_green_update
