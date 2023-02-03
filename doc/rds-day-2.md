@@ -67,21 +67,20 @@ flowchart TD
         FieldDefinitions(Fields that need restarting)
     end 
 
-    Restart(Restart instance)
+    Restart(Restart immediately)
 
     FieldDefinitions <--reference--> StepCheck
 
     PR(PR Created) --trigger--> GetChangedFiles --> StepCheck --yes--> Comment --> Approval(Wait for Approval) --> Merge --> GitOps(GitOps Tooling)
     StepCheck--no--> Approval
-    GitOps --> Restart --> Done
-    GitOps --no restart--> Done
+    GitOps --apply changes now --> Restart --> Done
+    GitOps --wait until next \n maintenance window--> Done
 ```
 
 In this example, whenever a pull request is created, a workflow is executed and a comment is created on the PR warning the developers of potential impacts. When developers approve the PR, it implies that they are aware of consequences.
 To check if a PR is impacted, you can use of the following options:
 - Parse git diff and search for changes to "dangerous" fields
 - Use `kubectl diff` then look for changes to "dangerous" fields. This requires read access to the target cluster but more accurate.
-
 
 
 ### Check at runtime
