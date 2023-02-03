@@ -23,10 +23,9 @@ There are some problems when using the apply immediately option.
 The main goal of this document is to provide guidance on how to provide guardrails for end users when managing RDS resources through Crossplane.
 
 ## Parameter Groups
-[Parameter Groups](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_WorkingWithParamGroups.html) define how the underlying database engine is configured. For example you may wish to change the `binlog_cache_size` configuration value for your MySQL database. It is also important to note that parameter groups can be used on multiple 
+[Parameter Groups](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_WorkingWithParamGroups.html) define how the underlying database engine is configured. For example, if you wish to change the `binlog_cache_size` configuration value for your MySQL database, you can do that through parameter groups. A parameter group is not limited to be used by a single RDS instance. A parameter group can be used by multiple RDS instances. 
 
-In Parameter Groups, there are two types of parameters: dynamic and static.
-Dynamic parameters do not require a restart for their values to be applied to the running instance / cluster.  Static parameters require a restart for their values to be applied. Additionally, dynamic parameters support specifying how changes to them are applied. When `immediate` is specified the changes to dynamic parameters are applied immediately. When `pending-reboot` is specified, the changes to dynamic parameters are applied during next restart or during the next maintenance window, whichever is earlier. 
+In Parameter Groups, there are two types of parameters: dynamic and static. Dynamic parameters do not require a restart for their values to be applied to the running instance / cluster.  Static parameters require a restart for their values to be applied. Additionally, dynamic parameters support specifying how changes to them are applied. When `immediate` is specified the changes to dynamic parameters are applied immediately. When `pending-reboot` is specified, the changes to dynamic parameters are applied during next restart or during the next maintenance window, whichever is earlier. 
 
 Since static parameters do not support `immediate` apply option, specifying this in your composition could lead to some unexpected errors. Therefore, extra care should be taken when exposing this resource to your end users. End users may not be aware of underlying engine specifications.
 
