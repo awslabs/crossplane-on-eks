@@ -132,7 +132,7 @@ helm install crossplane upbound-stable/universal-crossplane \
 --version 1.10.2-up.1 # Get the latest version from https://github.com/upbound/universal-crossplane/releases
 
 ```
-> Note: Upbound install documentation use namespace `upbound-system`, we use `corssplane-system` to be compatible with the examples in this repository and easier to switch from crossplane upstream to upbound downstream.
+> Note: Upbound install documentation use namespace `upbound-system`, we use `crossplane-system` to be compatible with the examples in this repository and easier to switch from crossplane upstream to upbound downstream.
 
 
 ### Install Crossplane Providers
