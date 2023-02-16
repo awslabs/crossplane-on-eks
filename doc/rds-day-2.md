@@ -32,7 +32,8 @@ Since static parameters do not support `immediate` apply option, specifying this
 Summarizing everything above effectively means there are a few general approaches to managing RDS configuration changes. 
 1. You want to ensure that parameter group values in the running cluster / instance match what is defined in your Git repository with no delay. The only certain way do this is by restarting the cluster/ instance during the reconciliation process.
 2. You can wait for parameter group changes to be applied during the next maintenance window. This means you may need to wait maximum 7 days for the changes to be applied. 
-3. The change does not have to be applied immediately but it needs to happen sooner than 7 days. This requires a separate workflow to restart cluster / instance. 
+3. The change does not have to be applied immediately but it needs to happen sooner than 7 days. This requires a separate workflow to restart cluster / instance.
+4. Use the RDS Blue Green deployment feature.
 
 For reference, problems encountered during parameter group updates in ACK and Terraform are discussed in [this issue](https://github.com/aws-controllers-k8s/community/issues/869) and [this blog post](https://tech.instacart.com/terraforming-rds-part-3-9d81a7e2047f). 
 
@@ -86,7 +87,7 @@ To check if a PR is impacted, you can use of the following options:
 
 Another approach is to deny such operation at runtime using a policy engine and/or custom validating web hook unless certain conditions are met. This means problems with RDS configuration is communicated to the developers through their GitOps tooling by providing reasons for denial.
 
-#### Approach 1 
+#### Example 1 
 
 ```mermaid
 flowchart LR
@@ -107,13 +108,14 @@ flowchart LR
     PR(PR Merged) --> GitOps --> ValidatingController
     ValidatingController --check--> Ticketing
     ValidatingController --deny and provide reason--> GitOps
+    ValidatingController --Once Approved--> Restart
 ```
 
 In the example above, no check is performed during PR. During admission into the Kubernetes cluster, a validating controller will reach out to the ticketing system and verify if this change is approved. If no ticket associated with this change is approved, it's rejected with provided reason. 
 
 Note that ticketing system here is just an example. It can be any type of systems that provides a decision.
 
-#### Approach 2
+#### Example 2
 
 ```mermaid
 flowchart LR
@@ -142,6 +144,7 @@ flowchart LR
     ValidatingController --reference--> ConfigMap
     ValidatingController --deny if not approved \n and provide reason--> GitOps
     Approved --create when the ticket \n is approved--> ConfigMap
+    ValidatingController--Once Approved--> Restart
     
 ```
 In this example, developer creates a ticket in the ticketing system and annotates the infrastructure claim with the ticket number. The admission controller checks if the change affects fields that require approval. If approval is required, the change is denied until the ticket is approved and the reason is given back to the GitOps tooling. 
