@@ -1,0 +1,70 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xencryptionkeys-kms.awsblueprints.io
+  labels:
+    awsblueprints.io/environment: dev
+    awsblueprints.io/provider: aws
+spec:
+  compositeTypeRef:
+    apiVersion: awsblueprints.io/v1alpha1
+    kind: XEncryptionKey
+  patchSets:
+    - name: common-fields
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.deletionPolicy
+          toFieldPath: spec.deletionPolicy
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            mergeOptions:
+              appendSlice: true
+  resources:
+    - name: key
+      base:
+        apiVersion: kms.aws.upbound.io/v1beta1
+        kind: Key
+        spec:
+          forProvider:
+            description: "for use with this account"
+            deletionWindowInDays: 10
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.policy
+          toFieldPath: spec.forProvider.policy
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.arn
+          toFieldPath: status.keyArn
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.keyId
+          toFieldPath: status.keyId
+    - name: alais
+      base:
+        apiVersion: kms.aws.upbound.io/v1beta1
+        kind: Alias
+        spec:
+          forProvider: {}
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.keyId
+          toFieldPath: spec.forProvider.targetKeyId
+          policy:
+            fromFieldPath: Required
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.id
+          toFieldPath: status.keyName

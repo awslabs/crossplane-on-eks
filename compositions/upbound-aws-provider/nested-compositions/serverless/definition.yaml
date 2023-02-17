@@ -1,0 +1,88 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xserverlessapp.awsblueprints.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+spec:
+  group: awsblueprints.io
+  names:
+    kind: XServerlessApp
+    plural: xserverlessapp
+  claimNames:
+    kind: ServerlessApp
+    plural: serverlessapps
+  defaultCompositionRef:
+    name: xobject-processor.awsblueprints.io
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                bucketName:
+                  type: string
+                bucketKey:
+                  type: string
+                handler:
+                  type: string
+                envVariables:
+                  type: object
+                  additionalProperties:
+                    type: string
+                resourceConfig:
+                  description: ResourceConfig defines general properties of this AWS
+                    resource.
+                  properties:
+                    deletionPolicy:
+                      description: Defaults to Delete
+                      enum:
+                      - Delete
+                      - Orphan
+                      type: string
+                    name:
+                      description: Set the name of this resource in AWS to the value
+                        provided by this field.
+                      type: string
+                    providerConfigName:
+                      type: string
+                      default: "aws-provider-config"
+                    region:
+                      type: string
+                      default: "us-west-2"
+                  required:
+                  - region
+                  type: object
+              required:
+              - resourceConfig
+              type: object
+            status:
+              properties:
+                printerRoleName:
+                  type: string
+                processorRoleName:
+                  type: string
+                processorFuncName:
+                  type: string
+                sourceQueueArn:
+                  type: string
+                bucketName:
+                  type: string
+                bucketArn:
+                  type: string
+                kmsKeyArn:
+                  type: string
+                keyName:
+                  type: string
+                accountNumber:
+                  type: string
+              type: object
+          required:
+          - spec
+          type: object

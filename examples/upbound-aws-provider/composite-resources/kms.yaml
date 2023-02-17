@@ -1,0 +1,37 @@
+apiVersion: awsblueprints.io/v1alpha1
+kind: EncryptionKey
+metadata:
+  name: test-kms-key
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/environment: dev
+      awsblueprints.io/provider: aws
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: us-west-2
+  policy: |
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Principal": {"AWS": "arn:aws:iam::123456789012:root"},
+          "Action": "kms:*",
+          "Resource": "*"
+        },
+        {
+          "Effect": "Allow",
+          "Principal": {
+              "Service": "sns.amazonaws.com"
+          },
+          "Action": [
+              "kms:Decrypt",
+              "kms:GenerateDataKey*"
+          ],
+          "Resource": "*"
+        }
+      ]
+    }
+  

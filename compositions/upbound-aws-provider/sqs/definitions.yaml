@@ -1,0 +1,61 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xqueues.awsblueprints.io
+spec:
+  group: awsblueprints.io
+  names:
+    kind: XQueue
+    plural: xqueues
+  claimNames:
+    kind: Queue
+    plural: queues
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                encryptionKey:
+                  type: string
+                resourceConfig:
+                  description: ResourceConfig defines general properties of this AWS
+                    resource.
+                  properties:
+                    deletionPolicy:
+                      description: Defaults to Delete
+                      enum:
+                      - Delete
+                      - Orphan
+                      type: string
+                    name:
+                      description: Set the name of this resource in AWS to the value
+                        provided by this field.
+                      type: string
+                    providerConfigName:
+                      type: string
+                    region:
+                      type: string
+                  required:
+                  - region
+                  type: object
+              required:
+              - resourceConfig
+              type: object
+            status:
+              properties:
+                queueUrl:
+                  type: string
+                queueArn:
+                  type: string
+                
+              type: object
+          required:
+          - spec
+          type: object

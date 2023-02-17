@@ -1,0 +1,52 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: sqs.esm.awsblueprints.io
+  labels:
+    esm.awsblueprints.io/service: sqs
+spec:
+  compositeTypeRef:
+    apiVersion: awsblueprints.io/v1alpha1
+    kind: EventSourceMapping
+  patchSets:
+    - name: common-fields
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.deletionPolicy
+          toFieldPath: spec.deletionPolicy
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            mergeOptions:
+              appendSlice: true
+        - fromFieldPath: "metadata.name"
+          toFieldPath: "metadata.name"
+          transforms:
+            - type: string
+              string:
+                fmt: "esm-%s"
+  resources:
+    - name: mapping
+      base:
+        apiVersion: lambda.aws.upbound.io/v1beta1
+        kind: EventSourceMapping
+        spec:
+          forProvider:
+            batchSize: 5
+            region: us-west-2
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.sourceArn
+          toFieldPath: spec.forProvider.eventSourceArn
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.funcName
+          toFieldPath: spec.forProvider.functionName

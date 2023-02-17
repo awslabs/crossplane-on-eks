@@ -1,0 +1,161 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xfanout.awsblueprints.io
+  labels:
+    awsblueprints.io/environment: dev
+    awsblueprints.io/provider: aws
+spec:
+  compositeTypeRef:
+    apiVersion: awsblueprints.io/v1alpha1
+    kind: XFanout
+  patchSets:
+    - name: common-fields-composition
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig
+          toFieldPath: spec.resourceConfig
+        - fromFieldPath: "metadata.name"
+          toFieldPath: "metadata.name"
+          transforms:
+            - type: string
+              string:
+                fmt: "sns-sqs-%s"
+    - name: common-fields
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.deletionPolicy
+          toFieldPath: spec.deletionPolicy
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            mergeOptions:
+              appendSlice: true
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.name
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+        - fromFieldPath: "metadata.name"
+          toFieldPath: "metadata.name"
+          transforms:
+            - type: string
+              string:
+                fmt: "sns-sqs-%s"
+  resources:
+    - name: sqs
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: XQueue
+        spec:
+          compositionSelector:
+            matchLabels:
+              awsblueprints.io/provider: aws
+              awsblueprints.io/environment: dev
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-composition
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.encryptionKey
+          toFieldPath: spec.encryptionKey
+          policy:
+            fromFieldPath: Required
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.queueArn
+          toFieldPath: status.queueArn
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.queueUrl
+          toFieldPath: status.queueUrl
+    - name: sns
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: XNotification
+        spec:
+          compositionSelector:
+            matchLabels:
+              awsblueprints.io/provider: aws
+              awsblueprints.io/environment: dev
+              notification.awsblueprints.io/type: standard
+              notification.awsblueprints.io/sns-config: cloudwatch
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-composition
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.encryptionKey
+          toFieldPath: spec.encryptionKey
+          policy:
+            fromFieldPath: Required
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.topicArn
+          toFieldPath: status.topicArn
+    - name: subscription
+      base:
+        apiVersion: sns.aws.upbound.io/v1beta1
+        kind: TopicSubscription
+        spec:
+          forProvider:
+            protocol: sqs
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.queueArn
+          toFieldPath: spec.forProvider.endpoint
+          policy:
+            fromFieldPath: Required
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.topicArn
+          toFieldPath: spec.forProvider.topicArn
+          policy:
+            fromFieldPath: Required
+    - name: sns-queue-policy
+      base:
+        apiVersion: sqs.aws.upbound.io/v1beta1
+        kind: QueuePolicy
+        spec:
+          forProvider: {}
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.queueUrl
+          toFieldPath: spec.forProvider.queueUrl
+          policy:
+            fromFieldPath: Required
+        - type: CombineFromComposite
+          toFieldPath: spec.forProvider.policy
+          policy:
+            fromFieldPath: Required
+          combine:
+            variables:
+              - fromFieldPath: status.queueArn
+              - fromFieldPath: status.topicArn
+            strategy: string
+            string:
+              fmt: |
+                {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Principal": {
+                        "Service": "sns.amazonaws.com"
+                      },
+                      "Action": "sqs:SendMessage",
+                      "Resource": "%s",
+                      "Condition": {
+                        "ArnEquals": {
+                          "aws:SourceArn": "%s"
+                        }
+                      }
+                    }
+                  ]
+                }

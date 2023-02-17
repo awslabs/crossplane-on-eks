@@ -1,0 +1,14 @@
+apiVersion: awsblueprints.io/v1alpha1
+kind: Fanout
+metadata:
+  name: test-sns-sqs
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/environment: dev
+      awsblueprints.io/provider: aws
+  encryptionKey: alias/defaultKey  
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: us-west-2

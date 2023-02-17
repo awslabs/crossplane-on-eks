@@ -1,0 +1,20 @@
+apiVersion: awsblueprints.io/v1alpha1
+kind: XLambdaFunction
+metadata:
+  name: test-zip-lambda
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+      awsblueprints.io/type: zip
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: us-west-2
+  handler: main
+  bucketName: awsblueprints-lambda-zip-upload
+  bucketKey: function.zip
+  runTime: go1.x
+  envVariables:
+    key1: testing
