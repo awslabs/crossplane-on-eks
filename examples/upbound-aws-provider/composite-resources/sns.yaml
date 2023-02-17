@@ -1,0 +1,15 @@
+apiVersion: awsblueprints.io/v1alpha1
+kind: Notification
+metadata:
+  name: test-sns-topic
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+      notification.awsblueprints.io/type: standard
+      notification.awsblueprints.io/sns-config: cloudwatch
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: us-west-2

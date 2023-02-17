@@ -1,0 +1,279 @@
+
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xobject-processor.awsblueprints.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+  labels:
+    awsblueprints.io/provider: aws
+    awsblueprints.io/environment: dev
+    serverless.awsblueprints.io/app: object-processor
+spec:
+  compositeTypeRef:
+    apiVersion: awsblueprints.io/v1alpha1
+    kind: XServerlessApp
+  patchSets:
+    - name: common-fields-composition
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig
+          toFieldPath: spec.resourceConfig
+    - name: common-fields
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.deletionPolicy
+          toFieldPath: spec.deletionPolicy
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            mergeOptions:
+              appendSlice: true
+    - name: common-lambda
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.bucketName
+          toFieldPath: spec.envVariables[APP__CONFIG__DESTINATIONBUCKET]
+          policy:
+            fromFieldPath: Required
+            mergeOptions:
+              keepMapValues: true
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.bucketName
+          toFieldPath: spec.envVariables[APP__CONFIG__DESTINATIONQUEUE]
+          policy:
+            fromFieldPath: Required
+            mergeOptions:
+              keepMapValues: true
+  resources:
+    - name: sns-sqs
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: XFanout
+        spec:
+          compositionSelector:
+            matchLabels:
+              awsblueprints.io/environment: dev
+              awsblueprints.io/provider: aws
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-composition
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.queueArn
+          toFieldPath: status.sourceQueueArn
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.keyName
+          toFieldPath: spec.encryptionKey
+    - name: processor-event-source
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: EventSourceMapping
+        spec:
+          compositionSelector:
+            matchLabels:
+              esm.awsblueprints.io/service: sqs
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-composition
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.processorFuncName
+          toFieldPath: spec.funcName
+          policy:
+            fromFieldPath: Required
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.sourceQueueArn
+          toFieldPath: spec.sourceArn
+          policy:
+            fromFieldPath: Required
+    - name: processor-lambda
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: XLambdaFunction
+        spec:
+          compositionSelector:
+            matchLabels:
+              awsblueprints.io/provider: aws
+              awsblueprints.io/environment: dev
+              awsblueprints.io/type: zip
+          resourceConfig:
+            providerConfigName: aws-provider-config
+            region: us-west-2
+          handler: main
+          runTime: go1.x
+          envVariables:
+            APP__CONFIG__PROCESSOR: "TRUE"
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-composition
+        - type: PatchSet
+          patchSetName: common-lambda
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.bucketName
+          toFieldPath: spec.bucketName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.bucketKey
+          toFieldPath: spec.bucketKey
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: metadata.name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-processor"
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.functionRoleName
+          toFieldPath: status.processorRoleName
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.functionName
+          toFieldPath: status.processorFuncName
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.functionRoleArn
+          toFieldPath: status.accountNumber
+          transforms:
+            - type: string
+              string:
+                type: Regexp
+                regexp:
+                  match: 'arn:aws:iam::(\d+):.*'
+                  group: 1
+    - name: bucket
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: XObjectStorage
+        metadata:
+          name: standard-object-storage
+        spec:
+          compositionSelector:
+            matchLabels:
+              awsblueprints.io/provider: aws
+              awsblueprints.io/environment: dev
+              s3.awsblueprints.io/configuration: standard
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-composition
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.bucketName
+          toFieldPath: status.bucketName
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.bucketArn
+          toFieldPath: status.bucketArn
+    - name: processor-bucket-policy
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: IAMPolicy
+        spec:
+          compositionSelector:
+            matchLabels:
+              awsblueprints.io/provider: aws
+              awsblueprints.io/environment: dev
+              iam.awsblueprints.io/policy-type: write
+              iam.awsblueprints.io/service: s3
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-composition
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.processorRoleName
+          toFieldPath: spec.roleName
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.bucketArn
+          toFieldPath: spec.resourceArn
+    - name: processor-sqs-policy
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: IAMPolicy
+        spec:
+          compositionSelector:
+            matchLabels:
+              awsblueprints.io/provider: aws
+              awsblueprints.io/environment: dev
+              iam.awsblueprints.io/policy-type: read
+              iam.awsblueprints.io/service: sqs
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-composition
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.processorRoleName
+          toFieldPath: spec.roleName
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.sourceQueueArn
+          toFieldPath: spec.resourceArn
+    - name: kms-key
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: XEncryptionKey
+        spec:
+          compositionSelector:
+            matchLabels:
+              awsblueprints.io/provider: aws
+              awsblueprints.io/environment: dev
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-composition
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.keyArn
+          toFieldPath: status.kmsKeyArn
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.keyName
+          toFieldPath: status.keyName
+        - type: CombineFromComposite
+          toFieldPath: spec.policy
+          policy:
+            fromFieldPath: Required
+          combine:
+            variables:
+              - fromFieldPath: status.accountNumber
+            strategy: string
+            string:
+              fmt: |
+                {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Principal": {"AWS": "arn:aws:iam::%s:root"},
+                      "Action": "kms:*",
+                      "Resource": "*"
+                    },
+                    {
+                      "Effect": "Allow",
+                      "Principal": {
+                          "Service": "sns.amazonaws.com"
+                      },
+                      "Action": [
+                          "kms:Decrypt",
+                          "kms:GenerateDataKey*"
+                      ],
+                      "Resource": "*"
+                    }
+                  ]
+                }
+    - name: processor-kms-policy
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: IAMPolicy
+        spec:
+          compositionSelector:
+            matchLabels:
+              awsblueprints.io/provider: aws
+              awsblueprints.io/environment: dev
+              iam.awsblueprints.io/policy-type: read
+              iam.awsblueprints.io/service: kms
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-composition
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.processorRoleName
+          toFieldPath: spec.roleName
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.kmsKeyArn
+          toFieldPath: spec.resourceArn

@@ -1,0 +1,14 @@
+apiVersion: awsblueprints.io/v1alpha1
+kind: ObjectStorage
+metadata:
+  name: test-bucket-awsblueprint-123456789
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+      s3.awsblueprints.io/configuration: standard
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: us-west-2
