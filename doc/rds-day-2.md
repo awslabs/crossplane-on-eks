@@ -4,7 +4,9 @@
 ## Background and problem statement
 
 
-Managing databases can be challenging because they are stateful, not easily replaceable, and data loss could have significant business impacts. An unexpected restart could cause havoc to applications that depend on them. Because of this, database users and administrators want to offload the management, maintenance, and availability of databases to another entity such as cloud providers. Amazon RDS is one of such services. 
+Managing databases can be challenging because they are stateful, not easily replaceable, and data loss could have significant business impacts. 
+An unexpected restart could cause havoc to applications that depend on them. 
+Because of this, database users and administrators want to offload the management, maintenance, and availability of databases to another entity such as cloud providers. Amazon RDS is one of such services.
 Crossplane AWS provider aims to create building blocks for self-service experience for developers by providing abilities to manage AWS resources in Kubernetes native ways. 
 
 In Amazon RDS some operations require an instance restart. For example, version upgrade and storage size modification require an instance restart. RDS attempts to minimize impact of such operations by:
@@ -14,7 +16,8 @@ In Amazon RDS some operations require an instance restart. For example, version 
 
 This approach is fundamentally different from GitOps. In GitOps, when a change is checked into your repository, it is expected that actual resources are to match the specifications provided in the repository. 
 
-RDS supports applying these changes immediately instead of waiting for a scheduled maintenance window, and when using Crossplane AWS providers, they have the option to apply changes immediately as well. This is the option that should be used when using RDS with GitOps. However this leads to problems when enabling self service model where developers can provision resources on their own. 
+RDS supports applying these changes immediately instead of waiting for a scheduled maintenance window, and when using Crossplane AWS providers, they have [the option](https://marketplace.upbound.io/providers/crossplane-contrib/provider-aws/v0.37.1/resources/rds.aws.crossplane.io/DBInstance/v1alpha1#doc:spec-forProvider-applyImmediately) to [apply changes immediately](https://marketplace.upbound.io/providers/upbound/provider-aws/v0.29.0/resources/rds.aws.upbound.io/Instance/v1beta1#doc:spec-forProvider-applyImmediately) as well. 
+This is the option that should be used when using RDS with GitOps. However this leads to problems when enabling self service model where developers can provision resources on their own. 
 
 There are some problems when using the apply immediately option.  
 - Updates made to certain fields would need a restart to take effect but this information may not be surfaced back to users. For example, changing the parameter group on an instance requires a restart but this information is not available in the Upbound Official provider. The community provider surface this information in a status field. In both providers, the status fields indicates `Available` and `ReconcileSuccess`. This could give end users an illusion of successful parameter changes, but in reality it has not taken effect yet. 
@@ -23,13 +26,16 @@ There are some problems when using the apply immediately option.
 The main goal of this document is to provide guidance on how to provide guardrails for end users when managing RDS resources through Crossplane.
 
 ## Parameter Groups
-[Parameter Groups](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_WorkingWithParamGroups.html) define how the underlying database engine is configured. For example, if you wish to change the `binlog_cache_size` configuration value for your MySQL database, you can do that through parameter groups. A parameter group is not limited to be used by a single RDS instance. A parameter group can be used by multiple RDS instances. 
+[Parameter Groups](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_WorkingWithParamGroups.html) define how the underlying database engine is configured. For example, if you wish to change the `binlog_cache_size` configuration value for your MySQL database, you can do that through parameter groups. 
+A parameter group is not limited to be used by a single RDS instance. A parameter group can be used by multiple RDS instances. 
 
-In Parameter Groups, there are two types of parameters: dynamic and static. Dynamic parameters do not require a restart for their values to be applied to the running instance / cluster.  Static parameters require a restart for their values to be applied. Additionally, dynamic parameters support specifying how changes to them are applied. When `immediate` is specified the changes to dynamic parameters are applied immediately. When `pending-reboot` is specified, the changes to dynamic parameters are applied during next restart or during the next maintenance window, whichever is earlier. 
+In Parameter Groups, there are two types of parameters: dynamic and static. Dynamic parameters do not require a restart for their values to be applied to the running instance / cluster.  Static parameters require a restart for their values to be applied. 
+Additionally, dynamic parameters support specifying how changes to them are applied. When `immediate` is specified the changes to dynamic parameters are applied immediately. When `pending-reboot` is specified, the changes to dynamic parameters are applied during next restart or during the next maintenance window, whichever is earlier. 
 
 Since static parameters do not support `immediate` apply option, specifying this in your composition could lead to some unexpected errors. Therefore, extra care should be taken when exposing this resource to your end users. End users may not be aware of underlying engine specifications.
 
 Summarizing everything above effectively means there are a few general approaches to managing RDS configuration changes. 
+
 1. You want to ensure that parameter group values in the running cluster / instance match what is defined in your Git repository with no delay. The only certain way do this is by restarting the cluster/ instance during the reconciliation process.
 2. You can wait for parameter group changes to be applied during the next maintenance window. This means you may need to wait maximum 7 days for the changes to be applied. 
 3. The change does not have to be applied immediately but it needs to happen sooner than 7 days. This requires a separate workflow to restart cluster / instance.
@@ -86,6 +92,7 @@ To check if a PR is impacted, you can use of the following options:
 ### Check at runtime
 
 Another approach is to deny such operation at runtime using a policy engine and/or custom validating web hook unless certain conditions are met. This means problems with RDS configuration is communicated to the developers through their GitOps tooling by providing reasons for denial.
+Note that it is a good idea to check at runtime even if you have a check during PR.
 
 #### Example 1 
 
