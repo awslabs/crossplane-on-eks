@@ -62,6 +62,8 @@ Crossplane can be configured to publish secrets external to the cluster in which
 
 - Try it out with [this guide](doc/vault-integration.md)
 
+✅   Check out the [RDS day 2 operation doc](./doc/rds-day-2.md) 
+
 ✅   Checkout example [Gatekeeper configurations](./examples/gatekeeper/).
 
 ✅   Upbound AWS provider examples
