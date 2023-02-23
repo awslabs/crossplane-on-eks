@@ -9,8 +9,8 @@ This folder contains examples for deploying AWS resources using the following pr
  - ProviderConfig deployment with injected identity
 
 Follow these links to bootstrap the cluster
-- Bootstrap the cluster with [Terraform](../bootstrap/terraform/README.md)
-- Bootstrap the cluster with [eksctl](../bootstrap/eksctl/README.md)
+- Bootstrap the cluster with [Terraform](../../bootstrap/terraform/README.md)
+- Bootstrap the cluster with [eksctl](../../bootstrap/eksctl/README.md)
 
 
 ## AWS Provider
@@ -20,14 +20,14 @@ The following steps demonstrates VPC example composition deployment with **AWS P
 Deploys VPC Composition file and XRD definition file
 
 ```shell
-kubectl apply -f compositions/aws-provider/vpc
+kubectl apply -f ../../compositions/aws-provider/vpc
 ```
 
 ### Deploy Application example
 Deploys VPC claim resource which uses the above composition.
 
 ```shell
-kubectl apply -f examples/aws-provider/composite-resources/vpc/vpc.yaml
+kubectl apply -f composite-resources/vpc/vpc.yaml
 ```
 
 ## Deploy Managed resource for AWS Provider
@@ -35,7 +35,7 @@ kubectl apply -f examples/aws-provider/composite-resources/vpc/vpc.yaml
 The following shows the deployment of VPC using AWS Provider
 
 ```shell
-kubectl apply -f examples/aws-provider/managed-resources/vpc.yaml
+kubectl apply -f managed-resources/vpc.yaml
 
 # Verify the resource. When provisioning is complete, you should see READY: True in the output
 kubectl get VPC aws-provider-vpc
@@ -49,7 +49,7 @@ Note: [Kubernetes Provider](https://github.com/crossplane-contrib/provider-kuber
 Terraform and eksctl bootstrap scripts deploys kubernetes provider in EKS Cluster.
 
 ```shell
-kubectl apply -f examples/kubernetes-provider/test-namespace.yaml
+kubectl apply -f ../kubernetes-provider/test-namespace.yaml
 
 # Verify the resource
 kubectl get namespaces  

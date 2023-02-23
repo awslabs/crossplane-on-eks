@@ -7,6 +7,8 @@ Welcome to the AWS Crossplane Blueprints.
 [AWS](https://aws.amazon.com/) Crossplane Blueprints is an open source repo to bootstrap Amazon Elastic Kubernetes Service Clusters.
 and provision AWS resources with a library of [Crossplane Compositions (XRs)](https://crossplane.io/docs/master/concepts/composition.html) with Composite Resource Definitions (XRDs).
 
+If you are new to Crossplane, it is highly recommended to get yourself familiarized with Crossplane concepts. The [official documentation](https://docs.crossplane.io/master/getting-started/introduction/) and this [blog post](https://blog.upbound.io/crossplane-first-look/) are good starting points. 
+
 Compositions in this repository enable platform teams to define and offer bespoke AWS infrastructure APIs to the teams of application developers based on
 predefined [Composite Resources (XRs)](https://crossplane.io/docs/master/concepts/composition.html), encompassing one or more of AWS [Managed Resources (MRs)](https://crossplane.io/docs/master/concepts/managed-resources.html)
 
@@ -15,7 +17,9 @@ predefined [Composite Resources (XRs)](https://crossplane.io/docs/master/concept
 ✅   Bootstrap [Amazon EKS](https://aws.amazon.com/eks/) Cluster and Crossplane with [Terraform](https://www.terraform.io/) \
 ✅   Bootstrap [Amazon EKS](https://aws.amazon.com/eks/) Cluster and Crossplane with [eksctl](https://eksctl.io/) \
 ✅   [AWS Provider](https://github.com/crossplane/provider-aws) - Crossplane Compositions for AWS Services \
+✅   [Upbound AWS Provider](https://github.com/upbound/provider-aws) - Upbound Crossplane Compositions for AWS Services \
 ✅   [AWS IRSA on EKS](https://github.com/crossplane/provider-aws/blob/master/AUTHENTICATION.md#using-iam-roles-for-serviceaccounts) - AWS Provider Config with IRSA enabled  \
+✅ [Patching 101](doc/patching-101.md) - Learn how patches work.
 ✅   Example deployment patterns for [Composite Resources (XRs)](https://crossplane.io/docs/master/concepts/composition.html) for AWS Provider\
 ✅   Example deployment patterns for [Crossplane Managed Resources (MRs)](https://crossplane.io/docs/master/concepts/managed-resources.html)
 
@@ -32,9 +36,10 @@ Checkout the following README for full deployment configuration
 ✅   Configure the EKS cluster
 
 Enable IRSA support for your EKS cluster for the necessary permissions to spin up other AWS services.
-Refer to the bootstrap README for this configuration.
+Depending on the provider, refer to the bootstrap README for this configuration.
 
  - [AWS Provider](https://github.com/crossplane/provider-aws) - Crossplane Compositions for AWS Services
+ - [Upbound AWS Provider](https://github.com/upbound/provider-aws) - Upbound Crossplane Compositions for AWS Services
 
 ✅   Deploy the Examples
 
@@ -43,7 +48,7 @@ crossplane compositions or managed resources you want to experiment with. Keep
 in mind that the list of compositions and managed resources in this repository
 are evolving.
 
-- Deploy the Examples by following [this README](examples/README.md)
+- Deploy the Examples by following [this README](examples/aws-provider/README.md)
 
 ✅   Work with nested compositions.
 
@@ -57,9 +62,14 @@ Crossplane can be configured to publish secrets external to the cluster in which
 
 - Try it out with [this guide](doc/vault-integration.md)
 
-✅ Check out the [RDS day 2 operation doc](./doc/rds-day-2.md) 
+✅   Check out the [RDS day 2 operation doc](./doc/rds-day-2.md) 
 
 ✅   Checkout example [Gatekeeper configurations](./examples/gatekeeper/).
+
+✅   Upbound AWS provider examples
+
+- Deploy the Examples by following [this README](examples/upbound-aws-provider/README.md)
+
 ## Learn More
 
 - [Amazon EKS](https://aws.amazon.com/eks/)

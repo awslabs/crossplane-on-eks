@@ -1,0 +1,16 @@
+apiVersion: awsblueprints.io/v1alpha1
+kind: ServerlessApp
+metadata:
+  name: test-serverless
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+      serverless.awsblueprints.io/app: object-processor
+  bucketName: replace-with-unique-s3-bucket
+  bucketKey: function.zip
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: replace-with-aws-region

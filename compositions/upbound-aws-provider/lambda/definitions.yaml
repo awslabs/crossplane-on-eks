@@ -1,0 +1,81 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xlambdafunctions.awsblueprints.io
+spec:
+  group: awsblueprints.io
+  names:
+    kind: XLambdaFunction
+    plural: xlambdafunctions
+  claimNames:
+    kind: LambdaFunction
+    plural: lambdafunctions
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                imageUri: 
+                  type: string
+                timeout:
+                  type: integer
+                runTime:
+                  type: string
+                handler:
+                  type: string
+                permissionsBoundaryArn:
+                  type: string
+                bucketName:
+                  type: string
+                bucketKey:
+                  type: string
+                envVariables:
+                  type: object
+                  additionalProperties:
+                    type: string
+                resourceConfig:
+                  description: ResourceConfig defines general properties of this AWS
+                    resource.
+                  properties:
+                    deletionPolicy:
+                      description: Defaults to Delete
+                      enum:
+                      - Delete
+                      - Orphan
+                      type: string
+                    name:
+                      description: Set the name of this resource in AWS to the value
+                        provided by this field.
+                      type: string
+                    providerConfigName:
+                      type: string
+                    region:
+                      type: string
+                  required:
+                  - region
+                  type: object
+              required:
+              - resourceConfig
+              type: object
+            status:
+              properties:
+                functionRoleArn:
+                  type: string
+                functionRoleName:
+                  type: string
+                functionName:
+                  type: string
+                functionArn:
+                  description: Indicates this function's ARN
+                  type: string
+              type: object
+          required:
+          - spec
+          type: object

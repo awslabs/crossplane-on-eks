@@ -1,0 +1,13 @@
+apiVersion: awsblueprints.io/v1alpha1
+kind: Queue
+metadata:
+  name: test-queue
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: us-west-2

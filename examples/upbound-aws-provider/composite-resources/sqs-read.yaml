@@ -1,0 +1,16 @@
+apiVersion: awsblueprints.io/v1alpha1
+kind: IAMPolicy
+metadata:
+  name: test-queue-read
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+      iam.awsblueprints.io/policy-type: read
+      iam.awsblueprints.io/service: sqs
+  resourceArn: arn:aws:sqs:us-west-2:123456789012:test-sns-sqs-gnlc2
+  roleName: test-zip-lambda-xdzwd
+  resourceConfig:
+    providerConfigName: aws-provider-config
