@@ -43,7 +43,6 @@ spec:
           forProvider:
             delaySeconds: 10
             messageRetentionSeconds: 345600
-            kmsMasterKeyId: alias/aws/sqs
       patches:
         - type: PatchSet
           patchSetName: common-fields
