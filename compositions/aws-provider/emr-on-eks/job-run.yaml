@@ -43,7 +43,6 @@ spec:
               awsblueprints.io/type: role-only
           awsAccountID: ""
           eksOIDC: ""
-          permissionsBoundaryArn: ""
           serviceAccountName: emr-containers*
       patches:
         - type: PatchSet
@@ -70,7 +69,7 @@ spec:
     - name: read-policy-entrypoint
       base:
         apiVersion: awsblueprints.io/v1alpha1
-        kind: IAMPolicy
+        kind: XIAMPolicy
         spec:
           compositionSelector:
             matchLabels:
@@ -104,7 +103,7 @@ spec:
     - name: read-policy
       base:
         apiVersion: awsblueprints.io/v1alpha1
-        kind: IAMPolicy
+        kind: XIAMPolicy
         spec:
           compositionSelector:
             matchLabels:
@@ -136,7 +135,7 @@ spec:
     - name: write-policy
       base:
         apiVersion: awsblueprints.io/v1alpha1
-        kind: IAMPolicy
+        kind: XIAMPolicy
         spec:
           compositionSelector:
             matchLabels:
