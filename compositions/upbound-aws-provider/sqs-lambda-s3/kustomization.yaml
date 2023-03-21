@@ -3,7 +3,6 @@ kind: Kustomization
 resources:
 - ../event-source-mapping/
 - ../iam-policy/
-- ../kms/
 - ../lambda/
 - ../s3/
 - ../sqs/
