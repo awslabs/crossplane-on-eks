@@ -54,11 +54,13 @@ spec:
                       type: string
                     providerConfigName:
                       type: string
-                      default: "aws-provider-config"
                     region:
                       type: string
-                      default: "us-east-1"
+                  required:
+                  - region
                   type: object
+              required:
+              - resourceConfig
               type: object
             status:
               properties:

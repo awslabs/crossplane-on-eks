@@ -12,3 +12,6 @@ spec:
   bucketName: lambda-code-bucket-ab3
   bucketKey: function.zip
   memorySize: 128
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: us-east-1

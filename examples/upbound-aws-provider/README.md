@@ -39,7 +39,7 @@ kubectl get buckets
 
 ## Deploy the serverless app example
 This example deploys the architecture depicted on the diagram.
-![Serverless diagram](serverless.png)
+![Serverless diagram](diagrams/serverless.png)
 
 ### Deploy XRDs and Compositions
 

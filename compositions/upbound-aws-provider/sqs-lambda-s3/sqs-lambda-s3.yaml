@@ -22,23 +22,6 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig
           toFieldPath: spec.resourceConfig
-    - name: common-fields
-      patches:
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.deletionPolicy
-          toFieldPath: spec.deletionPolicy
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.region
-          toFieldPath: spec.forProvider.region
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.providerConfigName
-          toFieldPath: spec.providerConfigRef.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.tags
-          toFieldPath: spec.forProvider.tags
-          policy:
-            mergeOptions:
-              appendSlice: true
     - name: common-lambda
       patches:
         - type: FromCompositeFieldPath
