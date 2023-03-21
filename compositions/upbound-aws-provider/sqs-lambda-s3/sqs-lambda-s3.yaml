@@ -105,9 +105,6 @@ spec:
               awsblueprints.io/provider: aws
               awsblueprints.io/environment: dev
               awsblueprints.io/type: zip
-          resourceConfig:
-            providerConfigName: aws-provider-config
-            region: us-west-2
           handler: main
           runTime: go1.x
           envVariables:
