@@ -1,0 +1,17 @@
+apiVersion: awsblueprints.io/v1alpha1
+kind: SqsLambdaSSS
+metadata:
+  name: test-serverless
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+      serverless.awsblueprints.io/app: sqs-lambda-s3
+  bucketName: lambda-code-bucket-ab3
+  bucketKey: function.zip
+  memorySize: 128
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: us-east-1
