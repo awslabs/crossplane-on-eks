@@ -68,6 +68,62 @@ Expected result (it might take sometime before READY=True)
 NAME              SYNCED   READY   CONNECTION-SECRET   AGE
 test-serverless   True     True                        20m
 ```
+The claim will create the following resources:
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> Claim\nsqslambdassss
+    Claim\nsqslambdassss --> XR\nxsqslambdassss
+    XR\nxsqslambdassss --> Composition\nxsqslambdas3
+    Composition\nxsqslambdas3 --> XR\nxqueue
+    Composition\nxsqslambdas3 --> XR\neventsourcemapping
+    Composition\nxsqslambdas3 --> XR\nxlambdafunction
+    Composition\nxsqslambdas3 --> XR\nxobjectstorages
+    Composition\nxsqslambdas3 --> XR\niampolicies\nwrites3
+    Composition\nxsqslambdas3 --> XR\niampolicies\nreadsqs
+    XR\nxqueue --> Composition\nsqs
+    Composition\nsqs --> ManagedResource\nsqs
+    XR\neventsourcemapping --> Compostion\nsqsesm
+    Compostion\nsqsesm --> ManagedResource\neventsourcemapping
+    XR\nxlambdafunction --> Compostion\ns3lambda
+    Compostion\ns3lambda --> ManagedResource\nfunction
+    Compostion\ns3lambda --> ManagedResource\nrole
+    Compostion\ns3lambda --> ManagedResource\nrolepolicyattachement
+    XR\nxobjectstorages --> Compostion\ns3bucket
+    Compostion\ns3bucket --> ManagedResource\nbucket
+    XR\niampolicies\nwrites3 --> Compostion\nwrites3
+    Compostion\nwrites3 --> ManagedResource\npolicy\nwrites3
+    Compostion\nwrites3 --> ManagedResource\nrolepolicyattachement\nwrites3
+    XR\niampolicies\nreadsqs --> Compostion\nreadsqs
+    Compostion\nreadsqs --> ManagedResource\npolicy\nreadsqs
+    Compostion\nreadsqs --> ManagedResource\nrolepolicyattachement\nreadsqs
+```
+Each XR in the diagram contains the underlying resource refs:
+```
+kubectl describe xsqslambdassss | grep "Resource Refs" -A 18
+```
+Expected output:
+```
+  Resource Refs:
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         XQueue
+    Name:         test-serverless-p7bqf-l47lv
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         EventSourceMapping
+    Name:         test-serverless-p7bqf-stvlr
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         XLambdaFunction
+    Name:         test-serverless-p7bqf-processor
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         XObjectStorage
+    Name:         test-serverless-p7bqf-hlfff
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         IAMPolicy
+    Name:         test-serverless-p7bqf-lnqzb
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         IAMPolicy
+    Name:         test-serverless-p7bqf-s6jjs
+```
 
 #### Test
 Use the following command to get the SQS URL and store it in $SQS_URL environment variable
