@@ -5,7 +5,7 @@ This example deploys the architecture depicted on the diagram. First, it applies
 
 ## Pre-requisites:
  - [Upbound AWS Provider Crossplane Blueprint Examples](../../../README.md)
- - [serverless app](../object-processor-app/README.md)
+ - [This serverless application](../object-processor-app/README.md)
 
 ### Deploy XRDs and Compositions
 
@@ -50,7 +50,7 @@ xsqs-lambda-s3.awsblueprints.io                 5m
 ```
 cd claim
 ```
-Replace the bucket name and region in the claim with the ones set in the pre-requizite step [serverless app](../object-processor-app/README.md) where the `function.zip` file is uploaded.
+Replace the bucket name and region in the claim with the ones set in the pre-requizite step [This serverless application](../object-processor-app/README.md) where the `function.zip` file is uploaded.
 ```
 sed -i -e "s/replace-with-unique-s3-bucket/$S3_BUCKET/" sqs-lambda-s3-claim.yaml
 sed -i -e "s/replace-with-aws-region/$REGION/" sqs-lambda-s3-claim.yaml
@@ -72,7 +72,6 @@ The claim will create the following resources:
 ```mermaid
 stateDiagram-v2
     direction LR
-    [*] --> Claim\nsqslambdassss
     Claim\nsqslambdassss --> XR\nxsqslambdassss
     XR\nxsqslambdassss --> Composition\nxsqslambdas3
     Composition\nxsqslambdas3 --> XR\nxqueue
