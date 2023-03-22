@@ -147,7 +147,7 @@ Navigate to the AWS console and observe the SQS triggering the Lambda, and publi
 ## Clean Up
 Delete the serverless application
 ```
-kubectl delete -f sns-sqs-lambda-s3-claim.yaml
+kubectl delete -f sqs-lambda-s3-claim.yaml
 ```
 Delete the bucket
 ```
