@@ -9,8 +9,8 @@ spec:
       awsblueprints.io/provider: aws
       awsblueprints.io/environment: dev
       serverless.awsblueprints.io/app: object-processor
-  bucketName: lambda-code-bucket-ab3
+  bucketName: replace-with-unique-s3-bucket
   bucketKey: function.zip
   resourceConfig:
     providerConfigName: aws-provider-config
-    region: us-east-1
+    region: replace-with-aws-region
