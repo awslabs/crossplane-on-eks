@@ -34,7 +34,6 @@ spec:
                   type: string
                 memorySize:
                   type: integer
-                  default: 128
                 envVariables:
                   type: object
                   additionalProperties:
