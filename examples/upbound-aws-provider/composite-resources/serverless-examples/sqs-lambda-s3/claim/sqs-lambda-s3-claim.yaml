@@ -1,5 +1,5 @@
 apiVersion: awsblueprints.io/v1alpha1
-kind: SqsLambdaSSS
+kind: ServerlessApp
 metadata:
   name: test-serverless
   namespace: default
