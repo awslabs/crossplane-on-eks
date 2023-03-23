@@ -24,6 +24,7 @@ spec:
               properties:
                 encryptionKey:
                   type: string
+                  default: alias/aws/sqs
                 resourceConfig:
                   description: ResourceConfig defines general properties of this AWS
                     resource.

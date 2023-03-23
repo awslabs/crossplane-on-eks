@@ -8,7 +8,7 @@ spec:
     matchLabels:
       awsblueprints.io/provider: aws
       awsblueprints.io/environment: dev
-      serverless.awsblueprints.io/app: object-processor
+      serverless.awsblueprints.io/app: sns-sqs-lambda-s3
   bucketName: replace-with-unique-s3-bucket
   bucketKey: function.zip
   resourceConfig:

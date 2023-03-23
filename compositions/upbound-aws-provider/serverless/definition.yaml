@@ -16,7 +16,7 @@ spec:
     kind: ServerlessApp
     plural: serverlessapps
   defaultCompositionRef:
-    name: xobject-processor.awsblueprints.io
+    name: xsnssqslambdas3.awsblueprints.io
   versions:
     - name: v1alpha1
       served: true
@@ -32,6 +32,9 @@ spec:
                   type: string
                 handler:
                   type: string
+                memorySize:
+                  type: integer
+                  default: 128
                 envVariables:
                   type: object
                   additionalProperties:
