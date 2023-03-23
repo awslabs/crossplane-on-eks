@@ -51,7 +51,8 @@ write-s3.iampolicy.awsblueprints.io             5m
 write-sqs.iampolicy.awsblueprints.io            5m
 xencryptionkeys-kms.awsblueprints.io            5m
 xfanout.awsblueprints.io                        5m
-xobject-processor.awsblueprints.io              5m
+xsnssqslambdas3.awsblueprints.io                5m
+xsqslambdas3.awsblueprints.io                   5m
 ```
 
 #### Update and apply the claim
@@ -73,16 +74,16 @@ kubectl get serverlessapp
 ```
 Expected result (it might take sometime before READY=True)
 ```
-NAME              SYNCED   READY   CONNECTION-SECRET   AGE
-test-serverless   True     True                        20m
+NAME                     SYNCED   READY   CONNECTION-SECRET   AGE
+test-sns-sqs-lambda-s3   True     True                        20m
 ```
 
 #### Test
 Use the following command to get the SNS topic ARN and store it in $SNS_TOPIC_ARN environment variable
 ```
-SNS_TOPIC_ARN=$(aws sns list-topics |jq -r '.Topics | map(select(.TopicArn | contains("function-sns-sqs-test-serverless"))) | .[0].TopicArn' | tr -d '[:space:]')
+SNS_TOPIC_ARN=$(aws sns list-topics |jq -r '.Topics | map(select(.TopicArn | contains("function-sns-sqs-test-sns-sqs-lambda-s3"))) | .[0].TopicArn' | tr -d '[:space:]')
 ```
-The command will only store the first topic that contains `function-sns-sqs-test-serverless` in the name. Validate you have the correct topic:
+The command will only store the first topic that contains `function-sns-sqs-test-sns-sqs-lambda-s3` in the name. Validate you have the correct topic:
 ```
 echo $SNS_TOPIC_ARN
 ```

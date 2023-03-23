@@ -25,7 +25,7 @@ iampolicies.awsblueprints.io           True                    5m
 xlambdafunctions.awsblueprints.io      True          True      5m
 xobjectstorages.awsblueprints.io       True          True      5m
 xqueues.awsblueprints.io               True          True      5m
-xsqslambdassss.awsblueprints.io        True          True      5m
+xserverlessapp.awsblueprints.io        True          True      5m
 ```
 
 Verify the Compositions
@@ -43,7 +43,8 @@ s3bucket.awsblueprints.io                       5m
 sqs.esm.awsblueprints.io                        5m
 sqs.queue.aws.upbound.awsblueprints.io          5m
 write-s3.iampolicy.awsblueprints.io             5m
-xsqs-lambda-s3.awsblueprints.io                 5m
+xsnssqslambdas3.awsblueprints.io                5m
+xsqslambdas3.awsblueprints.io                   5m
 ```
 
 #### Update and apply the claim
@@ -61,19 +62,19 @@ kubectl apply -f sqs-lambda-s3-claim.yaml
 ```
 Validate the claim
 ```
-kubectl get sqslambdassss
+kubectl get serverlessapps
 ```
 Expected result (it might take sometime before READY=True)
 ```
-NAME              SYNCED   READY   CONNECTION-SECRET   AGE
-test-serverless   True     True                        20m
+NAME                 SYNCED   READY   CONNECTION-SECRET   AGE
+test-sqs-lambda-s3   True     True                        20m
 ```
 The claim will create the following resources:
 ```mermaid
 stateDiagram-v2
     direction LR
-    Claim\nsqslambdassss --> XR\nxsqslambdassss
-    XR\nxsqslambdassss --> Composition\nxsqslambdas3
+    Claim\nserverlessapps--> XR\nxserverlessapp
+    XR\nxserverlessapp --> Composition\nxsqslambdas3
     Composition\nxsqslambdas3 --> XR\nxqueue
     Composition\nxsqslambdas3 --> XR\neventsourcemapping
     Composition\nxsqslambdas3 --> XR\nxlambdafunction
@@ -99,37 +100,37 @@ stateDiagram-v2
 ```
 Each XR in the diagram contains the underlying resource refs:
 ```
-kubectl describe xsqslambdassss | grep "Resource Refs" -A 18
+kubectl describe xserverlessapp | grep "Resource Refs" -A 18
 ```
 Expected output:
 ```
   Resource Refs:
     API Version:  awsblueprints.io/v1alpha1
     Kind:         XQueue
-    Name:         test-serverless-p7bqf-l47lv
+    Name:         test-sqs-lambda-s3-hc2m5-7qwnb
     API Version:  awsblueprints.io/v1alpha1
     Kind:         EventSourceMapping
-    Name:         test-serverless-p7bqf-stvlr
+    Name:         test-sqs-lambda-s3-hc2m5-9q2kf
     API Version:  awsblueprints.io/v1alpha1
     Kind:         XLambdaFunction
-    Name:         test-serverless-p7bqf-processor
+    Name:         test-sqs-lambda-s3-hc2m5-processor
     API Version:  awsblueprints.io/v1alpha1
     Kind:         XObjectStorage
-    Name:         test-serverless-p7bqf-hlfff
+    Name:         test-sqs-lambda-s3-hc2m5-mbqcc
     API Version:  awsblueprints.io/v1alpha1
     Kind:         IAMPolicy
-    Name:         test-serverless-p7bqf-lnqzb
+    Name:         test-sqs-lambda-s3-hc2m5-jspzj
     API Version:  awsblueprints.io/v1alpha1
     Kind:         IAMPolicy
-    Name:         test-serverless-p7bqf-s6jjs
+    Name:         test-sqs-lambda-s3-hc2m5-2qzfl
 ```
 
 #### Test
 Use the following command to get the SQS URL and store it in $SQS_URL environment variable
 ```
-SQS_URL=$(aws sqs list-queues | jq -r '.QueueUrls|map(select(contains("test-serverless"))) | .[0]' | tr -d '[:space:]')
+SQS_URL=$(aws sqs list-queues | jq -r '.QueueUrls|map(select(contains("test-sqs-lambda-s3"))) | .[0]' | tr -d '[:space:]')
 ```
-The command will only store the first url that contains `test-serverless` in the name. Validate you have the correct url:
+The command will only store the first url that contains `test-sqs-lambda-s3` in the name. Validate you have the correct url:
 ```
 echo $SQS_URL
 ```
