@@ -1,7 +1,7 @@
 apiVersion: awsblueprints.io/v1alpha1
 kind: ServerlessApp
 metadata:
-  name: test-serverless
+  name: test-sqs-lambda-s3
   namespace: default
 spec:
   compositionSelector:
