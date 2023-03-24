@@ -4,19 +4,15 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: xserverlessapp.awsblueprints.io
-  annotations:
-    argocd.argoproj.io/sync-wave: "-10"
+  name: xlambdafunctions.awsblueprints.io
 spec:
   group: awsblueprints.io
   names:
-    kind: XServerlessApp
-    plural: xserverlessapp
+    kind: XLambdaFunction
+    plural: xlambdafunctions
   claimNames:
-    kind: ServerlessApp
-    plural: serverlessapps
-  defaultCompositionRef:
-    name: xobject-processor.awsblueprints.io
+    kind: LambdaFunction
+    plural: lambdafunctions
   versions:
     - name: v1alpha1
       served: true
@@ -26,11 +22,22 @@ spec:
           properties:
             spec:
               properties:
+                imageUri: 
+                  type: string
+                timeout:
+                  type: integer
+                memorySize:
+                  type: integer
+                  default: 128
+                runTime:
+                  type: string
+                handler:
+                  type: string
+                permissionsBoundaryArn:
+                  type: string
                 bucketName:
                   type: string
                 bucketKey:
-                  type: string
-                handler:
                   type: string
                 envVariables:
                   type: object
@@ -52,10 +59,8 @@ spec:
                       type: string
                     providerConfigName:
                       type: string
-                      default: "aws-provider-config"
                     region:
                       type: string
-                      default: "us-west-2"
                   required:
                   - region
                   type: object
@@ -64,23 +69,14 @@ spec:
               type: object
             status:
               properties:
-                printerRoleName:
+                functionRoleArn:
                   type: string
-                processorRoleName:
+                functionRoleName:
                   type: string
-                processorFuncName:
+                functionName:
                   type: string
-                sourceQueueArn:
-                  type: string
-                bucketName:
-                  type: string
-                bucketArn:
-                  type: string
-                kmsKeyArn:
-                  type: string
-                keyName:
-                  type: string
-                accountNumber:
+                functionArn:
+                  description: Indicates this function's ARN
                   type: string
               type: object
           required:

@@ -1,14 +1,14 @@
 apiVersion: awsblueprints.io/v1alpha1
 kind: ServerlessApp
 metadata:
-  name: test-serverless
+  name: test-sns-sqs-lambda-s3
   namespace: default
 spec:
   compositionSelector:
     matchLabels:
       awsblueprints.io/provider: aws
       awsblueprints.io/environment: dev
-      serverless.awsblueprints.io/app: object-processor
+      serverless.awsblueprints.io/app: sns-sqs-lambda-s3
   bucketName: replace-with-unique-s3-bucket
   bucketKey: function.zip
   resourceConfig:

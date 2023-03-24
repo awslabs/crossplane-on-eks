@@ -4,15 +4,15 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: xlambdafunctions.awsblueprints.io
+  name: xqueues.awsblueprints.io
 spec:
   group: awsblueprints.io
   names:
-    kind: XLambdaFunction
-    plural: xlambdafunctions
+    kind: XQueue
+    plural: xqueues
   claimNames:
-    kind: LambdaFunction
-    plural: lambdafunctions
+    kind: Queue
+    plural: queues
   versions:
     - name: v1alpha1
       served: true
@@ -22,24 +22,9 @@ spec:
           properties:
             spec:
               properties:
-                imageUri: 
+                encryptionKey:
                   type: string
-                timeout:
-                  type: integer
-                runTime:
-                  type: string
-                handler:
-                  type: string
-                permissionsBoundaryArn:
-                  type: string
-                bucketName:
-                  type: string
-                bucketKey:
-                  type: string
-                envVariables:
-                  type: object
-                  additionalProperties:
-                    type: string
+                  default: alias/aws/sqs
                 resourceConfig:
                   description: ResourceConfig defines general properties of this AWS
                     resource.
@@ -66,15 +51,11 @@ spec:
               type: object
             status:
               properties:
-                functionRoleArn:
+                queueUrl:
                   type: string
-                functionRoleName:
+                queueArn:
                   type: string
-                functionName:
-                  type: string
-                functionArn:
-                  description: Indicates this function's ARN
-                  type: string
+                
               type: object
           required:
           - spec

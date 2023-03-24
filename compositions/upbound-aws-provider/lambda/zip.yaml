@@ -94,7 +94,6 @@ spec:
         spec:
           deletionPolicy: Delete
           forProvider:
-            memorySize: 128
             timeout: 30
             packageType: Zip
             role: "tbd"
@@ -110,6 +109,9 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: metadata.name
           toFieldPath: spec.forProvider.functionName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.memorySize
+          toFieldPath: spec.forProvider.memorySize
         - type: FromCompositeFieldPath
           fromFieldPath: spec.runTime
           toFieldPath: spec.forProvider.runtime

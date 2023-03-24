@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+bases:
+- ../../../../../compositions/upbound-aws-provider/event-source-mapping/
+- ../../../../../compositions/upbound-aws-provider/iam-policy/
+- ../../../../../compositions/upbound-aws-provider/kms/
+- ../../../../../compositions/upbound-aws-provider/lambda/
+- ../../../../../compositions/upbound-aws-provider/s3/
+- ../../../../../compositions/upbound-aws-provider/sns/
+- ../../../../../compositions/upbound-aws-provider/sns-sqs/
+- ../../../../../compositions/upbound-aws-provider/sqs/
+- ../../../../../compositions/upbound-aws-provider/serverless/

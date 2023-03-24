@@ -4,15 +4,19 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: xqueues.awsblueprints.io
+  name: xserverlessapp.awsblueprints.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
 spec:
   group: awsblueprints.io
   names:
-    kind: XQueue
-    plural: xqueues
+    kind: XServerlessApp
+    plural: xserverlessapp
   claimNames:
-    kind: Queue
-    plural: queues
+    kind: ServerlessApp
+    plural: serverlessapps
+  defaultCompositionRef:
+    name: xsnssqslambdas3.awsblueprints.io
   versions:
     - name: v1alpha1
       served: true
@@ -22,8 +26,18 @@ spec:
           properties:
             spec:
               properties:
-                encryptionKey:
+                bucketName:
                   type: string
+                bucketKey:
+                  type: string
+                handler:
+                  type: string
+                memorySize:
+                  type: integer
+                envVariables:
+                  type: object
+                  additionalProperties:
+                    type: string
                 resourceConfig:
                   description: ResourceConfig defines general properties of this AWS
                     resource.
@@ -40,8 +54,10 @@ spec:
                       type: string
                     providerConfigName:
                       type: string
+                      default: "aws-provider-config"
                     region:
                       type: string
+                      default: "us-west-2"
                   required:
                   - region
                   type: object
@@ -50,11 +66,24 @@ spec:
               type: object
             status:
               properties:
-                queueUrl:
+                printerRoleName:
                   type: string
-                queueArn:
+                processorRoleName:
                   type: string
-                
+                processorFuncName:
+                  type: string
+                sourceQueueArn:
+                  type: string
+                bucketName:
+                  type: string
+                bucketArn:
+                  type: string
+                kmsKeyArn:
+                  type: string
+                keyName:
+                  type: string
+                accountNumber:
+                  type: string
               type: object
           required:
           - spec
