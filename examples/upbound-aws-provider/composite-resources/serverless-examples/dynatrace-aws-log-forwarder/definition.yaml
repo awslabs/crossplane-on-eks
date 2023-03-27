@@ -1,0 +1,94 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xfirehoseapps.awsblueprints.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+spec:
+  group: awsblueprints.io
+  names:
+    kind: XFirehoseApp
+    plural: xfirehoseapps
+  claimNames:
+    kind: FirehoseApp
+    plural: firehoseapps
+  defaultCompositionRef:
+    name: s3.firehose.upbound.awsblueprints.io
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                bucketName:
+                  type: string
+                bucketKey:
+                  type: string
+                envVariables:
+                  type: object
+                  default:
+                    DEBUG: "false"
+                    VERIFY_SSL: "true"
+                  properties:
+                    DEBUG:
+                      type: string
+                    VERIFY_SSL:
+                      type: string
+                    DYNATRACE_ENV_URL:
+                      type: string
+                    DYNATRACE_API_KEY:
+                      type: string
+                resourceConfig:
+                  description: ResourceConfig defines general properties of this AWS
+                    resource.
+                  properties:
+                    deletionPolicy:
+                      description: Defaults to Delete
+                      enum:
+                      - Delete
+                      - Orphan
+                      type: string
+                    name:
+                      description: Set the name of this resource in AWS to the value
+                        provided by this field.
+                      type: string
+                    providerConfigName:
+                      type: string
+                      default: "aws-provider-config"
+                    region:
+                      type: string
+                      default: "us-west-2"
+                  required:
+                  - region
+                  type: object
+              required:
+              - bucketName
+              - envVariables
+              - resourceConfig
+              default:
+                bucketKey: dynatrace-aws-log-forwarder-lambda.zip
+              type: object
+            status:
+              properties:
+                printerRoleName:
+                  type: string
+                processorRoleName:
+                  type: string
+                processorFuncName:
+                  type: string
+                bucketName:
+                  type: string
+                bucketArn:
+                  type: string
+                accountNumber:
+                  type: string
+              type: object
+          required:
+          - spec
+          type: object
