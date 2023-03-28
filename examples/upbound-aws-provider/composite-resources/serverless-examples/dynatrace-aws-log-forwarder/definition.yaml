@@ -32,18 +32,20 @@ spec:
                   type: string
                 envVariables:
                   type: object
-                  default:
-                    DEBUG: "false"
-                    VERIFY_SSL: "true"
                   properties:
                     DEBUG:
                       type: string
+                      default: "false"
                     VERIFY_SSL:
                       type: string
+                      default: "true"
                     DYNATRACE_ENV_URL:
                       type: string
                     DYNATRACE_API_KEY:
                       type: string
+                  required:
+                  - DYNATRACE_ENV_URL
+                  - DYNATRACE_API_KEY
                 resourceConfig:
                   description: ResourceConfig defines general properties of this AWS
                     resource.
@@ -81,6 +83,18 @@ spec:
                 processorRoleName:
                   type: string
                 processorFuncName:
+                  type: string
+                processorFuncArn:
+                  type: string
+                kinesisRoleArn:
+                  type: string
+                kinesisRoleName:
+                  type: string
+                kinesisArn:
+                  type: string
+                cloudwatchlogsRoleArn:
+                  type: string
+                cloudwatchlogsRoleName:
                   type: string
                 bucketName:
                   type: string

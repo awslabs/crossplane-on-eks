@@ -1,0 +1,278 @@
+apiVersion: s3.aws.upbound.io/v1beta1
+kind: Bucket
+metadata:
+  name: kinesis-bucket
+  annotations:
+    crossplane.io/external-name: ${BUCKET_LOGS}
+spec:
+  forProvider:
+    region: ${AWS_REGION}
+  providerConfigRef:
+    name: aws-provider-config
+---
+apiVersion: s3.aws.upbound.io/v1beta1
+kind: BucketPublicAccessBlock
+metadata:
+  name: kinesis-bucket
+spec:
+  forProvider:
+    region: ${AWS_REGION}
+    blockPublicAcls: true
+    blockPublicPolicy: true
+    ignorePublicAcls: true
+    restrictPublicBuckets: true
+    bucket: kinesis-bucket
+  providerConfigRef:
+    name: aws-provider-config
+---
+apiVersion: awsblueprints.io/v1alpha1
+kind: XLambdaFunction
+metadata:
+  name: dynatrace-log-forwarder
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+      awsblueprints.io/type: zip
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: ${AWS_REGION}
+  handler: index.handler
+  bucketName: ${BUCKET_LAMBDA_ZIP}
+  bucketKey: dynatrace-aws-log-forwarder-lambda.zip
+  runTime: python3.8
+  memorySize: 256
+  timeout: 60
+  envVariables:
+    DEBUG: "false"
+    DYNATRACE_API_KEY: "${DYNATRACE_API_KEY}"
+    DYNATRACE_ENV_URL: "${DYNATRACE_ENV_URL}"
+    VERIFY_SSL: "true"
+---
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: Policy
+metadata:
+  name: lambda-putmetrics
+spec:
+  forProvider:
+    policy: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Action": [
+                    "cloudwatch:PutMetricData"
+                ],
+                "Resource": "*",
+                "Effect": "Allow"
+            }
+        ]
+      }
+  providerConfigRef:
+    name: aws-provider-config
+---
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: RolePolicyAttachment
+metadata:
+  name: dynatrace-log-forwarder-attach
+spec:
+  forProvider:
+    policyArnRef:
+      name: lambda-putmetrics
+    roleRef:
+      name: dynatrace-log-forwarder-role
+  providerConfigRef:
+    name: aws-provider-config
+---
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: Role
+metadata:
+  name: kinesis-role
+spec:
+  forProvider:
+    assumeRolePolicy: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "firehose.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      }
+  providerConfigRef:
+    name: aws-provider-config
+---
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: Policy
+metadata:
+  name: kinesis-s3
+spec:
+  forProvider:
+    policy: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Action": [
+                    "s3:AbortMultipartUpload",
+                    "s3:GetBucketLocation",
+                    "s3:GetObject",
+                    "s3:ListBucket",
+                    "s3:ListBucketMultipartUploads",
+                    "s3:PutObject"
+                ],
+                "Resource": [
+                    "arn:aws:s3:::${BUCKET_LOGS}",
+                    "arn:aws:s3:::${BUCKET_LOGS}/*"
+                ],
+                "Effect": "Allow"
+            }
+        ]
+      }
+  providerConfigRef:
+    name: aws-provider-config
+---
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: Policy
+metadata:
+  name: kinesis-invocation
+spec:
+  forProvider:
+    policy: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Action": [
+                    "lambda:InvokeFunction",
+                    "lambda:GetFunctionConfiguration"
+                ],
+                "Resource": [
+                    "arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:dynatrace-log-forwarder"
+                ],
+                "Effect": "Allow"
+            }
+        ]
+      }
+  providerConfigRef:
+    name: aws-provider-config
+---
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: RolePolicyAttachment
+metadata:
+  name: kinesis-attach-invocation
+spec:
+  forProvider:
+    policyArnRef:
+      name: kinesis-invocation
+    roleRef:
+      name: kinesis-role
+  providerConfigRef:
+    name: aws-provider-config
+---
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: RolePolicyAttachment
+metadata:
+  name: kinesis-attach-s3
+spec:
+  forProvider:
+    policyArnRef:
+      name: kinesis-s3
+    roleRef:
+      name: kinesis-role
+  providerConfigRef:
+    name: aws-provider-config
+---
+apiVersion: firehose.aws.upbound.io/v1beta1
+kind: DeliveryStream
+metadata:
+  name: dynatrace-s3-stream
+spec:
+  forProvider:
+    destination: extended_s3
+    region: ${AWS_REGION}
+    extendedS3Configuration:
+      - bucketArnRef:
+          name: kinesis-bucket
+        roleArnRef:
+          name: kinesis-role
+        bufferInterval: 60
+        bufferSize: 5
+        compressionFormat: GZIP
+        prefix: "success-"
+        processingConfiguration:
+        - enabled: true
+          processors:
+          - parameters:
+            - parameterName: LambdaArn
+              parameterValue: arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:dynatrace-log-forwarder
+            type: Lambda
+  providerConfigRef:
+    name: aws-provider-config
+---
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: Role
+metadata:
+  name: cloudwatch-logs-role
+spec:
+  forProvider:
+    assumeRolePolicy: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "logs.${AWS_REGION}.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      }
+  providerConfigRef:
+    name: aws-provider-config
+---
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: Policy
+metadata:
+  name: cloudwatch-logs-policy
+spec:
+  forProvider:
+    policy: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Action": [
+                    "firehose:PutRecord",
+                    "firehose:PutRecordBatch"
+                ],
+                "Resource": [
+                    "arn:aws:firehose:${AWS_REGION}:${AWS_ACCOUNT_ID}:deliverystream/dynatrace-s3-stream"
+                ],
+                "Effect": "Allow"
+            }
+        ]
+      }
+  providerConfigRef:
+    name: aws-provider-config
+---
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: RolePolicyAttachment
+metadata:
+  name: cloudwatch-logs-attach
+spec:
+  forProvider:
+    policyArnRef:
+      name: cloudwatch-logs-policy
+    roleRef:
+      name: cloudwatch-logs-role
+  providerConfigRef:
+    name: aws-provider-config
+---
