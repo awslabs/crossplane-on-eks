@@ -151,7 +151,7 @@ module "eks_blueprints_crossplane_addons" {
   # Default helm chart and providers values set at https://github.com/aws-ia/terraform-aws-eks-blueprints/blob/main/modules/kubernetes-addons/crossplane/locals.tf
   enable_crossplane = true
   crossplane_helm_config = {
-    version = "1.11.0"
+    version = "1.11.2"
     values = [yamlencode({
       args    = ["--enable-environment-configs","--enable-composition-functions"]
       metrics = {
