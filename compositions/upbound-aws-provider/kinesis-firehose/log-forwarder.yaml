@@ -39,6 +39,13 @@ spec:
               appendSlice: true
         - fromFieldPath: "metadata.name"
           toFieldPath: "metadata.name"
+  environment:
+    environmentConfigs:
+      - type: Selector
+        selector:
+          matchLabels:
+          - key: awsblueprints.io/environment
+            valueFromFieldPath: spec.environmentConfigs
   resources:
     - name: processor-lambda
       base:
@@ -60,12 +67,18 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: spec.envVariables
           toFieldPath: spec.envVariables
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.bucketName
+        - type: FromEnvironmentFieldPath
+          fromFieldPath: bucketName
           toFieldPath: spec.bucketName
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.bucketKey
+        - type: FromEnvironmentFieldPath
+          fromFieldPath: bucketKey
           toFieldPath: spec.bucketKey
+        - type: FromEnvironmentFieldPath
+          fromFieldPath: DYNATRACE_API_KEY
+          toFieldPath: spec.envVariables.DYNATRACE_API_KEY
+        - type: FromEnvironmentFieldPath
+          fromFieldPath: DYNATRACE_ENV_URL
+          toFieldPath: spec.envVariables.DYNATRACE_ENV_URL
         - type: FromCompositeFieldPath
           fromFieldPath: metadata.name
           toFieldPath: metadata.name
@@ -237,6 +250,13 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: metadata.name
           toFieldPath: metadata.name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-kinesis-firehose"
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: spec.forProvider.name
           transforms:
             - type: string
               string:

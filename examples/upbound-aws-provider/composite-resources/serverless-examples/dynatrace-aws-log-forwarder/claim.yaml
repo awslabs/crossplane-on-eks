@@ -1,0 +1,17 @@
+apiVersion: awsblueprints.io/v1alpha1
+kind: FirehoseApp
+metadata:
+  name: test-logs-firehose-s3-lambda
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+      firehoseapps.awsblueprints.io/app: firehose
+      firehoseapps.awsblueprints.io/destination: s3
+  envVariables: {}
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: us-east-1
+  environmentConfigs: dev

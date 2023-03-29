@@ -26,10 +26,6 @@ spec:
           properties:
             spec:
               properties:
-                bucketName:
-                  type: string
-                bucketKey:
-                  type: string
                 envVariables:
                   type: object
                   properties:
@@ -39,13 +35,6 @@ spec:
                     VERIFY_SSL:
                       type: string
                       default: "true"
-                    DYNATRACE_ENV_URL:
-                      type: string
-                    DYNATRACE_API_KEY:
-                      type: string
-                  required:
-                  - DYNATRACE_ENV_URL
-                  - DYNATRACE_API_KEY
                 resourceConfig:
                   description: ResourceConfig defines general properties of this AWS
                     resource.
@@ -69,10 +58,12 @@ spec:
                   required:
                   - region
                   type: object
+                environmentConfigs:
+                  type: string
               required:
-              - bucketName
               - envVariables
               - resourceConfig
+              - environmentConfigs
               default:
                 bucketKey: dynatrace-aws-log-forwarder-lambda.zip
               type: object
