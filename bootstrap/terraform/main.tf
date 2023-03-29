@@ -161,6 +161,15 @@ module "eks_blueprints_crossplane_addons" {
         enabled = true
         args = ["--debug"]
       }
+      resourcesRBACManager = {
+        limits = { 
+          cpu = "500m"
+          memory = "1Gi"
+        }
+        requests = {
+          cpu = "100m"
+          memory = "512Mi"
+        }
     })]
   }
   #---------------------------------------------------------
