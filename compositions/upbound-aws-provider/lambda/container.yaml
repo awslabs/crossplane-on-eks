@@ -45,8 +45,6 @@ spec:
         spec:
           deletionPolicy: Delete
           forProvider:
-            memorySize: 128
-            timeout: 30
             packageType: Image
       patches:
         - type: PatchSet
@@ -57,6 +55,12 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: metadata.name
           toFieldPath: spec.forProvider.functionName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.memorySize
+          toFieldPath: spec.forProvider.memorySize
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.timeout
+          toFieldPath: spec.forProvider.timeout
         - type: FromCompositeFieldPath
           fromFieldPath: spec.imageUri
           toFieldPath: spec.forProvider.imageUri

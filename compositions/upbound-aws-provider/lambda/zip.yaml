@@ -94,7 +94,6 @@ spec:
         spec:
           deletionPolicy: Delete
           forProvider:
-            timeout: 30
             packageType: Zip
             role: "tbd"
             environment:
@@ -112,6 +111,9 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: spec.memorySize
           toFieldPath: spec.forProvider.memorySize
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.timeout
+          toFieldPath: spec.forProvider.timeout
         - type: FromCompositeFieldPath
           fromFieldPath: spec.runTime
           toFieldPath: spec.forProvider.runtime
