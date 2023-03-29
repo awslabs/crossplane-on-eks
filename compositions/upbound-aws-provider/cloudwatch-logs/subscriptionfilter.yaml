@@ -69,6 +69,9 @@ spec:
               string:
                 fmt: "%s-subscriptionfilter"
         - type: FromCompositeFieldPath
+          fromFieldPath: spec.destinationArn
+          toFieldPath: spec.forProvider.destinationArn
+        - type: FromCompositeFieldPath
           fromFieldPath: spec.destinationArnRef
           toFieldPath: spec.forProvider.destinationArnRef
         - type: FromCompositeFieldPath
