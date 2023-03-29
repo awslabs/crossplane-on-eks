@@ -1,0 +1,25 @@
+apiVersion: cloudwatchlogs.aws.upbound.io/v1beta1
+kind: SubscriptionFilter
+metadata:
+  name: dynatrace-aws-logs-test
+spec:
+  forProvider:
+    # For now specified the Kinesis Firehose Stream arn
+    destinationArn: "arn:aws:firehose:${AWS_REGION}:${AWS_ACCOUNT_ID}:deliverystream/<firehose delivery stream name>"
+    # TODO there is an issue with destinationArnSelector not working for Kinesis Firehose https://github.com/upbound/upjet/issues/95
+    #destinationArnSelector:
+    #  matchLabels:
+    #    crossplane.io/claim-name: test-logs-firehose-s3-lambda
+    #    crossplane.io/claim-namespace: default
+    #    firehoseapps.awsblueprints.io/app: firehose
+    filterPattern: ""
+    logGroupName: "/aws/eks/crossplane-blueprints/cluster"
+    name: "dynatrace-aws-logs-test"
+    region: "us-east-1"
+    roleArnSelector:
+      matchLabels:
+        crossplane.io/claim-name: test-logs-firehose-s3-lambda
+        crossplane.io/claim-namespace: default
+        iam.awsblueprints.io/service: firehose
+  providerConfigRef:
+    name: aws-provider-config

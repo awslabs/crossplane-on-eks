@@ -5,7 +5,7 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: subscriptionfilter.cloudwatchlogs.upbound.awsblueprints.io
+  name: subscriptionfilter.upbound.awsblueprints.io
   annotations:
     argocd.argoproj.io/sync-wave: "-10"
   labels:

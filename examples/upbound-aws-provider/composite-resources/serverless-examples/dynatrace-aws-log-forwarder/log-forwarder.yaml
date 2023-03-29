@@ -206,58 +206,13 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: status.processorFuncArn
           toFieldPath: spec.resourceArn
-    - name: cloudwatchlogs-role
-      base:
-        apiVersion: iam.aws.upbound.io/v1beta1
-        kind: Role
-        spec:
-          forProvider: {}
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - fromFieldPath: spec.resourceConfig.region
-          toFieldPath: spec.forProvider.assumeRolePolicy
-          transforms:
-            - type: string
-              string:
-                fmt: |
-                  {
-                    "Version": "2012-10-17",
-                    "Statement": [
-                      {
-                        "Effect": "Allow",
-                        "Principal": {
-                          "Service": "logs.%s.amazonaws.com"
-                        },
-                        "Action": "sts:AssumeRole"
-                      }
-                    ]
-                  }
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.providerConfigName
-          toFieldPath: spec.providerConfigRef.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-cloudwatch-logs-role"
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.arn
-          toFieldPath: status.cloudwatchlogsRoleArn
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.id
-          toFieldPath: status.cloudwatchlogsRoleName
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.permissionsBoundaryArn
-          toFieldPath: spec.forProvider.permissionsBoundary
     - name: kinesis-firehose
       base:
         apiVersion: firehose.aws.upbound.io/v1beta1
         kind: DeliveryStream
         metadata:
-          name: dynatrace-s3-stream
+          labels:
+            firehoseapps.awsblueprints.io/app: firehose
         spec:
           forProvider:
             destination: extended_s3
@@ -298,6 +253,56 @@ spec:
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.id
           toFieldPath: status.kinesisArn
+    - name: firehose-write-role
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: Role
+        metadata:
+          labels:
+            iam.awsblueprints.io/policy-type: write
+            iam.awsblueprints.io/service: firehose
+        spec:
+          forProvider: {}
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.assumeRolePolicy
+          transforms:
+            - type: string
+              string:
+                fmt: |
+                  {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                        "Effect": "Allow",
+                        "Principal": {
+                          "Service": "logs.%s.amazonaws.com"
+                        },
+                        "Action": "sts:AssumeRole"
+                      }
+                    ]
+                  }
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: metadata.name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-firehose-write-role"
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.arn
+          toFieldPath: status.cloudwatchlogsRoleArn
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.id
+          toFieldPath: status.cloudwatchlogsRoleName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.permissionsBoundaryArn
+          toFieldPath: spec.forProvider.permissionsBoundary
     - name: firehose-write-policy
       base:
         apiVersion: awsblueprints.io/v1alpha1

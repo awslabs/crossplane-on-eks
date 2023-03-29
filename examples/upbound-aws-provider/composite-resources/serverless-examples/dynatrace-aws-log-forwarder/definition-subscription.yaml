@@ -4,7 +4,7 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: subscriptionfilters.awsblueprints.io
+  name: xsubscriptionfilters.awsblueprints.io
   annotations:
     argocd.argoproj.io/sync-wave: "-10"
 spec:
@@ -16,7 +16,7 @@ spec:
     kind: SubscriptionFilter
     plural: subscriptionfilters
   defaultCompositionRef:
-    name: subscriptionfilter.cloudwatchlogs.upbound.awsblueprints.io
+    name: subscriptionfilter.upbound.awsblueprints.io
   versions:
     - name: v1alpha1
       served: true
@@ -231,7 +231,6 @@ spec:
               required:
               - filterPattern
               - logGroupName
-              - name
               - resourceConfig
               type: object
             status:
