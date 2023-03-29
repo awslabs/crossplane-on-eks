@@ -18,11 +18,6 @@ spec:
     apiVersion: awsblueprints.io/v1alpha1
     kind: XSubscriptionFilter
   patchSets:
-    - name: common-fields-composition
-      patches:
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig
-          toFieldPath: spec.resourceConfig
     - name: common-fields
       patches:
         - type: FromCompositeFieldPath
@@ -37,8 +32,19 @@ spec:
           policy:
             mergeOptions:
               appendSlice: true
-        - fromFieldPath: "metadata.name"
-          toFieldPath: "metadata.name"
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.name
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: metadata.name
+          transforms:
+            - type: string
+              string:
+                fmt: "subscriptionfilter-%s"
   resources:
     - name: subscriptionfilter
       base:
@@ -49,25 +55,13 @@ spec:
       patches:
         - type: PatchSet
           patchSetName: common-fields
-        - type: PatchSet
-          patchSetName: common-fields-composition
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.providerConfigName
-          toFieldPath: spec.providerConfigRef.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-subscriptionfilter"
         - type: FromCompositeFieldPath
           fromFieldPath: metadata.name
           toFieldPath: spec.forProvider.name
           transforms:
             - type: string
               string:
-                fmt: "%s-subscriptionfilter"
+                fmt: "subscriptionfilter-%s"
         - type: FromCompositeFieldPath
           fromFieldPath: spec.destinationArn
           toFieldPath: spec.forProvider.destinationArn
