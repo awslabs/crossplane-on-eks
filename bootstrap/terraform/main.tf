@@ -170,6 +170,7 @@ module "eks_blueprints_crossplane_addons" {
           cpu = "100m"
           memory = "512Mi"
         }
+      }
     })]
   }
   #---------------------------------------------------------
