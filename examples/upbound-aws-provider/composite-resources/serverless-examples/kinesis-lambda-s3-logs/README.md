@@ -1,7 +1,7 @@
 # Example to deploy serverless architecture (kinesis log forwarder)
 This example deploys the architecture depicted on the diagram. First, it applies the Crossplane XRD and Compositions. Then it applies the Claim to deploy the log forwarder with the AWS resources (Kinesis Data Firehose steam, S3 bucket, Lambda function), and then it applies a second Claim to subscribe the log forwarder to a CloudWatch log group. Last it will start sending logs to Lambda to be process which forwards the logs to a 3rd party log collector with a copy saved on S3.
 
-![Serverless diagram](../../../diagrams/sqs-lambda-s3.png)
+![Serverless diagram](images/kinesis-lambda-s3.jpg)
 
 ## Pre-requisites:
  - [Upbound AWS Provider Crossplane Blueprint Examples](../../../README.md)
@@ -107,34 +107,6 @@ NAME                           SYNCED   READY   CONNECTION-SECRET   AGE
 test-logs-firehose-s3-lambda   True     True                        10m
 ```
 
-Each XR in the diagram contains the underlying resource refs:
-```
-kubectl describe xfirehoseapps | grep "Resource Refs" -A 18
-```
-
-Expected output:
-```
-  Resource Refs:
-    API Version:  awsblueprints.io/v1alpha1
-    Kind:         IAMPolicy
-    Name:         test-logs-firehose-s3-lambda-fwndt-576hp
-    API Version:  awsblueprints.io/v1alpha1
-    Kind:         IAMPolicy
-    Name:         test-logs-firehose-s3-lambda-fwndt-78ztw
-    API Version:  awsblueprints.io/v1alpha1
-    Kind:         IAMPolicy
-    Name:         test-logs-firehose-s3-lambda-fwndt-9pv99
-    API Version:  awsblueprints.io/v1alpha1
-    Kind:         IAMPolicy
-    Name:         test-logs-firehose-s3-lambda-fwndt-bpc7t
-    API Version:  awsblueprints.io/v1alpha1
-    Kind:         XLambdaFunction
-    Name:         test-logs-firehose-s3-lambda-fwndt-processor
-    API Version:  awsblueprints.io/v1alpha1
-    Kind:         XObjectStorage
-    Name:         test-logs-firehose-s3-lambda-fwndt-ksvxd
-```
-
 The claim will create the following resources:
 ```mermaid
 stateDiagram-v2
@@ -170,6 +142,43 @@ stateDiagram-v2
     XR\nxkinesisfirehose --> Compostion\nkinesisfirehose
     Compostion\nkinesisfirehose --> ManagedResource\nDeliveryStream
     Compostion\nkinesisfirehose --> ManagedResource\nrole\nkinesis
+```
+
+Each XR in the diagram contains the underlying resource refs:
+```
+kubectl describe xfirehoseapps | grep "Resource Refs" -A 18
+```
+
+Expected output:
+```
+  Resource Refs:
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         IAMPolicy
+    Name:         test-logs-firehose-s3-lambda-fwndt-576hp
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         IAMPolicy
+    Name:         test-logs-firehose-s3-lambda-fwndt-78ztw
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         IAMPolicy
+    Name:         test-logs-firehose-s3-lambda-fwndt-9pv99
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         IAMPolicy
+    Name:         test-logs-firehose-s3-lambda-fwndt-bpc7t
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         XLambdaFunction
+    Name:         test-logs-firehose-s3-lambda-fwndt-processor
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         XObjectStorage
+    Name:         test-logs-firehose-s3-lambda-fwndt-ksvxd
+    API Version:  firehose.aws.upbound.io/v1beta1
+    Kind:         DeliveryStream
+    Name:         test-logs-firehose-s3-lambda-fwndt-kinesis-firehose
+    API Version:  iam.aws.upbound.io/v1beta1
+    Kind:         Role
+    Name:         test-logs-firehose-s3-lambda-fwndt-firehose-write-role
+    API Version:  iam.aws.upbound.io/v1beta1
+    Kind:         Role
+    Name:         test-logs-firehose-s3-lambda-fwndt-kinesis-role
 ```
 
 ## Test with CloudWatch Subscription Filter
@@ -221,7 +230,15 @@ NAME                           SYNCED   READY   CONNECTION-SECRET   AGE
 test-logs-firehose-s3-lambda   True     True                        27s
 ```
 
-The xfirehoseapps XR contains the underlying resource refs:
+The claim will create the following resources:
+```mermaid
+stateDiagram-v2
+    direction LR
+    Claim\nsubscriptionfilter --> XR\nxsubscriptionfilter
+    XR\nxsubscriptionfilter--> Composition\nsubscriptionfilter
+    Composition\nsubscriptionfilter --> ManagedResource\nSubscriptionFilter
+```
+Each XR in the diagram contains the underlying resource refs:
 ```
 kubectl describe xfirehoseapps | grep "Resource Refs" -A 3
 ```
@@ -234,14 +251,6 @@ Expected output:
     Name:         subscriptionfilter-test-logs-firehose-s3-lambda-kw9c2
 ```
 
-The claim will create the following resources:
-```mermaid
-stateDiagram-v2
-    direction LR
-    Claim\nsubscriptionfilter --> XR\nxsubscriptionfilter
-    XR\nxsubscriptionfilter--> Composition\nsubscriptionfilter
-    Composition\nsubscriptionfilter --> ManagedResource\nSubscriptionFilter
-```
 
 Validate that the cloudwatch log subscription filter is added by using the AWS Console (Cloud Watch -> Logs -> Log Group -> Subscription Filter)
 
