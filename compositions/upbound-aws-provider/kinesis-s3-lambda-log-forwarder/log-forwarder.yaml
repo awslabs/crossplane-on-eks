@@ -5,12 +5,12 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: s3.firehose.upbound.awsblueprints.io
+  name: firehose.upbound.awsblueprints.io
   annotations:
     argocd.argoproj.io/sync-wave: "-10"
   labels:
     awsblueprints.io/provider: aws
-    awsblueprints.io/environment: dev
+    awsblueprints.io/environment: new
     firehoseapps.awsblueprints.io/app: firehose
     firehoseapps.awsblueprints.io/destination: s3
 spec:
@@ -37,6 +37,12 @@ spec:
           policy:
             mergeOptions:
               appendSlice: true
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.labels
+          toFieldPath: metadata.labels
+          policy:
+            mergeOptions:
+              keepMapValues: true
         - fromFieldPath: "metadata.name"
           toFieldPath: "metadata.name"
   environment:
@@ -137,47 +143,61 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: status.bucketArn
           toFieldPath: spec.resourceArn
-    - name: kinesis-role
+    - name: kinesis-firehose
       base:
-        apiVersion: iam.aws.upbound.io/v1beta1
-        kind: Role
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: XKinesisFirehose
+        metadata:
         spec:
-          forProvider:
-            assumeRolePolicy: |
-              {
-                "Version": "2012-10-17",
-                "Statement": [
-                  {
-                    "Effect": "Allow",
-                    "Principal": {
-                      "Service": "firehose.amazonaws.com"
-                    },
-                    "Action": "sts:AssumeRole"
-                  }
-                ]
-              }
+          destination: extended_s3
+          extendedS3Configuration:
+            - bufferInterval: 60
+              bufferSize: 5
+              compressionFormat: GZIP
+              prefix: "success-"
+              processingConfiguration:
+              - enabled: true
+                processors:
+                - parameters:
+                  - parameterName: LambdaArn
+                    parameterValue: TBD
+                  type: Lambda
       patches:
         - type: PatchSet
-          patchSetName: common-fields
+          patchSetName: common-fields-composition
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.providerConfigName
-          toFieldPath: spec.providerConfigRef.name
+          fromFieldPath: metadata.labels
+          toFieldPath: metadata.labels
+          policy:
+            mergeOptions:
+              keepMapValues: true
         - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-kinesis-role"
+          fromFieldPath: spec.name
+          toFieldPath: spec.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.region
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.bucketName
+          toFieldPath: spec.extendedS3Configuration[0].bucketArnRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.kinesisRoleName
+          toFieldPath: spec.extendedS3Configuration[0].roleArnRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.processorFuncArn
+          toFieldPath: spec.extendedS3Configuration[0].processingConfiguration[0].processors[0].parameters[0].parameterValue
         - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.arn
+          fromFieldPath: status.kinesisRoleArn
           toFieldPath: status.kinesisRoleArn
         - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.id
+          fromFieldPath: status.kinesisRoleName
           toFieldPath: status.kinesisRoleName
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.permissionsBoundaryArn
-          toFieldPath: spec.forProvider.permissionsBoundary
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.kinesisName
+          toFieldPath: status.kinesisName
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.kinesisArn
+          toFieldPath: status.kinesisArn
     - name: kinesis-bucket-policy
       base:
         apiVersion: awsblueprints.io/v1alpha1
@@ -219,60 +239,6 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: status.processorFuncArn
           toFieldPath: spec.resourceArn
-    - name: kinesis-firehose
-      base:
-        apiVersion: firehose.aws.upbound.io/v1beta1
-        kind: DeliveryStream
-        metadata:
-          labels:
-            firehoseapps.awsblueprints.io/app: firehose
-        spec:
-          forProvider:
-            destination: extended_s3
-            extendedS3Configuration:
-              - bufferInterval: 60
-                bufferSize: 5
-                compressionFormat: GZIP
-                prefix: "success-"
-                processingConfiguration:
-                - enabled: true
-                  processors:
-                  - parameters:
-                    - parameterName: LambdaArn
-                      parameterValue: TBD
-                    type: Lambda
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.providerConfigName
-          toFieldPath: spec.providerConfigRef.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-kinesis-firehose"
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: spec.forProvider.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-kinesis-firehose"
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.bucketName
-          toFieldPath: spec.forProvider.extendedS3Configuration[0].bucketArnRef.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.kinesisRoleName
-          toFieldPath: spec.forProvider.extendedS3Configuration[0].roleArnRef.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.processorFuncArn
-          toFieldPath: spec.forProvider.extendedS3Configuration[0].processingConfiguration[0].processors[0].parameters[0].parameterValue
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.id
-          toFieldPath: status.kinesisArn
     - name: firehose-write-role
       base:
         apiVersion: iam.aws.upbound.io/v1beta1

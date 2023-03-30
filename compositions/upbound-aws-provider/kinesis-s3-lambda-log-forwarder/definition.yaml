@@ -16,7 +16,7 @@ spec:
     kind: FirehoseApp
     plural: firehoseapps
   defaultCompositionRef:
-    name: s3.firehose.upbound.awsblueprints.io
+    name: firehose.upbound.awsblueprints.io
   versions:
     - name: v1alpha1
       served: true
