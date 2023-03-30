@@ -9,7 +9,7 @@ spec:
   compositionSelector:
     matchLabels:
       awsblueprints.io/provider: aws
-      awsblueprints.io/environment: new
+      awsblueprints.io/environment: dev
       firehoseapps.awsblueprints.io/app: firehose
       firehoseapps.awsblueprints.io/destination: s3
   name: "dynatrace"

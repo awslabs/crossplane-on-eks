@@ -10,7 +10,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "-10"
   labels:
     awsblueprints.io/provider: aws
-    awsblueprints.io/environment: new
+    awsblueprints.io/environment: dev
     firehoseapps.awsblueprints.io/app: firehose
     firehoseapps.awsblueprints.io/destination: s3
 spec:
