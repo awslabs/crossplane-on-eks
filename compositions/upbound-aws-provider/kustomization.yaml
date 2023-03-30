@@ -5,7 +5,7 @@ resources:
 - event-source-mapping/
 - iam-policy/
 - kinesis-data-firehose/
-- kinesis-s3-lambda-log-forwarder/
+- kinesis-data-firehose-app/
 - kms/
 - lambda/
 - s3/

@@ -1,6 +1,6 @@
 # Example to deploy serverless architecture
 This example deploys the architecture depicted on the diagram. First, it applies the Crossplane XRD and Compositions. Then it applies the Claim which creates all the AWS resources, and deploys the code to the Lambda funtion. Last, it send a message to the SQS Queue, that triggers the Lambda fuction, which posts the results in the S3 bucket.
-   
+
 ![Serverless diagram](../../../diagrams/sqs-lambda-s3.png)
 
 ## Pre-requisites:

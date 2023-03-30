@@ -1,0 +1,288 @@
+# Example to deploy serverless architecture (kinesis log forwarder)
+This example deploys the architecture depicted on the diagram. First, it applies the Crossplane XRD and Compositions. Then it applies the Claim to deploy the log forwarder with the AWS resources (Kinesis Data Firehose steam, S3 bucket, Lambda function), and then it applies a second Claim to subscribe the log forwarder to a CloudWatch log group. Last it will start sending logs to Lambda to be process which forwards the logs to a 3rd party log collector with a copy saved on S3.
+
+![Serverless diagram](../../../diagrams/sqs-lambda-s3.png)
+
+## Pre-requisites:
+ - [Upbound AWS Provider Crossplane Blueprint Examples](../../../README.md)
+
+Create a dynatrace account (there is a 16 day free trial) and create an API Key for log ingestion,
+for more information on creating the key and enabling log monitoring see the doc [Amazon CloudWatch Logs monitoring
+](https://www.dynatrace.com/support/help/setup-and-configuration/setup-on-cloud-platforms/amazon-web-services/amazon-web-services-integrations/aws-service-metrics/cloudwatch-logs)
+
+You can the Dynatrace console in "Access Tokens" and generate a token or use the API to generate the token (sope log.ingest) with the followig command:
+```sh
+curl -X POST "https://XXXXXXXX.live.dynatrace.com/api/v2/apiTokens" -H "accept: application/json; charset=utf-8" -H "Content-Type: application/json; charset=utf-8" -d "{\"name\":\"lambda-ingest-logs\",\"scopes\":[\"logs.ingest\"]}" -H "Authorization: Api-Token XXXXXXXX"
+```
+
+Create an AWS bucket and upload the dynatrace lambda code, you can download latest version from github repository [github.com/dynatrace-oss](https://github.com/dynatrace-oss/dynatrace-aws-log-forwarder/releases)
+
+Use the helper script `upload_dynatrace_zip.sh` to download latest zip file lambda, and upload to s3 using the CLI, inspect the script in case you need to customize the aws cli command
+```sh
+S3_BUCKET="lambda-uploads-carrlos" ./upload_dynatrace_zip.sh
+```
+
+## Deploy XRDs and Compositions
+
+
+```shell
+kubectl apply -k .
+```
+
+Verify the XRDs
+```shell
+kubectl get xrds
+```
+
+Expected output
+```
+NAME                                    ESTABLISHED   OFFERED   AGE
+iampolicies.awsblueprints.io            True                    5s
+xfirehoseapps.awsblueprints.io          True          True      5s
+xkinesisfirehoses.awsblueprints.io      True                    5s
+xlambdafunctions.awsblueprints.io       True          True      5s
+xobjectstorages.awsblueprints.io        True          True      5s
+xsubscriptionfilters.awsblueprints.io   True          True      5s
+```
+
+Verify the Compositions
+```shell
+kubectl get compositions
+```
+
+Expected output
+```
+NAME                                                     AGE
+firehose.upbound.awsblueprints.io                        22m
+kinesisfirehose.upbound.awsblueprints.io                 22m
+lambda-invoke.iampolicy.awsblueprints.io                 22m
+read-kms.iampolicy.awsblueprints.io                      22m
+read-s3.iampolicy.awsblueprints.io                       22m
+read-sqs.iampolicy.awsblueprints.io                      22m
+s3.firehose.upbound.awsblueprints.io                     38h
+s3.lambda.aws.upbound.awsblueprints.io                   22m
+s3bucket.awsblueprints.io                                22m
+subscriptionfilter.upbound.awsblueprints.io              22m
+write-cloudwatch-metrics.iampolicy.awsblueprints.io      22m
+write-firehose-s3.iampolicy.awsblueprints.io             22m
+write-firehose.iampolicy.awsblueprints.io                22m
+write-s3.iampolicy.awsblueprints.io                      22m
+write-sqs.iampolicy.awsblueprints.io                     22m
+```
+
+
+## Update and apply Environment Config
+
+Use the file template `environmentconfig-tmpl.yaml` to create a file `environmentconfig.yaml`
+
+Set the variables `DYNATRACE_ENV_URL` and `DYNATRACE_API_KEY` in the following command with your valid values.
+
+```sh
+export DYNATRACE_ENV_URL="https://XXXXXXXX.live.dynatrace.com"
+export DYNATRACE_API_KEY="dt0c01.XXXXXXXX"
+export S3_BUCKET="lambda-uploads-carrlos"
+envsubst < "environmentconfig-tmpl.yaml" > "environmentconfig.yaml"
+```
+Create Crossplane environment config to be us with the Composition.
+
+```sh
+kubectl apply -f environmentconfig.yaml
+```
+
+## Update and apply the Kinesis Data Firehose App Claim
+
+Apply the claim
+```
+kubectl apply -f claim.yaml
+```
+
+Validate the claim
+```
+kubectl get firehoseapps
+```
+
+Expected result (it might take sometime before READY=True)
+```
+NAME                           SYNCED   READY   CONNECTION-SECRET   AGE
+test-logs-firehose-s3-lambda   True     True                        10m
+```
+
+Each XR in the diagram contains the underlying resource refs:
+```
+kubectl describe xfirehoseapps | grep "Resource Refs" -A 18
+```
+
+Expected output:
+```
+  Resource Refs:
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         XQueue
+    Name:         test-sqs-lambda-s3-hc2m5-7qwnb
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         EventSourceMapping
+    Name:         test-sqs-lambda-s3-hc2m5-9q2kf
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         XLambdaFunction
+    Name:         test-sqs-lambda-s3-hc2m5-processor
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         XObjectStorage
+    Name:         test-sqs-lambda-s3-hc2m5-mbqcc
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         IAMPolicy
+    Name:         test-sqs-lambda-s3-hc2m5-jspzj
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         IAMPolicy
+    Name:         test-sqs-lambda-s3-hc2m5-2qzfl
+```
+
+The claim will create the following resources:
+```mermaid
+stateDiagram-v2
+    direction LR
+    Claim\nfirehoseapps --> XR\nxfirehoseapp
+    XR\nxfirehoseapp --> Composition\nfirehose
+    Composition\nfirehose --> XR\nxkinesisfirehose
+    Composition\nfirehose --> XR\nxlambdafunction
+    Composition\nfirehose --> XR\nxobjectstorages
+    Composition\nfirehose --> XR\niampolicies\nwritemetrics
+    Composition\nfirehose --> XR\niampolicies\nwrites3
+    Composition\nfirehose --> XR\niampolicies\ninvoke
+    Composition\nfirehose --> XR\niampolicies\nwritefirehose
+    Composition\nfirehose --> ManagedResource\nrole\nlogs
+    XR\nxlambdafunction --> Compostion\ns3lambda
+    Compostion\ns3lambda --> ManagedResource\nfunction
+    Compostion\ns3lambda --> ManagedResource\nrole
+    Compostion\ns3lambda --> ManagedResource\nrolepolicyattachement
+    XR\nxobjectstorages --> Compostion\ns3bucket
+    Compostion\ns3bucket --> ManagedResource\nbucket
+    XR\niampolicies\nwrites3 --> Compostion\nwrites3
+    Compostion\nwrites3 --> ManagedResource\npolicy\nwrites3
+    Compostion\nwrites3 --> ManagedResource\nrolepolicyattachement\nwrites3
+    XR\niampolicies\nwritemetrics --> Compostion\nwritemetrics
+    Compostion\nwritemetrics --> ManagedResource\npolicy\nwritemetrics
+    Compostion\nwritemetrics --> ManagedResource\nrolepolicyattachement\nwritemetrics
+    XR\niampolicies\ninvoke --> Compostion\ninvoke
+    Compostion\ninvoke --> ManagedResource\npolicy\ninvoke
+    Compostion\ninvoke --> ManagedResource\nrolepolicyattachement\ninvoke
+    XR\niampolicies\nwritefirehose --> Compostion\nwritefirehose
+    Compostion\nwritefirehose --> ManagedResource\npolicy\nwritefirehose
+    Compostion\nwritefirehose --> ManagedResource\nrolepolicyattachement\nwritefirehose
+    XR\nxkinesisfirehose --> Compostion\nkinesisfirehose
+    Compostion\nkinesisfirehose --> ManagedResource\nDeliveryStream
+    Compostion\nkinesisfirehose --> ManagedResource\nrole\nkinesis
+
+```
+
+## Test with CloudWatch Subscription Filter
+
+
+Currently there is an [issue](https://github.com/upbound/upjet/issues/95) with Upbound crossplane provider in SubcriptionFilters using matchSelectors only work with Kinesis Stream, not other destinations.
+
+Get the name of the Kinesis Data Firehose created previously using the following command:
+
+Using the the following labes on the created claim `test-logs-firehose-s3-lambda`
+
+```shell
+KINESIS_CLAIM_NAME="test-logs-firehose-s3-lambda"
+DESTINATION_KINESIS_ARN=$(kubectl get firehoseapps.awsblueprints.io ${KINESIS_CLAIM_NAME} \
+  -o 'jsonpath={.status.kinesisArn}')
+echo "Found Kinesis Data Firehose => ${DESTINATION_KINESIS_ARN}"
+```
+
+Use the file template `claim-subscription-tmpl.yaml` to create a file `claim-subscription.yaml`
+
+- Edit file to customize the `filterPattern` and change value `default` if you installed in a different namespace.
+- Substitute the variable `${DESTINATION_KINESIS_ARN}` with the value we got previously
+- Substitute the variable `${CLOUDWATCH_LOG_GROUP}` with the desired CloudWatch log group to forward logs, for example the Amazon EKS Control Plane logs that contain Kubernetes Audit Logs, you can use the value `/aws/eks/crossplane-blueprints/cluster` which is the EKS cluster created in this git repo installed with Crossplane.
+
+You can use the following command:
+```shell
+export NAMESPACE="default"
+export KINESIS_CLAIM_NAME="test-logs-firehose-s3-lambda"
+export CLOUDWATCH_LOG_GROUP="/aws/eks/crossplane-blueprints/cluster"
+export DESTINATION_KINESIS_ARN="${DESTINATION_KINESIS_ARN}"
+envsubst < "claim-subscription-tmpl.yaml" > "claim-subscription.yaml"
+```
+
+Create the claim for the CloudWatch log group subscription filter, you can create up to two subscription filters per log group.
+
+Apply the claim
+```
+kubectl apply -f claim-subscription.yaml
+```
+
+Validate the claim
+```
+kubectl get subscriptionfilters.awsblueprints.io
+```
+
+Expected result (it might take sometime before READY=True)
+```
+NAME                           SYNCED   READY   CONNECTION-SECRET   AGE
+test-logs-firehose-s3-lambda   True     True                        27s
+```
+
+The xfirehoseapps XR contains the underlying resource refs:
+```
+kubectl describe xfirehoseapps | grep "Resource Refs" -A 18
+```
+
+Expected output:
+```
+  Resource Refs:
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         XQueue
+    Name:         test-sqs-lambda-s3-hc2m5-7qwnb
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         EventSourceMapping
+    Name:         test-sqs-lambda-s3-hc2m5-9q2kf
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         XLambdaFunction
+    Name:         test-sqs-lambda-s3-hc2m5-processor
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         XObjectStorage
+    Name:         test-sqs-lambda-s3-hc2m5-mbqcc
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         IAMPolicy
+    Name:         test-sqs-lambda-s3-hc2m5-jspzj
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         IAMPolicy
+    Name:         test-sqs-lambda-s3-hc2m5-2qzfl
+```
+
+Validate that the cloudwatch log subscription filter is added by using the AWS Console (Cloud Watch -> Logs -> Log Group -> Subscription Filter)
+
+![CloudWatch Log subcription filter](images/cloudwatch.jpg)
+
+Validate that the Lambda is sending logs to the 3rd party log collector by uing the AWS Console (Lamda -> Function -> Monitorin -> Metrics) verify that at least one invocation ran (It might take a few minutes for metric data to show up).
+
+![Lambda Invocation](images/lambda.jpg)
+
+Validate that the 3rd party collector is receiving logs by using the Console (Observe and Explore -> Logs), filter using AWS selectors like `region` and `aws.log_stream` (ie kube-apiserver..)
+
+![Log Collector](images/log-collector.jpg)
+
+
+## Clean Up
+Delete the CloudWatch Log Subscription Filter
+```shell
+kubectl delete -f claim-subscription.yaml
+```
+
+Delete the Kinesis, Lambda, and S3 bucket holding the logs (be aware if you want to keep the logs)
+```shell
+kubectl delete -f claim.yaml
+```
+
+Delete the lambda zip file and bucket
+```shell
+aws s3 rm s3://${S3_BUCKET}/function.zip
+aws s3api delete-bucket --bucket ${S3_BUCKET} # This will fail when the bucket is not empty.
+```
+
+Delete the XRDs and Compositions
+```shell
+kubectl delete -k .
+```
+
+

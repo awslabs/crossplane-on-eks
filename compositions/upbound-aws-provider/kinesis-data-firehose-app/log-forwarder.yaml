@@ -47,7 +47,7 @@ spec:
           - key: awsblueprints.io/environment
             valueFromFieldPath: spec.environmentConfigs
   resources:
-    - name: processor-lambda
+    - name: lambda
       base:
         apiVersion: awsblueprints.io/v1alpha1
         kind: XLambdaFunction
@@ -116,7 +116,7 @@ spec:
         - type: ToCompositeFieldPath
           fromFieldPath: status.bucketArn
           toFieldPath: status.bucketArn
-    - name: processor-bucket-policy
+    - name: lambda-metrics-write
       base:
         apiVersion: awsblueprints.io/v1alpha1
         kind: IAMPolicy
@@ -134,9 +134,6 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: status.processorRoleName
           toFieldPath: spec.roleName
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.bucketArn
-          toFieldPath: spec.resourceArn
     - name: kinesis-firehose
       base:
         apiVersion: awsblueprints.io/v1alpha1
@@ -194,7 +191,7 @@ spec:
         - type: ToCompositeFieldPath
           fromFieldPath: status.kinesisArn
           toFieldPath: status.kinesisArn
-    - name: kinesis-bucket-policy
+    - name: kinesis-write-s3
       base:
         apiVersion: awsblueprints.io/v1alpha1
         kind: IAMPolicy
@@ -215,7 +212,7 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: status.bucketArn
           toFieldPath: spec.resourceArn
-    - name: kinesis-invoke-policy
+    - name: kinesis-invoke-lambda
       base:
         apiVersion: awsblueprints.io/v1alpha1
         kind: IAMPolicy
@@ -235,7 +232,7 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: status.processorFuncArn
           toFieldPath: spec.resourceArn
-    - name: firehose-write-role
+    - name: logs-write-firehose-role
       base:
         apiVersion: iam.aws.upbound.io/v1beta1
         kind: Role
@@ -285,7 +282,7 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: spec.permissionsBoundaryArn
           toFieldPath: spec.forProvider.permissionsBoundary
-    - name: firehose-write-policy
+    - name: logs-write-firehose-policy
       base:
         apiVersion: awsblueprints.io/v1alpha1
         kind: IAMPolicy
