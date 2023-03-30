@@ -141,6 +141,8 @@ module "eks_blueprints_kubernetes_addons" {
   enable_karpenter      = true  
   enable_metrics_server = true 
   enable_prometheus     = true
+
+  depends_on = [module.eks.managed_node_groups]
 }  
 
 module "eks_blueprints_crossplane_addons" {
@@ -161,6 +163,16 @@ module "eks_blueprints_crossplane_addons" {
         enabled = true
         args = ["--debug"]
       }
+      resourcesCrossplane = {
+        limits = { 
+          cpu = "1"
+          memory = "2Gi"
+        }
+        requests = {
+          cpu = "100m"
+          memory = "1Gi"
+        }
+      }
       resourcesRBACManager = {
         limits = { 
           cpu = "500m"
@@ -177,6 +189,7 @@ module "eks_blueprints_crossplane_addons" {
   # Crossplane community AWS Provider deployment
   #---------------------------------------------------------
   crossplane_aws_provider = {
+    # !NOTE!: only enable one AWS provider at a time 
     enable          = true
     provider_config = "aws-provider-config"
     provider_aws_version = "v0.38.0"
@@ -188,6 +201,7 @@ module "eks_blueprints_crossplane_addons" {
   # Crossplane Upbound AWS Provider deployment
   #---------------------------------------------------------
   crossplane_upbound_aws_provider = {
+    # !NOTE!: only enable one AWS provider at a time 
     enable          = true
     provider_config = "aws-provider-config"
     provider_aws_version = "v0.31.0"
@@ -209,7 +223,7 @@ module "eks_blueprints_crossplane_addons" {
     enable = true
   }
 
-  depends_on = [module.eks.managed_node_groups]
+  depends_on = [module.eks.managed_node_groups, module.eks_blueprints_kubernetes_addons]
 }
 
 
