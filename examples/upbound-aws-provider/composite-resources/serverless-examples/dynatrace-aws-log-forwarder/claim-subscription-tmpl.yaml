@@ -2,7 +2,7 @@ apiVersion: awsblueprints.io/v1alpha1
 kind: SubscriptionFilter
 metadata:
   name: test-logs-firehose-s3-lambda
-  namespace: default
+  namespace: ${NAMESPACE}
 spec:
   compositionSelector:
     matchLabels:
@@ -10,18 +10,18 @@ spec:
       awsblueprints.io/environment: dev
       cloudwatchlogs.awsblueprints.io/service: cloudwatch
       cloudwatchlogs.awsblueprints.io/logs: subscriptionfilter
-  logGroupName: "/aws/eks/envconfig-crossplane/cluster"
+  logGroupName: "${CLOUDWATCH_LOG_GROUP}"
   filterPattern: ""
   roleArnSelector:
     matchLabels:
-      crossplane.io/claim-name: "test-logs-firehose-s3-lambda"
-      crossplane.io/claim-namespace: default
+      crossplane.io/claim-name: "${KINESIS_CLAIM_NAME}"
+      crossplane.io/claim-namespace: ${NAMESPACE}
       iam.awsblueprints.io/service: firehose
-  destinationArn: "arn:aws:firehose:us-east-1:015299085168:deliverystream/test-logs-firehose-s3-lambda-hb6mq-kinesis-firehose"
+  destinationArn: "${DESTINATION_KINESIS_ARN}"
   # TODO there is an issue with destinationArnSelector not working for Kinesis Firehose https://github.com/upbound/upjet/issues/95
   #destinationArnSelector:
   #  matchLabels:
-  #    crossplane.io/claim-name: test-logs-firehose-s3-lambda"
+  #    crossplane.io/claim-name: ${KINESIS_CLAIM_NAME}"
   #    crossplane.io/claim-namespace: default
   #    firehoseapps.awsblueprints.io/app: firehose
   resourceConfig:

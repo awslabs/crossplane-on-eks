@@ -37,12 +37,6 @@ spec:
           policy:
             mergeOptions:
               appendSlice: true
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.labels
-          toFieldPath: metadata.labels
-          policy:
-            mergeOptions:
-              keepMapValues: true
         - fromFieldPath: "metadata.name"
           toFieldPath: "metadata.name"
   environment:
@@ -165,6 +159,8 @@ spec:
       patches:
         - type: PatchSet
           patchSetName: common-fields-composition
+        # We want to pass down a custom label for deliverystreams.firehose.aws.upbound.io CR
+        # This will allow us to find this CR with matchSelector in subscriptionfilters.cloudwatchlogs.aws.upbound.io CRs
         - type: FromCompositeFieldPath
           fromFieldPath: metadata.labels
           toFieldPath: metadata.labels

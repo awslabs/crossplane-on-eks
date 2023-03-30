@@ -5,7 +5,7 @@ metadata:
   labels:
     awsblueprints.io/environment: dev
 data:
-  bucketName: lambda-uploads-carrlos
+  bucketName: ${S3_BUCKET}
   bucketKey: dynatrace-aws-log-forwarder-lambda.zip
-  DYNATRACE_API_KEY: "dt0c01.TNNWXRD42F76P5YOYP4GXILV.KO7PLM2OVSKHLVYWVRB7DCDP3CD537LGGEJMMP22TW47EUMJ3MFPOME6ELPKPNYA"
-  DYNATRACE_ENV_URL: "https://wyh04380.live.dynatrace.com"
+  DYNATRACE_API_KEY: "${DYNATRACE_API_KEY}"
+  DYNATRACE_ENV_URL: "${DYNATRACE_ENV_URL}"

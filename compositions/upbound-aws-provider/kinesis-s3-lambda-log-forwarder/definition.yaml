@@ -87,6 +87,8 @@ spec:
                   type: string
                 kinesisRoleName:
                   type: string
+                kinesisName:
+                  type: string
                 kinesisArn:
                   type: string
                 cloudwatchlogsRoleArn:

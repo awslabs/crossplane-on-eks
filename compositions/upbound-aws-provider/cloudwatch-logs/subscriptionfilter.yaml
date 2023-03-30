@@ -33,12 +33,6 @@ spec:
             mergeOptions:
               appendSlice: true
         - type: FromCompositeFieldPath
-          fromFieldPath: metadata.labels
-          toFieldPath: metadata.labels
-          policy:
-            mergeOptions:
-              keepMapValues: true
-        - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.name
           toFieldPath: metadata.annotations[crossplane.io/external-name]
         - type: FromCompositeFieldPath
