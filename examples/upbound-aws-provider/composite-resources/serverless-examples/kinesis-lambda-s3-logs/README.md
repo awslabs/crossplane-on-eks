@@ -116,23 +116,23 @@ Expected output:
 ```
   Resource Refs:
     API Version:  awsblueprints.io/v1alpha1
-    Kind:         XQueue
-    Name:         test-sqs-lambda-s3-hc2m5-7qwnb
+    Kind:         IAMPolicy
+    Name:         test-logs-firehose-s3-lambda-fwndt-576hp
     API Version:  awsblueprints.io/v1alpha1
-    Kind:         EventSourceMapping
-    Name:         test-sqs-lambda-s3-hc2m5-9q2kf
+    Kind:         IAMPolicy
+    Name:         test-logs-firehose-s3-lambda-fwndt-78ztw
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         IAMPolicy
+    Name:         test-logs-firehose-s3-lambda-fwndt-9pv99
+    API Version:  awsblueprints.io/v1alpha1
+    Kind:         IAMPolicy
+    Name:         test-logs-firehose-s3-lambda-fwndt-bpc7t
     API Version:  awsblueprints.io/v1alpha1
     Kind:         XLambdaFunction
-    Name:         test-sqs-lambda-s3-hc2m5-processor
+    Name:         test-logs-firehose-s3-lambda-fwndt-processor
     API Version:  awsblueprints.io/v1alpha1
     Kind:         XObjectStorage
-    Name:         test-sqs-lambda-s3-hc2m5-mbqcc
-    API Version:  awsblueprints.io/v1alpha1
-    Kind:         IAMPolicy
-    Name:         test-sqs-lambda-s3-hc2m5-jspzj
-    API Version:  awsblueprints.io/v1alpha1
-    Kind:         IAMPolicy
-    Name:         test-sqs-lambda-s3-hc2m5-2qzfl
+    Name:         test-logs-firehose-s3-lambda-fwndt-ksvxd
 ```
 
 The claim will create the following resources:
@@ -170,7 +170,6 @@ stateDiagram-v2
     XR\nxkinesisfirehose --> Compostion\nkinesisfirehose
     Compostion\nkinesisfirehose --> ManagedResource\nDeliveryStream
     Compostion\nkinesisfirehose --> ManagedResource\nrole\nkinesis
-
 ```
 
 ## Test with CloudWatch Subscription Filter
@@ -224,30 +223,24 @@ test-logs-firehose-s3-lambda   True     True                        27s
 
 The xfirehoseapps XR contains the underlying resource refs:
 ```
-kubectl describe xfirehoseapps | grep "Resource Refs" -A 18
+kubectl describe xfirehoseapps | grep "Resource Refs" -A 3
 ```
 
 Expected output:
 ```
   Resource Refs:
-    API Version:  awsblueprints.io/v1alpha1
-    Kind:         XQueue
-    Name:         test-sqs-lambda-s3-hc2m5-7qwnb
-    API Version:  awsblueprints.io/v1alpha1
-    Kind:         EventSourceMapping
-    Name:         test-sqs-lambda-s3-hc2m5-9q2kf
-    API Version:  awsblueprints.io/v1alpha1
-    Kind:         XLambdaFunction
-    Name:         test-sqs-lambda-s3-hc2m5-processor
-    API Version:  awsblueprints.io/v1alpha1
-    Kind:         XObjectStorage
-    Name:         test-sqs-lambda-s3-hc2m5-mbqcc
-    API Version:  awsblueprints.io/v1alpha1
-    Kind:         IAMPolicy
-    Name:         test-sqs-lambda-s3-hc2m5-jspzj
-    API Version:  awsblueprints.io/v1alpha1
-    Kind:         IAMPolicy
-    Name:         test-sqs-lambda-s3-hc2m5-2qzfl
+    API Version:  cloudwatchlogs.aws.upbound.io/v1beta1
+    Kind:         SubscriptionFilter
+    Name:         subscriptionfilter-test-logs-firehose-s3-lambda-kw9c2
+```
+
+The claim will create the following resources:
+```mermaid
+stateDiagram-v2
+    direction LR
+    Claim\nsubscriptionfilter --> XR\nxsubscriptionfilter
+    XR\nxsubscriptionfilter--> Composition\nsubscriptionfilter
+    Composition\nsubscriptionfilter --> ManagedResource\nSubscriptionFilter
 ```
 
 Validate that the cloudwatch log subscription filter is added by using the AWS Console (Cloud Watch -> Logs -> Log Group -> Subscription Filter)
