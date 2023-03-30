@@ -37,5 +37,5 @@ kubectl get buckets
 
 ## Deploy the examples
 
-[sqs-lambda-s3](composite-resources/serverless-examples/sqs-lambda-s3/README.md)\n
+[sqs-lambda-s3](composite-resources/serverless-examples/sqs-lambda-s3/README.md)<br>
 [sns-sqs-lambda-s3](composite-resources/serverless-examples/sns-sqs-lambda-s3/README.md)
