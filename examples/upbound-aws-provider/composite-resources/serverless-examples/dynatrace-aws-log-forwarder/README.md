@@ -9,18 +9,24 @@ Use the helper script `upload_dynatrace_zip.sh` to download latest zip file lamb
 S3_BUCKET="lambda-uploads-carrlos" ./upload_dynatrace_zip.sh
 ```
 
-Create a dynatrace account (there is a 60 free trial) and create an API Key for log ingestion,
+Create a dynatrace account (there is a 16 free trial) and create an API Key for log ingestion,
 for more information on creating the key and enabling log monitoring see the doc [Amazon CloudWatch Logs monitoring
 ](https://www.dynatrace.com/support/help/setup-and-configuration/setup-on-cloud-platforms/amazon-web-services/amazon-web-services-integrations/aws-service-metrics/cloudwatch-logs)
+
+If you want to use the API to generate the token you can use the followig command
+```sh
+curl -X POST "https://XXXXXXXX.live.dynatrace.com/api/v2/apiTokens" -H "accept: application/json; charset=utf-8" -H "Content-Type: application/json; charset=utf-8" -d "{\"name\":\"lambda-ingest-logs\",\"scopes\":[\"logs.ingest\"]}" -H "Authorization: Api-Token XXXXXXXX"
+```
+
 
 Use the file template `environmentconfig-tmpl.yaml` to create a file `environmentconfig.yaml`
 
 Set the variables `DYNATRACE_ENV_URL` and `DYNATRACE_API_KEY` in the following command with your valid values.
 
 ```sh
-DYNATRACE_ENV_URL="https://1234567.live.dynatrace.com" \
-DYNATRACE_API_KEY="dt0c01.123abcd" \
-S3_BUCKET="lambda-uploads-carrlos" \
+export DYNATRACE_ENV_URL="https://XXXXXXXX.live.dynatrace.com"
+export DYNATRACE_API_KEY="dt0c01.XXXXXXXX"
+export S3_BUCKET="lambda-uploads-carrlos"
 envsubst < "environmentconfig-tmpl.yaml" > "environmentconfig.yaml"
 ```
 Create Crossplane environment config to be us with the Composition.
@@ -49,10 +55,10 @@ Use the file template `claim-subscription-tmpl.yaml` to create a file `claim-sub
 
 You can use the following command:
 ```sh
-NAMESPACE=default \
-KINESIS_CLAIM_NAME="test-logs-firehose-s3-lambda" \
-CLOUDWATCH_LOG_GROUP="/aws/eks/crossplane-blueprints/cluster" \
-DESTINATION_KINESIS_ARN="${DESTINATION_KINESIS_ARN}" \
+export NAMESPACE="default"
+export KINESIS_CLAIM_NAME="test-logs-firehose-s3-lambda"
+export CLOUDWATCH_LOG_GROUP="/aws/eks/crossplane-blueprints/cluster"
+export DESTINATION_KINESIS_ARN="${DESTINATION_KINESIS_ARN}"
 envsubst < "claim-subscription-tmpl.yaml" > "claim-subscription.yaml"
 ```
 
