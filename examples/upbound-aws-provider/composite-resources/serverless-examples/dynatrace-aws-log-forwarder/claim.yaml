@@ -3,13 +3,16 @@ kind: FirehoseApp
 metadata:
   name: test-logs-firehose-s3-lambda
   namespace: default
+  labels:
+    firehoseapps.awsblueprints.io/app: firehose
 spec:
   compositionSelector:
     matchLabels:
       awsblueprints.io/provider: aws
-      awsblueprints.io/environment: dev
+      awsblueprints.io/environment: new
       firehoseapps.awsblueprints.io/app: firehose
       firehoseapps.awsblueprints.io/destination: s3
+  name: "dynatrace"
   envVariables: {}
   resourceConfig:
     providerConfigName: aws-provider-config

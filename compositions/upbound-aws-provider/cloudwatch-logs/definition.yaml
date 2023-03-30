@@ -225,6 +225,10 @@ spec:
                     region:
                       type: string
                       default: "us-west-2"
+                    tags:
+                      additionalProperties:
+                        type: string
+                      type: object
                   required:
                   - region
                   type: object

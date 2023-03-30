@@ -60,6 +60,12 @@ spec:
                   type: object
                 environmentConfigs:
                   type: string
+                name:
+                  description: A name to identify the stream. This is unique to
+                    the AWS account and region the Stream is created in. When using
+                    for WAF logging, name must be prefixed with aws-waf-logs-. See
+                    AWS Documentation for more details.
+                  type: string
               required:
               - envVariables
               - resourceConfig

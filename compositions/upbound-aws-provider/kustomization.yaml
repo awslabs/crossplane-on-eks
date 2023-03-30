@@ -4,7 +4,8 @@ resources:
 - cloudwatch-logs/
 - event-source-mapping/
 - iam-policy/
-- kinesis-firehose
+- kinesis-data-firehose/
+- kinesis-s3-lambda-log-forwarder/
 - kms/
 - lambda/
 - s3/
