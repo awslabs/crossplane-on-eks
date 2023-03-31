@@ -12,7 +12,7 @@ Create a dynatrace account (there is a 16 day free trial) and create an API Key 
 for more information on creating the key and enabling log monitoring see the doc [Amazon CloudWatch Logs monitoring
 ](https://www.dynatrace.com/support/help/setup-and-configuration/setup-on-cloud-platforms/amazon-web-services/amazon-web-services-integrations/aws-service-metrics/cloudwatch-logs)
 
-You can the Dynatrace console in "Access Tokens" and generate a token or use the API to generate the token (sope log.ingest) with the followig command:
+Navigate to the Dynatrace console -> "Access Tokens" and generate a token or use the API to generate the token (scope log.ingest) with the following command:
 ```sh
 curl -X POST "https://XXXXXXXX.live.dynatrace.com/api/v2/apiTokens" -H "accept: application/json; charset=utf-8" -H "Content-Type: application/json; charset=utf-8" -d "{\"name\":\"lambda-ingest-logs\",\"scopes\":[\"logs.ingest\"]}" -H "Authorization: Api-Token XXXXXXXX"
 ```
