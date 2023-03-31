@@ -1,5 +1,5 @@
 # Example to deploy serverless architecture (kinesis log forwarder)
-This example deploys the architecture depicted on the diagram. First, it applies the Crossplane XRD and Compositions. Then it applies the Claim to deploy the log forwarder with the AWS resources (Kinesis Data Firehose steam, S3 bucket, Lambda function), and then it applies a second Claim to subscribe the log forwarder to a CloudWatch log group. Last it will start sending logs to Lambda to be process which forwards the logs to a 3rd party log collector with a copy saved on S3.
+This example deploys the architecture depicted on the diagram. First, it applies the Crossplane XRD and Compositions. Then it applies the Claim to deploy the log forwarder with the AWS resources (Kinesis Data Firehose steam, S3 bucket, Lambda function), and then it applies a second Claim to subscribe the log forwarder to a CloudWatch log group. Last, it tests the architecture functionality by sending logs to Lambda to be process which forwards the logs to a 3rd party log collector with a copy saved on S3.
 
 ![Serverless diagram](images/kinesis-lambda-s3.jpg)
 
