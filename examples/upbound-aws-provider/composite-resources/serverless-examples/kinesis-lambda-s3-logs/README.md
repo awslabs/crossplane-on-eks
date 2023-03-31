@@ -262,7 +262,7 @@ Expected output:
 ```
 
 
-Validate that the cloudwatch log subscription filter is added by using the AWS Console (Cloud Watch -> Logs -> Log Group -> Subscription Filter)
+Validate that the cloudwatch log subscription filter is added by using the AWS Console (Cloud Watch -> Logs -> Log groups -> Subscription Filter)
 
 ![CloudWatch Log subcription filter](images/cloudwatch.jpg)
 
