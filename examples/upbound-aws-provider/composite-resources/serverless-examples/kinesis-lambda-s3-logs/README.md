@@ -82,7 +82,7 @@ Set the variables `DYNATRACE_ENV_URL` and `DYNATRACE_API_KEY` in the following c
 ```sh
 export DYNATRACE_ENV_URL="https://XXXXXXXX.live.dynatrace.com"
 export DYNATRACE_API_KEY="dt0c01.XXXXXXXX"
-export S3_BUCKET="lambda-uploads-carrlos"
+export S3_BUCKET=<replace-me-with-s3-bucket-name>
 envsubst < "environmentconfig-tmpl.yaml" > "environmentconfig.yaml"
 ```
 Create Crossplane environment config to be us with the Composition.
