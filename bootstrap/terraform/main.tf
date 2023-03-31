@@ -6,29 +6,37 @@ provider "aws" {
 }
 
 provider "kubernetes" {
-  host                   = module.eks_blueprints.eks_cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks_blueprints.eks_cluster_certificate_authority_data)
-  token                  = data.aws_eks_cluster_auth.this.token
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    args        = ["eks", "get-token", "--cluster-name", local.name, "--region", var.region]
+    command     = "aws"
+  }
 }
 
 provider "helm" {
   kubernetes {
-    host                   = module.eks_blueprints.eks_cluster_endpoint
-    cluster_ca_certificate = base64decode(module.eks_blueprints.eks_cluster_certificate_authority_data)
-    token                  = data.aws_eks_cluster_auth.this.token
+    host                   = module.eks.cluster_endpoint
+    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+    exec {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      args        = ["eks", "get-token", "--cluster-name", local.name, "--region", var.region]
+      command     = "aws"
+    }
   }
 }
 
 provider "kubectl" {
-  host                   = module.eks_blueprints.eks_cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks_blueprints.eks_cluster_certificate_authority_data)
-  token                  = data.aws_eks_cluster_auth.this.token
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    args        = ["eks", "get-token", "--cluster-name", local.name, "--region", var.region]
+    command     = "aws"
+  }
   load_config_file       = false
   apply_retry_count      = 15
-}
-
-data "aws_eks_cluster_auth" "this" {
-  name = module.eks_blueprints.eks_cluster_id
 }
 
 data "aws_caller_identity" "current" {}
@@ -43,7 +51,7 @@ locals {
 
   vpc_name = local.name
   vpc_cidr = "10.0.0.0/16"
-  azs      = slice(data.aws_availability_zones.available.names, 0, 2)
+  azs      = slice(data.aws_availability_zones.available.names, 0, 3)
 
   tags = {
     Blueprint  = local.name
@@ -52,27 +60,65 @@ locals {
 }
 
 #---------------------------------------------------------------
-# EKS Blueprints
+# EBS CSI Driver Role
 #---------------------------------------------------------------
 
-module "eks_blueprints" {
-  source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.22.0"
+module "ebs_csi_driver_irsa" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "~> 5.14"
 
-  # EKS CONTROL PLANE VARIABLES
-  cluster_name    = local.cluster_name
-  cluster_version = local.cluster_version
+  role_name = "${local.name}-ebs-csi-driver"
 
-  # EKS Cluster VPC and Subnet mandatory config
-  vpc_id             = module.vpc.vpc_id
-  private_subnet_ids = module.vpc.private_subnets
+  attach_ebs_csi_policy = true
 
-  # EKS MANAGED NODE GROUPS
-  managed_node_groups = {
-    mg = {
-      node_group_name = "managed-on-demand"
-      instance_types  = ["m5.large"]
-      min_size        = 2
-      max_size        = 3
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
+    }
+  }
+
+  tags = local.tags
+}
+
+#---------------------------------------------------------------
+# EKS Cluster
+#---------------------------------------------------------------
+
+module "eks" {
+  source  = "terraform-aws-modules/eks/aws"
+  version = "~> 19.10"
+
+  cluster_name                   = local.name
+  cluster_version                = local.cluster_version
+  cluster_endpoint_public_access = true
+
+  cluster_addons = {
+    aws-ebs-csi-driver = {
+      service_account_role_arn = module.ebs_csi_driver_irsa.iam_role_arn
+      most_recent              = true
+    }
+    coredns = {
+      most_recent = true
+    }
+    kube-proxy = {
+      most_recent = true
+    }
+    vpc-cni = {
+      most_recent = true
+    }
+  }
+
+  vpc_id     = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnets
+
+  eks_managed_node_groups = {
+    initial = {
+      instance_types  = ["m6i.large", "m5.large", "m5n.large", "m5zn.large"]
+      capacity_type   = "SPOT"
+      min_size        = 1
+      max_size        = 5
+      desired_size    = 3
       subnet_ids      = module.vpc.private_subnets
     }
   }
@@ -81,24 +127,68 @@ module "eks_blueprints" {
 }
 
 #---------------------------------------------------------------
-# EKS Blueprints Addons
+# EKS Addons
 #---------------------------------------------------------------
 
 module "eks_blueprints_kubernetes_addons" {
-  source = "github.com/aws-ia/terraform-aws-eks-blueprints//modules/kubernetes-addons?ref=v4.22.0"
+  source = "github.com/aws-ia/terraform-aws-eks-blueprints-addons"
 
-  eks_cluster_id = module.eks_blueprints.eks_cluster_id
+  cluster_name          = module.eks.cluster_name
+  cluster_endpoint      = module.eks.cluster_endpoint
+  cluster_version       = module.eks.cluster_version
+  oidc_provider         = module.eks.oidc_provider
+  oidc_provider_arn     = module.eks.oidc_provider_arn
+  enable_karpenter      = true  
+  enable_metrics_server = true 
+  enable_prometheus     = true
 
+  depends_on = [module.eks.managed_node_groups]
+}  
+
+module "eks_blueprints_crossplane_addons" {
+  source = "github.com/aws-ia/terraform-aws-eks-blueprints//modules/kubernetes-addons?ref=v4.26.0"
+
+  eks_cluster_id = module.eks.cluster_name
   # Deploy Crossplane
   # Default helm chart and providers values set at https://github.com/aws-ia/terraform-aws-eks-blueprints/blob/main/modules/kubernetes-addons/crossplane/locals.tf
   enable_crossplane = true
-
+  crossplane_helm_config = {
+    version = "1.11.2"
+    values = [yamlencode({
+      args    = ["--enable-environment-configs"]
+      metrics = {
+        enabled = true
+      }
+      resourcesCrossplane = {
+        limits = { 
+          cpu = "1"
+          memory = "2Gi"
+        }
+        requests = {
+          cpu = "100m"
+          memory = "1Gi"
+        }
+      }
+      resourcesRBACManager = {
+        limits = { 
+          cpu = "500m"
+          memory = "1Gi"
+        }
+        requests = {
+          cpu = "100m"
+          memory = "512Mi"
+        }
+      }
+    })]
+  }
   #---------------------------------------------------------
   # Crossplane community AWS Provider deployment
   #---------------------------------------------------------
   crossplane_aws_provider = {
+    # !NOTE!: only enable one AWS provider at a time 
     enable          = true
     provider_config = "aws-provider-config"
+    provider_aws_version = "v0.38.0"
     # to override the default irsa policy:
     # additional_irsa_policies = ["arn:aws:iam::aws:policy/AmazonS3FullAccess"]
   }
@@ -107,8 +197,10 @@ module "eks_blueprints_kubernetes_addons" {
   # Crossplane Upbound AWS Provider deployment
   #---------------------------------------------------------
   crossplane_upbound_aws_provider = {
+    # !NOTE!: only enable one AWS provider at a time 
     enable          = true
     provider_config = "aws-provider-config"
+    provider_aws_version = "v0.31.0"
     # to override the default irsa policy:
     # additional_irsa_policies = ["arn:aws:iam::aws:policy/AmazonS3FullAccess"]
   }
@@ -127,7 +219,7 @@ module "eks_blueprints_kubernetes_addons" {
     enable = true
   }
 
-  depends_on = [module.eks_blueprints.managed_node_groups]
+  depends_on = [module.eks.managed_node_groups, module.eks_blueprints_kubernetes_addons]
 }
 
 

@@ -28,8 +28,6 @@ kubectl get vpcs
 ```
 
 ### Deploy S3 Managed Resource for Upbound AWS Provider
-TODO: change `name: my-bucket` to `generateName: upbound-test-bucket-`
-
 ```shell
 kubectl create -f managed-resources/s3/bucket.yaml
 
@@ -39,5 +37,5 @@ kubectl get buckets
 
 ## Deploy the examples
 
-[sqs-lambda-s3](composite-resources/serverless-examples/sqs-lambda-s3/README.md)
+[sqs-lambda-s3](composite-resources/serverless-examples/sqs-lambda-s3/README.md)<br>
 [sns-sqs-lambda-s3](composite-resources/serverless-examples/sns-sqs-lambda-s3/README.md)
