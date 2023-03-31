@@ -21,7 +21,7 @@ Create an AWS bucket and upload the dynatrace lambda code, you can download late
 
 Use the helper script `upload_dynatrace_zip.sh` to download latest zip file lambda, and upload to s3 using the CLI, inspect the script in case you need to customize the aws cli command
 ```sh
-S3_BUCKET="lambda-uploads-carrlos" ./upload_dynatrace_zip.sh
+S3_BUCKET=<replace-me-with-s3-bucket-name> ./upload_dynatrace_zip.sh
 ```
 
 ## Deploy XRDs and Compositions
