@@ -8,7 +8,8 @@ This example deploys the architecture depicted on the diagram. First, it applies
 ## Pre-requisites:
  - [Upbound AWS Provider Crossplane Blueprint Examples](../../../README.md)
 
-Create a dynatrace account (there is a 16 day free trial) and create an API Key for log ingestion,
+- A Dynatrace account
+Dynatrace provides a 16 day free trial. Once you are logged in, create an API Key for log ingestion,
 for more information on creating the key and enabling log monitoring see the doc [Amazon CloudWatch Logs monitoring
 ](https://www.dynatrace.com/support/help/setup-and-configuration/setup-on-cloud-platforms/amazon-web-services/amazon-web-services-integrations/aws-service-metrics/cloudwatch-logs)
 
