@@ -138,15 +138,15 @@ module "eks_blueprints_kubernetes_addons" {
   cluster_version       = module.eks.cluster_version
   oidc_provider         = module.eks.oidc_provider
   oidc_provider_arn     = module.eks.oidc_provider_arn
-  enable_karpenter      = true  
-  enable_metrics_server = true 
+  enable_karpenter      = true
+  enable_metrics_server = true
   enable_prometheus     = true
 
   depends_on = [module.eks.managed_node_groups]
-}  
+}
 
 module "eks_blueprints_crossplane_addons" {
-  source = "github.com/aws-ia/terraform-aws-eks-blueprints//modules/kubernetes-addons?ref=v4.26.0"
+  source = "github.com/aws-ia/terraform-aws-eks-blueprints//modules/kubernetes-addons?ref=v4.27.0"
 
   eks_cluster_id = module.eks.cluster_name
   # Deploy Crossplane
@@ -160,7 +160,7 @@ module "eks_blueprints_crossplane_addons" {
         enabled = true
       }
       resourcesCrossplane = {
-        limits = { 
+        limits = {
           cpu = "1"
           memory = "2Gi"
         }
@@ -170,7 +170,7 @@ module "eks_blueprints_crossplane_addons" {
         }
       }
       resourcesRBACManager = {
-        limits = { 
+        limits = {
           cpu = "500m"
           memory = "1Gi"
         }
@@ -185,7 +185,7 @@ module "eks_blueprints_crossplane_addons" {
   # Crossplane community AWS Provider deployment
   #---------------------------------------------------------
   crossplane_aws_provider = {
-    # !NOTE!: only enable one AWS provider at a time 
+    # !NOTE!: only enable one AWS provider at a time
     enable          = true
     provider_config = "aws-provider-config"
     provider_aws_version = "v0.38.0"
@@ -197,10 +197,10 @@ module "eks_blueprints_crossplane_addons" {
   # Crossplane Upbound AWS Provider deployment
   #---------------------------------------------------------
   crossplane_upbound_aws_provider = {
-    # !NOTE!: only enable one AWS provider at a time 
+    # !NOTE!: only enable one AWS provider at a time
     enable          = true
     provider_config = "aws-provider-config"
-    provider_aws_version = "v0.31.0"
+    provider_aws_version = "v0.32.0"
     # to override the default irsa policy:
     # additional_irsa_policies = ["arn:aws:iam::aws:policy/AmazonS3FullAccess"]
   }
@@ -210,6 +210,7 @@ module "eks_blueprints_crossplane_addons" {
   #---------------------------------------------------------
   crossplane_kubernetes_provider = {
     enable = true
+    provider_kubernetes_version = "v0.7.0"
   }
 
   #---------------------------------------------------------
@@ -217,6 +218,7 @@ module "eks_blueprints_crossplane_addons" {
   #---------------------------------------------------------
   crossplane_helm_provider = {
     enable = true
+    provider_helm_version = "v0.14.0"
   }
 
   depends_on = [module.eks.managed_node_groups, module.eks_blueprints_kubernetes_addons]
