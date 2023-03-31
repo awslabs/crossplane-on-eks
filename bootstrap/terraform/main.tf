@@ -155,13 +155,9 @@ module "eks_blueprints_crossplane_addons" {
   crossplane_helm_config = {
     version = "1.11.2"
     values = [yamlencode({
-      args    = ["--enable-environment-configs","--enable-composition-functions"]
+      args    = ["--enable-environment-configs"]
       metrics = {
         enabled = true
-      }
-      xfn = {
-        enabled = true
-        args = ["--debug"]
       }
       resourcesCrossplane = {
         limits = { 
