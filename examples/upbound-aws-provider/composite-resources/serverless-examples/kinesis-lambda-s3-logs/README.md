@@ -3,6 +3,8 @@ This example deploys the architecture depicted on the diagram. First, it applies
 
 ![Serverless diagram](images/kinesis-lambda-s3.jpg)
 
+> This composition implemets the [github.com/dynatrace-oss/dynatrace-aws-log-forwarder](https://github.com/dynatrace-oss/dynatrace-aws-log-forwarder)
+
 ## Pre-requisites:
  - [Upbound AWS Provider Crossplane Blueprint Examples](../../../README.md)
 
@@ -15,7 +17,7 @@ You can the Dynatrace console in "Access Tokens" and generate a token or use the
 curl -X POST "https://XXXXXXXX.live.dynatrace.com/api/v2/apiTokens" -H "accept: application/json; charset=utf-8" -H "Content-Type: application/json; charset=utf-8" -d "{\"name\":\"lambda-ingest-logs\",\"scopes\":[\"logs.ingest\"]}" -H "Authorization: Api-Token XXXXXXXX"
 ```
 
-Create an AWS bucket and upload the dynatrace lambda code, you can download latest version from github repository [github.com/dynatrace-oss](https://github.com/dynatrace-oss/dynatrace-aws-log-forwarder/releases)
+Create an AWS bucket and upload the dynatrace lambda code, you can download latest version from github repository [github.com/dynatrace-oss/dynatrace-aws-log-forwarder](https://github.com/dynatrace-oss/dynatrace-aws-log-forwarder/releases)
 
 Use the helper script `upload_dynatrace_zip.sh` to download latest zip file lambda, and upload to s3 using the CLI, inspect the script in case you need to customize the aws cli command
 ```sh
@@ -184,35 +186,42 @@ Expected output:
 ## Test with CloudWatch Subscription Filter
 
 
-Currently there is an [issue](https://github.com/upbound/upjet/issues/95) with Upbound crossplane provider in SubcriptionFilters using matchSelectors only work with Kinesis Stream, not other destinations.
-
-Get the name of the Kinesis Data Firehose created previously using the following command:
-
-Using the the following labes on the created claim `test-logs-firehose-s3-lambda`
+Setup the environment with the following variables
 
 ```shell
-KINESIS_CLAIM_NAME="test-logs-firehose-s3-lambda"
-DESTINATION_KINESIS_ARN=$(kubectl get firehoseapps.awsblueprints.io ${KINESIS_CLAIM_NAME} \
+export CLOUDWATCH_LOG_GROUP="/aws/eks/crossplane-blueprints/cluster"
+export KINESIS_CLAIM_NAME="test-logs-firehose-s3-lambda"
+export DESTINATION_KINESIS_ARN=$(kubectl get firehoseapps.awsblueprints.io ${KINESIS_CLAIM_NAME} \
   -o 'jsonpath={.status.kinesisArn}')
-echo "Found Kinesis Data Firehose => ${DESTINATION_KINESIS_ARN}"
+export CLOUDWATCH_LOGS_ROLE=$(kubectl get firehoseapps.awsblueprints.io ${KINESIS_CLAIM_NAME} \
+  -o 'jsonpath={.status.cloudwatchlogsRoleArn}')
+export NAMESPACE="default"
 ```
 
-Use the file template `claim-subscription-tmpl.yaml` to create a file `claim-subscription.yaml`
 
-- Edit file to customize the `filterPattern` and change value `default` if you installed in a different namespace.
-- Substitute the variable `${DESTINATION_KINESIS_ARN}` with the value we got previously
-- Substitute the variable `${CLOUDWATCH_LOG_GROUP}` with the desired CloudWatch log group to forward logs, for example the Amazon EKS Control Plane logs that contain Kubernetes Audit Logs, you can use the value `/aws/eks/crossplane-blueprints/cluster` which is the EKS cluster created in this git repo installed with Crossplane.
+You can use the AWS Console or CLI to add a CloudWatch subscription filter:
+
+```shell
+aws logs put-subscription-filter \
+  --log-group-name  "${CLOUDWATCH_LOG_GROUP}" \
+  --filter-name "dynatrace-aws-logs" \
+  --filter-pattern "" \
+  --destination-arn "${DESTINATION_KINESIS_ARN}" \
+  --role-arn "${CLOUDWATCH_LOGS_ROLE}"
+```
+
+This example provides a Crossplane Composition to add a CloudWatch subscription filter
+
+
+Use the file template `claim-subscription-tmpl.yaml` to create the file `claim-subscription.yaml`
 
 You can use the following command:
 ```shell
-export NAMESPACE="default"
-export KINESIS_CLAIM_NAME="test-logs-firehose-s3-lambda"
-export CLOUDWATCH_LOG_GROUP="/aws/eks/crossplane-blueprints/cluster"
-export DESTINATION_KINESIS_ARN="${DESTINATION_KINESIS_ARN}"
 envsubst < "claim-subscription-tmpl.yaml" > "claim-subscription.yaml"
 ```
 
-Create the claim for the CloudWatch log group subscription filter, you can create up to two subscription filters per log group.
+>Currently there is an [issue](https://github.com/upbound/upjet/issues/95) with Upbound crossplane provider in SubcriptionFilters using matchSelectors only work with Kinesis Stream, not other destinations.
+
 
 Apply the claim
 ```
