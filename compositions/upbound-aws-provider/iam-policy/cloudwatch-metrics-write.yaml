@@ -46,23 +46,30 @@ spec:
         kind: Policy
         spec:
           deletionPolicy: Delete
-          forProvider:
-            policy: |
-              {
-                "Version": "2012-10-17",
-                "Statement": [
-                    {
-                        "Action": [
-                            "cloudwatch:PutMetricData"
-                        ],
-                        "Resource": "*",
-                        "Effect": "Allow"
-                    }
-                ]
-              }
+          forProvider: {}
       patches:
         - type: PatchSet
           patchSetName: common-fields
+        - fromFieldPath: spec.resourceArn
+          toFieldPath: spec.forProvider.policy
+          transforms:
+            - type: string
+              string:
+                fmt: |
+                  {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                          "Action": [
+                              "cloudwatch:PutMetricData"
+                          ],
+                          "Resource": [
+                              "%s"
+                          ],
+                          "Effect": "Allow"
+                      }
+                    ]
+                  }
     - name: policy-attachment
       base:
         apiVersion: iam.aws.upbound.io/v1beta1

@@ -22,10 +22,11 @@ spec:
           properties:
             spec:
               properties:
-                imageUri: 
+                imageUri:
                   type: string
                 timeout:
                   type: integer
+                  default: 30
                 memorySize:
                   type: integer
                   default: 128

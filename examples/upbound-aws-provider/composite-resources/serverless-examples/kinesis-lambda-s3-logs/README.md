@@ -275,6 +275,10 @@ Validate that the 3rd party collector is receiving logs by using the Console (Ob
 ![Log Collector](images/log-collector.jpg)
 
 
+## Developing Compositions
+
+The files `managed.yaml` and `managed-subscription.yaml` are provided as a convienece if you are going to develop changes to the composition or are debugging the composition, using managed resources is a good base line to have when working on compostions.
+
 ## Clean Up
 Delete the CloudWatch Log Subscription Filter
 ```shell

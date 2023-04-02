@@ -11,8 +11,8 @@ metadata:
   labels:
     awsblueprints.io/provider: aws
     awsblueprints.io/environment: dev
-    firehoseapps.awsblueprints.io/app: firehose
-    firehoseapps.awsblueprints.io/destination: s3
+    kinesis.awsblueprints.io/app: firehose
+    kinesis.awsblueprints.io/destination: s3
 spec:
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
@@ -121,6 +121,7 @@ spec:
         apiVersion: awsblueprints.io/v1alpha1
         kind: IAMPolicy
         spec:
+          resourceArn: "*"
           compositionSelector:
             matchLabels:
               awsblueprints.io/provider: aws

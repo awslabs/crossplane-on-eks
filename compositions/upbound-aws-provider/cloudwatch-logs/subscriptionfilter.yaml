@@ -11,8 +11,8 @@ metadata:
   labels:
     awsblueprints.io/provider: aws
     awsblueprints.io/environment: dev
-    cloudwatchlogs.awsblueprints.io/service: cloudwatch
-    cloudwatchlogs.awsblueprints.io/logs: subscriptionfilter
+    cloudwatch.awsblueprints.io/service: cloudwatch-logs
+    cloudwatch.awsblueprints.io/logs: subscriptionfilter
 spec:
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
@@ -53,6 +53,9 @@ spec:
         spec:
           forProvider: {}
       patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.forProvider
+          toFieldPath: spec.forProvider
         - type: PatchSet
           patchSetName: common-fields
         - type: FromCompositeFieldPath
@@ -62,30 +65,4 @@ spec:
             - type: string
               string:
                 fmt: "subscriptionfilter-%s"
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.destinationArn
-          toFieldPath: spec.forProvider.destinationArn
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.destinationArnRef
-          toFieldPath: spec.forProvider.destinationArnRef
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.destinationArnSelector
-          toFieldPath: spec.forProvider.destinationArnSelector
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.distribution
-          toFieldPath: spec.forProvider.distribution
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.filterPattern
-          toFieldPath: spec.forProvider.filterPattern
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.logGroupName
-          toFieldPath: spec.forProvider.logGroupName
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.roleArn
-          toFieldPath: spec.forProvider.roleArn
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.roleArnRef
-          toFieldPath: spec.forProvider.roleArnRef
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.roleArnSelector
-          toFieldPath: spec.forProvider.roleArnSelector
+
