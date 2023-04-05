@@ -1,0 +1,306 @@
+
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: firehose.upbound.awsblueprints.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+  labels:
+    awsblueprints.io/provider: aws
+    awsblueprints.io/environment: dev
+    kinesis.awsblueprints.io/app: firehose
+    kinesis.awsblueprints.io/destination: s3
+spec:
+  compositeTypeRef:
+    apiVersion: awsblueprints.io/v1alpha1
+    kind: XFirehoseApp
+  patchSets:
+    - name: common-fields-composition
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig
+          toFieldPath: spec.resourceConfig
+    - name: common-fields
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.deletionPolicy
+          toFieldPath: spec.deletionPolicy
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            mergeOptions:
+              appendSlice: true
+        - fromFieldPath: "metadata.name"
+          toFieldPath: "metadata.name"
+  environment:
+    environmentConfigs:
+      - type: Selector
+        selector:
+          matchLabels:
+          - key: awsblueprints.io/environment
+            valueFromFieldPath: spec.environmentConfigs
+  resources:
+    - name: lambda
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: XLambdaFunction
+        spec:
+          compositionSelector:
+            matchLabels:
+              awsblueprints.io/provider: aws
+              awsblueprints.io/environment: dev
+              awsblueprints.io/type: zip
+          runTime: python3.8
+          handler: index.handler
+          memorySize: 256
+          timeout: 60
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-composition
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.envVariables
+          toFieldPath: spec.envVariables
+        - type: FromEnvironmentFieldPath
+          fromFieldPath: bucketName
+          toFieldPath: spec.bucketName
+        - type: FromEnvironmentFieldPath
+          fromFieldPath: bucketKey
+          toFieldPath: spec.bucketKey
+        - type: FromEnvironmentFieldPath
+          fromFieldPath: DYNATRACE_API_KEY
+          toFieldPath: spec.envVariables.DYNATRACE_API_KEY
+        - type: FromEnvironmentFieldPath
+          fromFieldPath: DYNATRACE_ENV_URL
+          toFieldPath: spec.envVariables.DYNATRACE_ENV_URL
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: metadata.name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-processor"
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.functionRoleName
+          toFieldPath: status.processorRoleName
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.functionName
+          toFieldPath: status.processorFuncName
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.functionArn
+          toFieldPath: status.processorFuncArn
+    - name: bucket
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: XObjectStorage
+        metadata:
+          name: standard-object-storage
+        spec:
+          compositionSelector:
+            matchLabels:
+              awsblueprints.io/provider: aws
+              awsblueprints.io/environment: dev
+              s3.awsblueprints.io/configuration: standard
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-composition
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.bucketName
+          toFieldPath: status.bucketName
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.bucketArn
+          toFieldPath: status.bucketArn
+    - name: lambda-metrics-write
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: IAMPolicy
+        spec:
+          resourceArn: "*"
+          compositionSelector:
+            matchLabels:
+              awsblueprints.io/provider: aws
+              awsblueprints.io/environment: dev
+              iam.awsblueprints.io/policy-type: write
+              iam.awsblueprints.io/service: cloudwatch
+              iam.awsblueprints.io/service-type: metrics
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-composition
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.processorRoleName
+          toFieldPath: spec.roleName
+    - name: kinesis-firehose
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: XKinesisFirehose
+        metadata:
+        spec:
+          forProvider:
+            destination: extended_s3
+            extendedS3Configuration:
+              - bufferInterval: 60
+                bufferSize: 5
+                compressionFormat: GZIP
+                prefix: "success-"
+                processingConfiguration:
+                - enabled: true
+                  processors:
+                  - parameters:
+                    - parameterName: LambdaArn
+                      parameterValue: TBD
+                    type: Lambda
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-composition
+        # We want to pass down a custom label for deliverystreams.firehose.aws.upbound.io CR
+        # This will allow us to find this CR with matchSelector in subscriptionfilters.cloudwatchlogs.aws.upbound.io CRs
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.labels
+          toFieldPath: metadata.labels
+          policy:
+            mergeOptions:
+              keepMapValues: true
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.name
+          toFieldPath: spec.forProvider.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.bucketName
+          toFieldPath: spec.forProvider.extendedS3Configuration[0].bucketArnRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.kinesisRoleName
+          toFieldPath: spec.forProvider.extendedS3Configuration[0].roleArnRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.processorFuncArn
+          toFieldPath: spec.forProvider.extendedS3Configuration[0].processingConfiguration[0].processors[0].parameters[0].parameterValue
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.kinesisRoleArn
+          toFieldPath: status.kinesisRoleArn
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.kinesisRoleName
+          toFieldPath: status.kinesisRoleName
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.kinesisName
+          toFieldPath: status.kinesisName
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.kinesisArn
+          toFieldPath: status.kinesisArn
+    - name: kinesis-write-s3
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: IAMPolicy
+        spec:
+          compositionSelector:
+            matchLabels:
+              awsblueprints.io/provider: aws
+              awsblueprints.io/environment: dev
+              iam.awsblueprints.io/policy-type: write
+              iam.awsblueprints.io/service: s3
+              iam.awsblueprints.io/from-service: firehose
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-composition
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.kinesisRoleName
+          toFieldPath: spec.roleName
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.bucketArn
+          toFieldPath: spec.resourceArn
+    - name: kinesis-invoke-lambda
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: IAMPolicy
+        spec:
+          compositionSelector:
+            matchLabels:
+              awsblueprints.io/provider: aws
+              awsblueprints.io/environment: dev
+              iam.awsblueprints.io/policy-type: invoke
+              iam.awsblueprints.io/service: lambda
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-composition
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.kinesisRoleName
+          toFieldPath: spec.roleName
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.processorFuncArn
+          toFieldPath: spec.resourceArn
+    - name: logs-write-firehose-role
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: Role
+        metadata:
+          labels:
+            iam.awsblueprints.io/policy-type: write
+            iam.awsblueprints.io/service: firehose
+        spec:
+          forProvider: {}
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.assumeRolePolicy
+          transforms:
+            - type: string
+              string:
+                fmt: |
+                  {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                        "Effect": "Allow",
+                        "Principal": {
+                          "Service": "logs.%s.amazonaws.com"
+                        },
+                        "Action": "sts:AssumeRole"
+                      }
+                    ]
+                  }
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: metadata.name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-firehose-write-role"
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.arn
+          toFieldPath: status.cloudwatchlogsRoleArn
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.id
+          toFieldPath: status.cloudwatchlogsRoleName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.permissionsBoundaryArn
+          toFieldPath: spec.forProvider.permissionsBoundary
+    - name: logs-write-firehose-policy
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: IAMPolicy
+        spec:
+          compositionSelector:
+            matchLabels:
+              awsblueprints.io/provider: aws
+              awsblueprints.io/environment: dev
+              iam.awsblueprints.io/policy-type: write
+              iam.awsblueprints.io/service: firehose
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-composition
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.cloudwatchlogsRoleName
+          toFieldPath: spec.roleName
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.kinesisArn
+          toFieldPath: spec.resourceArn

@@ -200,7 +200,7 @@ module "eks_blueprints_crossplane_addons" {
     # !NOTE!: only enable one AWS provider at a time
     enable          = true
     provider_config = "aws-provider-config"
-    provider_aws_version = "v0.32.0"
+    provider_aws_version = "v0.32.1"
     # to override the default irsa policy:
     # additional_irsa_policies = ["arn:aws:iam::aws:policy/AmazonS3FullAccess"]
   }

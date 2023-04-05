@@ -1,8 +1,11 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+- cloudwatch-logs/
 - event-source-mapping/
 - iam-policy/
+- kinesis-data-firehose/
+- kinesis-data-firehose-app/
 - kms/
 - lambda/
 - s3/

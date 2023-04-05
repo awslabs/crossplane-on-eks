@@ -1,0 +1,11 @@
+apiVersion: apiextensions.crossplane.io/v1alpha1
+kind: EnvironmentConfig
+metadata:
+  name: test-logs-firehose-s3-lambda
+  labels:
+    awsblueprints.io/environment: dev
+data:
+  bucketName: ${S3_BUCKET}
+  bucketKey: dynatrace-aws-log-forwarder-lambda.zip
+  DYNATRACE_API_KEY: "${DYNATRACE_API_KEY}"
+  DYNATRACE_ENV_URL: "${DYNATRACE_ENV_URL}"

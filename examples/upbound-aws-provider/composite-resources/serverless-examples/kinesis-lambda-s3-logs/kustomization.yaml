@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+bases:
+- ../../../../../compositions/upbound-aws-provider/iam-policy/
+- ../../../../../compositions/upbound-aws-provider/lambda/
+- ../../../../../compositions/upbound-aws-provider/s3/
+- ../../../../../compositions/upbound-aws-provider/kinesis-data-firehose/
+- ../../../../../compositions/upbound-aws-provider/kinesis-data-firehose-app/
+- ../../../../../compositions/upbound-aws-provider/cloudwatch-logs/

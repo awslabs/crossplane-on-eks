@@ -57,6 +57,7 @@ spec:
                   type: object
               required:
               - resourceArn
+              - roleName
               - resourceConfig
               type: object
             status:
