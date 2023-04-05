@@ -32,75 +32,37 @@ spec:
             mergeOptions:
               appendSlice: true
         - type: FromCompositeFieldPath
-          fromFieldPath: metadata.labels
-          toFieldPath: metadata.labels
-          policy:
-            mergeOptions:
-              keepMapValues: true
-        - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.name
           toFieldPath: metadata.annotations[crossplane.io/external-name]
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.providerConfigName
           toFieldPath: spec.providerConfigRef.name
-  resources:
-    - name: kinesis-firehose
-      base:
-        apiVersion: firehose.aws.upbound.io/v1beta1
-        kind: DeliveryStream
-        spec: {}
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
         - type: FromCompositeFieldPath
           fromFieldPath: metadata.name
           toFieldPath: metadata.name
           transforms:
             - type: string
               string:
-                fmt: "%s-kinesis"
+                fmt: "kinesis-%s"
+        - type: FromCompositeFieldPath  # Labels are required because they are later used by SubscriptionFilter matchlabel selector
+          fromFieldPath: metadata.labels
+          toFieldPath: metadata.labels
+          policy:
+            mergeOptions:
+              keepMapValues: true
+  resources:
+    - name: kinesis-firehose
+      base:
+        apiVersion: firehose.aws.upbound.io/v1beta1
+        kind: DeliveryStream
+        spec:
+          forProvider: {}
+      patches:
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.name
-          toFieldPath: spec.forProvider.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.destination
-          toFieldPath: spec.forProvider.destination
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.region
-          toFieldPath: spec.forProvider.region
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.destinationId
-          toFieldPath: spec.forProvider.destinationId
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.elasticsearchConfiguration
-          toFieldPath: spec.forProvider.elasticsearchConfiguration
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.extendedS3Configuration
-          toFieldPath: spec.forProvider.extendedS3Configuration
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.httpEndpointConfiguration
-          toFieldPath: spec.forProvider.httpEndpointConfiguration
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.kinesisSourceConfiguration
-          toFieldPath: spec.forProvider.kinesisSourceConfiguration
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.redshiftConfiguration
-          toFieldPath: spec.forProvider.redshiftConfiguration
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.s3Configuration
-          toFieldPath: spec.forProvider.s3Configuration
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.serverSideEncryption
-          toFieldPath: spec.forProvider.serverSideEncryption
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.splunkConfiguration
-          toFieldPath: spec.forProvider.splunkConfiguration
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.tags
-          toFieldPath: spec.forProvider.tags
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.versionId
-          toFieldPath: spec.forProvider.versionId
+          fromFieldPath: spec.forProvider
+          toFieldPath: spec.forProvider
+        - type: PatchSet
+          patchSetName: common-fields
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.id
           toFieldPath: status.kinesisArn
@@ -129,13 +91,6 @@ spec:
       patches:
         - type: PatchSet
           patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-kinesis-role"
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.arn
           toFieldPath: status.kinesisRoleArn

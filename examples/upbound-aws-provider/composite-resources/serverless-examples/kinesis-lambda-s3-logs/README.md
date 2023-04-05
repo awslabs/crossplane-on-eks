@@ -55,22 +55,21 @@ kubectl get compositions
 
 Expected output
 ```
-NAME                                                     AGE
-firehose.upbound.awsblueprints.io                        22m
-kinesisfirehose.upbound.awsblueprints.io                 22m
-lambda-invoke.iampolicy.awsblueprints.io                 22m
-read-kms.iampolicy.awsblueprints.io                      22m
-read-s3.iampolicy.awsblueprints.io                       22m
-read-sqs.iampolicy.awsblueprints.io                      22m
-s3.firehose.upbound.awsblueprints.io                     38h
-s3.lambda.aws.upbound.awsblueprints.io                   22m
-s3bucket.awsblueprints.io                                22m
-subscriptionfilter.upbound.awsblueprints.io              22m
-write-cloudwatch-metrics.iampolicy.awsblueprints.io      22m
-write-firehose-s3.iampolicy.awsblueprints.io             22m
-write-firehose.iampolicy.awsblueprints.io                22m
-write-s3.iampolicy.awsblueprints.io                      22m
-write-sqs.iampolicy.awsblueprints.io                     22m
+NAME                                                  XR-KIND               XR-APIVERSION               AGE
+firehose.upbound.awsblueprints.io                     XFirehoseApp          awsblueprints.io/v1alpha1   13s
+kinesisfirehose.upbound.awsblueprints.io              XKinesisFirehose      awsblueprints.io/v1alpha1   13s
+lambda-invoke.iampolicy.awsblueprints.io              IAMPolicy             awsblueprints.io/v1alpha1   13s
+read-kms.iampolicy.awsblueprints.io                   IAMPolicy             awsblueprints.io/v1alpha1   13s
+read-s3.iampolicy.awsblueprints.io                    IAMPolicy             awsblueprints.io/v1alpha1   13s
+read-sqs.iampolicy.awsblueprints.io                   IAMPolicy             awsblueprints.io/v1alpha1   12s
+s3.lambda.aws.upbound.awsblueprints.io                XLambdaFunction       awsblueprints.io/v1alpha1   12s
+s3bucket.awsblueprints.io                             XObjectStorage        awsblueprints.io/v1alpha1   12s
+subscriptionfilter.upbound.awsblueprints.io           XSubscriptionFilter   awsblueprints.io/v1alpha1   12s
+write-cloudwatch-metrics.iampolicy.awsblueprints.io   IAMPolicy             awsblueprints.io/v1alpha1   12s
+write-firehose-s3.iampolicy.awsblueprints.io          IAMPolicy             awsblueprints.io/v1alpha1   12s
+write-firehose.iampolicy.awsblueprints.io             IAMPolicy             awsblueprints.io/v1alpha1   12s
+write-s3.iampolicy.awsblueprints.io                   IAMPolicy             awsblueprints.io/v1alpha1   12s
+write-sqs.iampolicy.awsblueprints.io                  IAMPolicy             awsblueprints.io/v1alpha1   12s
 ```
 
 
