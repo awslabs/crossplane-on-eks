@@ -145,9 +145,7 @@ module "eks_blueprints_kubernetes_addons" {
   argocd_helm_config = {
     namespace = local.argocd_namespace
     version   = "5.28.0" # ArgoCD v2.6.7
-    values    = [templatefile("${path.module}/argocd-values.yaml", {
-      irsa_iam_role_arn = module.argocd_irsa.iam_role_arn
-    })]
+    values    = [file("${path.module}/argocd-values.yaml")]
   }
   enable_karpenter      = true
   enable_metrics_server = true
@@ -197,7 +195,7 @@ module "eks_blueprints_crossplane_addons" {
   #---------------------------------------------------------
   crossplane_aws_provider = {
     # !NOTE!: only enable one AWS provider at a time
-    enable          = true
+    enable          = false
     provider_config = "aws-provider-config"
     provider_aws_version = "v0.38.0"
     # to override the default irsa policy:
@@ -272,45 +270,4 @@ module "vpc" {
   }
 
   tags = local.tags
-}
-
-#---------------------------------------------------------------
-# ArgoCD EKS Access
-#---------------------------------------------------------------
-
-module "argocd_irsa" {
-  source = "github.com/aws-ia/terraform-aws-eks-blueprints-addons//modules/eks-blueprints-addon"
-
-  create_release             = false
-  create_role                = true
-  role_name_use_prefix       = false
-  role_name                  = "${module.eks.cluster_name}-argocd"
-  assume_role_condition_test = "StringLike"
-  role_policies = {
-    ArgoCD_EKS_Policy = aws_iam_policy.irsa_policy.arn
-  }
-  oidc_providers = {
-    this = {
-      provider_arn    = module.eks.oidc_provider_arn
-      namespace       = local.argocd_namespace
-      service_account = "argocd-*"
-    }
-  }
-  tags = local.tags
-
-}
-
-resource "aws_iam_policy" "irsa_policy" {
-  name        = "${module.eks.cluster_name}-argocd-irsa"
-  description = "IAM Policy for ArgoCD Hub"
-  policy      = data.aws_iam_policy_document.irsa_policy.json
-  tags        = local.tags
-}
-
-data "aws_iam_policy_document" "irsa_policy" {
-  statement {
-    effect    = "Allow"
-    resources = ["*"]
-    actions   = ["sts:AssumeRole"]
-  }
 }
