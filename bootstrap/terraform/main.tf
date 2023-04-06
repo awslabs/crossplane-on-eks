@@ -53,6 +53,8 @@ locals {
   vpc_cidr = "10.0.0.0/16"
   azs      = slice(data.aws_availability_zones.available.names, 0, 3)
 
+  argocd_namespace = "argocd"
+
   tags = {
     Blueprint  = local.name
     GithubRepo = "github.com/awslabs/crossplane-on-eks"
@@ -112,6 +114,7 @@ module "eks" {
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
 
+  # for production cluster, add a node group for add-ons that should not be inerrupted such as coredns
   eks_managed_node_groups = {
     initial = {
       instance_types  = ["m6i.large", "m5.large", "m5n.large", "m5zn.large"]
@@ -138,6 +141,12 @@ module "eks_blueprints_kubernetes_addons" {
   cluster_version       = module.eks.cluster_version
   oidc_provider         = module.eks.oidc_provider
   oidc_provider_arn     = module.eks.oidc_provider_arn
+  enable_argocd         = true
+  argocd_helm_config = {
+    namespace = local.argocd_namespace
+    version   = "5.28.0" # ArgoCD v2.6.7
+    values    = [file("${path.module}/argocd-values.yaml")]
+  }
   enable_karpenter      = true
   enable_metrics_server = true
   enable_prometheus     = true
