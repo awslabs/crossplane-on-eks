@@ -70,7 +70,7 @@ Change the default value for `CLAIM_NAME`
 export CLAIM_NAME=test-sns-sqs-lambda-s3
 ```
 
-Use the template file `sns-sqs-lambda-s3-claim-tmpl.yaml` to create the claim file `sns-sqs-lambda-s3-claim.yaml` with the variables `CLAIM_NAME`, `S3_BUCKET`, and `REGION` substituted
+Use the template file `sns-sqs-lambda-s3-claim-tmpl.yaml` to create the claim file with the variables `CLAIM_NAME`, `S3_BUCKET`, and `REGION` substituted
 
 
 ```shell
