@@ -14,9 +14,10 @@ kubectl apply -k .
 ```
 
 Verify the XRDs
-```
+```shell
 kubectl get xrds
 ```
+
 Expected output
 ```
 NAME                                   ESTABLISHED   OFFERED   AGE
@@ -29,9 +30,10 @@ xserverlessapp.awsblueprints.io        True          True      5m
 ```
 
 Verify the Compositions
-```
+```shell
 kubectl get compositions
 ```
+
 Expected output
 ```
 NAME                                            AGE
@@ -48,27 +50,42 @@ xsqslambdas3.awsblueprints.io                   5m
 ```
 
 #### Update and apply the claim
-```
-cd claim
-```
+
 Replace the bucket name and region in the claim with the ones set in the pre-requizite step [This serverless application](../object-processor-app/README.md) where the `function.zip` file is uploaded.
+
+```shell
+export REGION=replace-with-aws-region
+export S3_BUCKET=replace-with-unique-s3-bucket
 ```
-sed -i -e "s/replace-with-unique-s3-bucket/$S3_BUCKET/" sqs-lambda-s3-claim.yaml
-sed -i -e "s/replace-with-aws-region/$REGION/" sqs-lambda-s3-claim.yaml
+
+Change the default value for `CLAIM_NAME`
+```shell
+export CLAIM_NAME=test-sqs-lambda-s3
 ```
+
+Use the template file `sqs-lambda-s3-claim-tmpl.yaml` to create the claim file with the variables `CLAIM_NAME`, `S3_BUCKET`, and `REGION` substituted
+
+
+```shell
+envsubst < "claim/sqs-lambda-s3-claim-tmpl.yaml" > "claim/sqs-lambda-s3-claim.yaml"
+```
+
 Apply the claim
+```shell
+kubectl apply -f claim/sqs-lambda-s3-claim.yaml
 ```
-kubectl apply -f sqs-lambda-s3-claim.yaml
-```
+
 Validate the claim
 ```
 kubectl get serverlessapps
 ```
+
 Expected result (it might take sometime before READY=True)
 ```
 NAME                 SYNCED   READY   CONNECTION-SECRET   AGE
 test-sqs-lambda-s3   True     True                        20m
 ```
+
 The claim will create the following resources:
 ```mermaid
 stateDiagram-v2
@@ -127,36 +144,40 @@ Expected output:
 
 #### Test
 Use the following command to get the SQS URL and store it in $SQS_URL environment variable
+```shell
+SQS_URL=$(aws sqs list-queues --region $REGION --output json | jq -r '.QueueUrls|map(select(contains("test-sqs-lambda-s3"))) | .[0]' | tr -d '[:space:]')
 ```
-SQS_URL=$(aws sqs list-queues | jq -r '.QueueUrls|map(select(contains("test-sqs-lambda-s3"))) | .[0]' | tr -d '[:space:]')
-```
+
 The command will only store the first url that contains `test-sqs-lambda-s3` in the name. Validate you have the correct url:
-```
+```shell
 echo $SQS_URL
 ```
+
 Send a message to the queue.
+```shell
+aws sqs send-message --queue-url $SQS_URL --message-body abc --region $REGION
 ```
-aws sqs send-message --queue-url $SQS_URL --message-body abc
-```
+
 Or send 100 messages to the queue.
-```
-for i in {1..100}; do aws sqs send-message --queue-url $SQS_URL --message-body abc ; done
+```shell
+for i in {1..100}; do aws sqs send-message --queue-url $SQS_URL --message-body abc --region $REGION ; done
 ```
 
 Navigate to the AWS console and observe the SQS triggering the Lambda, and publishing the result in the S3 bucket.
 
 ## Clean Up
 Delete the serverless application
+```shell
+kubectl delete -f claim/sqs-lambda-s3-claim.yaml
 ```
-kubectl delete -f sqs-lambda-s3-claim.yaml
-```
+
 Delete the bucket
-```
+```shell
 aws s3 rm s3://${S3_BUCKET}/function.zip
 aws s3api delete-bucket --bucket ${S3_BUCKET} # This will fail when the bucket is not empty.
 ```
+
 Delete the XRDs and Compositions
-```
-cd ..
+```shell
 kubectl delete -k .
 ```

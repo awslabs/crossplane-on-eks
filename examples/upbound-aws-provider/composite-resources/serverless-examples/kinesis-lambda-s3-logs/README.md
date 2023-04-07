@@ -79,27 +79,50 @@ Use the file template `environmentconfig-tmpl.yaml` to create a file `environmen
 
 Set the variables `DYNATRACE_ENV_URL` and `DYNATRACE_API_KEY` in the following command with your valid values.
 
-```sh
+```shell
 export DYNATRACE_ENV_URL="https://XXXXXXXX.live.dynatrace.com"
 export DYNATRACE_API_KEY="dt0c01.XXXXXXXX"
 export S3_BUCKET=<replace-me-with-s3-bucket-name>
-envsubst < "environmentconfig-tmpl.yaml" > "environmentconfig.yaml"
 ```
-Create Crossplane environment config to be us with the Composition.
 
-```sh
-kubectl apply -f environmentconfig.yaml
+Use the template file `environmentconfig-tmpl.yaml` to create the claim file `environmentconfig.yaml` with the variables `DYNATRACE_ENV_URL`, `DYNATRACE_API_KEY`, and `S3_BUCKET` substituted
+
+```shell
+envsubst < "environment/environmentconfig-tmpl.yaml" > "environment/environmentconfig.yaml"
+```
+
+Create Crossplane environment config to be us with the Composition.
+```shell
+kubectl apply -f environment/environmentconfig.yaml
 ```
 
 ## Update and apply the Kinesis Data Firehose App Claim
 
-Apply the claim
+Change the default value for `CLAIM_NAME`
+```shell
+export CLAIM_NAME=test-kineses-lambda-s3
 ```
-kubectl apply -f claim.yaml
+
+Set the region for the claim
+```shell
+export REGION=replace-with-aws-region
+```
+
+Use the template file `kinesis-lambda-s3-claim-tmpl.yaml` to create the claim file `kinesis-lambda-s3-claim.yaml` with the variables `CLAIM_NAME` and `REGION` substituted
+
+
+```shell
+envsubst < "claim/kinesis-lambda-s3-claim-tmpl.yaml" > "claim/kinesis-lambda-s3-claim.yaml"
+```
+
+
+Apply the claim
+```shell
+kubectl apply -f claim/kinesis-lambda-s3-claim.yaml
 ```
 
 Validate the claim
-```
+```shell
 kubectl get firehoseapps
 ```
 
@@ -147,7 +170,7 @@ stateDiagram-v2
 ```
 
 Each XR in the diagram contains the underlying resource refs:
-```
+```shell
 kubectl describe xfirehoseapps | grep "Resource Refs" -A 18
 ```
 
@@ -213,23 +236,29 @@ aws logs put-subscription-filter \
 This example provides a Crossplane Composition to add a CloudWatch subscription filter
 
 
-Use the file template `claim-subscription-tmpl.yaml` to create the file `claim-subscription.yaml`
+Use the file template `subscription-claim-tmpl.yaml` to create the file `subscription-claim.yaml` with the variables `NAMESPACE`, `CLOUDWATCH_LOG_GROUP`, `KINESIS_CLAIM_NAME`, `NAMESPACE`, `DESTINATION_KINESIS_ARN` and `REGION` substituted
+
+Change the default value for `CLAIM_NAME`
+```shell
+export SUBSCRIPTION_CLAIM_NAME=test-kineses-lambda-s3
+```
+
 
 You can use the following command:
 ```shell
-envsubst < "claim-subscription-tmpl.yaml" > "claim-subscription.yaml"
+envsubst < "claim/subscription-claim-tmpl.yaml" > "claim/subscription-claim.yaml"
 ```
 
 >Currently there is an [issue](https://github.com/upbound/upjet/issues/95) with Upbound crossplane provider in SubcriptionFilters using matchSelectors only work with Kinesis Stream, not other destinations.
 
 
 Apply the claim
-```
-kubectl apply -f claim-subscription.yaml
+```shell
+kubectl apply -f claim/subscription-claim.yaml
 ```
 
 Validate the claim
-```
+```shell
 kubectl get subscriptionfilters.awsblueprints.io
 ```
 
@@ -247,8 +276,9 @@ stateDiagram-v2
     XR\nxsubscriptionfilter--> Composition\nsubscriptionfilter
     Composition\nsubscriptionfilter --> ManagedResource\nSubscriptionFilter
 ```
+
 Each XR in the diagram contains the underlying resource refs:
-```
+```shell
 kubectl describe xfirehoseapps | grep "Resource Refs" -A 3
 ```
 
@@ -276,17 +306,17 @@ Validate that the 3rd party collector is receiving logs by using the Console (Ob
 
 ## Developing Compositions
 
-The files `managed.yaml` and `managed-subscription.yaml` are provided as a convienece if you are going to develop changes to the composition or are debugging the composition, using managed resources is a good base line to have when working on compostions.
+The files `managed/managed.yaml` and `managed/managed-subscription.yaml` are provided as a convienece if you are going to develop changes to the composition or are debugging the composition, using managed resources is a good base line to have when working on compostions.
 
 ## Clean Up
 Delete the CloudWatch Log Subscription Filter
 ```shell
-kubectl delete -f claim-subscription.yaml
+kubectl delete -f claim/subscription-claim.yaml
 ```
 
 Delete the Kinesis, Lambda, and S3 bucket holding the logs (be aware if you want to keep the logs)
 ```shell
-kubectl delete -f claim.yaml
+kubectl delete -f claim/kineses-lambda-s3-claim.yaml
 ```
 
 Delete the lambda zip file and bucket

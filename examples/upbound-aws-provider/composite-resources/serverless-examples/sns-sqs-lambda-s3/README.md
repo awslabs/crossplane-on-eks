@@ -1,6 +1,6 @@
 # Example to deploy serverless architecture
 This example deploys the architecture depicted on the diagram. First, it applies the Crossplane XRD and Compositions. Then it applies the Claim that creates all the AWS resources, and deploys the code to the Lambda funtion. Last, it send a message to SNS Topic and track it get passed to the SQS Queue, that triggers the Lambda fuction, which posts the results in the S3 bucket.
-   
+
 ![Serverless diagram](../../../diagrams/serverless.png)
 
 ## Pre-requisites:
@@ -14,9 +14,10 @@ kubectl apply -k .
 ```
 
 Verify the XRDs
-```
+```shell
 kubectl get xrds
 ```
+
 Expected output
 ```
 NAME                                   ESTABLISHED   OFFERED   AGE
@@ -56,22 +57,36 @@ xsqslambdas3.awsblueprints.io                   5m
 ```
 
 #### Update and apply the claim
-```
-cd claim
-```
+
 Replace the bucket name and region in the claim with the ones set in the pre-requizite step [This serverless application](../object-processor-app/README.md) where the `function.zip` file is uploaded.
+
+```shell
+export REGION=replace-with-aws-region
+export S3_BUCKET=replace-with-unique-s3-bucket
 ```
-sed -i -e "s/replace-with-unique-s3-bucket/$S3_BUCKET/" sns-sqs-lambda-s3-claim.yaml
-sed -i -e "s/replace-with-aws-region/$REGION/" sns-sqs-lambda-s3-claim.yaml
+
+Change the default value for `CLAIM_NAME`
+```shell
+export CLAIM_NAME=test-sns-sqs-lambda-s3
 ```
+
+Use the template file `sns-sqs-lambda-s3-claim-tmpl.yaml` to create the claim file with the variables `CLAIM_NAME`, `S3_BUCKET`, and `REGION` substituted
+
+
+```shell
+envsubst < "claim/sns-sqs-lambda-s3-claim-tmpl.yaml" > "claim/sns-sqs-lambda-s3-claim.yaml"
+```
+
 Apply the claim
+```shell
+kubectl apply -f claim/sns-sqs-lambda-s3-claim.yaml
 ```
-kubectl apply -f sns-sqs-lambda-s3-claim.yaml
-```
+
 Validate the claim
-```
+```shell
 kubectl get serverlessapp
 ```
+
 Expected result (it might take sometime before READY=True)
 ```
 NAME                     SYNCED   READY   CONNECTION-SECRET   AGE
@@ -81,35 +96,38 @@ test-sns-sqs-lambda-s3   True     True                        20m
 #### Test
 Use the following command to get the SNS topic ARN and store it in $SNS_TOPIC_ARN environment variable
 ```
-SNS_TOPIC_ARN=$(aws sns list-topics |jq -r '.Topics | map(select(.TopicArn | contains("function-sns-sqs-test-sns-sqs-lambda-s3"))) | .[0].TopicArn' | tr -d '[:space:]')
+SNS_TOPIC_ARN=$(aws sns list-topics --region $REGION --output json |jq -r '.Topics | map(select(.TopicArn | contains("function-sns-sqs-test-sns-sqs-lambda-s3"))) | .[0].TopicArn' | tr -d '[:space:]')
 ```
 The command will only store the first topic that contains `function-sns-sqs-test-sns-sqs-lambda-s3` in the name. Validate you have the correct topic:
-```
+```shell
 echo $SNS_TOPIC_ARN
 ```
+
 Publish a message to the topic.
+```shell
+aws sns publish --topic-arn $SNS_TOPIC_ARN --message abc --region $REGION
 ```
-aws sns publish --topic-arn $SNS_TOPIC_ARN --message abc
-```
+
 Or push 100 messages to the topic.
-```
-for i in {1..100} ; do aws sns publish --topic-arn $SNS_TOPIC_ARN --message abc ; done
+```shell
+for i in {1..100} ; do aws sns publish --topic-arn $SNS_TOPIC_ARN --message abc --region $REGION ; done
 ```
 
 Navigate to the AWS console and observe the message getting passed to the SQS, triggering the Lambda, and publishing the result in the S3 bucket.
 
 ## Clean Up
 Delete the serverless application
+```shell
+kubectl delete -f claim/sns-sqs-lambda-s3-claim.yaml
 ```
-kubectl delete -f sns-sqs-lambda-s3-claim.yaml
-```
+
 Delete the bucket
-```
+```shell
 aws s3 rm s3://${S3_BUCKET}/function.zip
 aws s3api delete-bucket --bucket ${S3_BUCKET} # This will fail when the bucket is not empty.
 ```
+
 Delete the XRDs and Compositions
-```
-cd ..
+```shell
 kubectl delete -k .
 ```
