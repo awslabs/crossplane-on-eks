@@ -16,7 +16,7 @@ spec:
     kind: ServerlessApp
     plural: serverlessapps
   defaultCompositionRef:
-    name: xsnssqslambdas3.awsblueprints.io
+    name: xsqslambdas3.awsblueprints.io
   versions:
     - name: v1alpha1
       served: true
@@ -83,6 +83,8 @@ spec:
                 kmsKeyArn:
                   type: string
                 keyName:
+                  type: string
+                ecrUrl:
                   type: string
                 accountNumber:
                   type: string

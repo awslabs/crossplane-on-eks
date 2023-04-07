@@ -8,3 +8,4 @@ spec:
   resourceConfig:
     providerConfigName: aws-provider-config
     region: $AWS_REGION
+  environmentConfigs: dev # This allows to use data from EnvironmentConfig
