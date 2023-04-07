@@ -47,10 +47,34 @@ write-s3.iampolicy.awsblueprints.io                   IAMPolicy            awsbl
 xsqslambdas3.awsblueprints.io                         XServerlessApp       awsblueprints.io/v1alpha1   5m
 ```
 
-#### Update and apply the claim
+### Update and apply Environment Config
 
-Replace the bucket name and region in the claim with the ones set in the pre-requizite step [This serverless application](../object-processor-app/README.md) where the `function.zip` file is uploaded.
+Use the file template `environmentconfig-tmpl.yaml` to create a file `environmentconfig.yaml`
 
+Use the variable `ECR_URL` set in the pre-requizite step [Option 1: Container of this Go application](../object-processor-app/README.md) where the docker image is uploaded to ECR. <br>
+Or regenarate it using
+```shell
+export ECR_URL=$(aws sts get-caller-identity|jq -r ".Account" | tr -d '[:space:]').dkr.ecr.$AWS_REGION.amazonaws.com
+```
+
+Use the template file `environmentconfig-tmpl.yaml` to create the claim file `environmentconfig.yaml` with the variable `ECR_URL` substituted
+```shell
+envsubst < "environment/environmentconfig-tmpl.yaml" > "environment/environmentconfig.yaml"
+```
+Validate the ECR_URL was populated
+```shell
+cat environment/environmentconfig.yaml
+```
+
+Create Crossplane environment config to be us with the Composition.
+```shell
+kubectl apply -f environment/environmentconfig.yaml
+```
+
+### Update and apply the claim
+
+Replace the image name, and aws region in the claim with the ones set in the pre-requizite step [Option 1: Container of this Go application](../object-processor-app/README.md) where the docker image is uploaded to ECR.<br>
+Or recreate them using
 ```shell
 export AWS_REGION=<replace-with-aws-region> # example `us-east-1`
 export IMAGE_NAME=<replace-with-image-name> # example `lambda-test`

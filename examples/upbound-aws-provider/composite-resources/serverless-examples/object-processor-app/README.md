@@ -14,9 +14,9 @@ cd ../object-processor-app/
 This option contains commands to build the Go binary, build a Docker image, and create ECR repo and upload the image to it.
 First, set the region, ECR_URL, and IMAGE_NAME as environment variables.
 ```shell
-AWS_REGION=<replace-me-with-aws-region> # this should make aws cli pointing to the region without explicitly passing --region 
-ECR_URL=$(aws sts get-caller-identity|jq -r ".Account" | tr -d '[:space:]').dkr.ecr.$AWS_REGION.amazonaws.com
-IMAGE_NAME=<replace-me-with-image-name>
+export AWS_REGION=<replace-me-with-aws-region> # this should make aws cli pointing to the region without explicitly passing --region 
+export ECR_URL=$(aws sts get-caller-identity|jq -r ".Account" | tr -d '[:space:]').dkr.ecr.$AWS_REGION.amazonaws.com
+export IMAGE_NAME=<replace-me-with-image-name>
 ```
 Log in to ECR
 ```shell
