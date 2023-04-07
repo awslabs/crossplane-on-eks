@@ -1,7 +1,7 @@
 apiVersion: apiextensions.crossplane.io/v1alpha1
 kind: EnvironmentConfig
 metadata:
-  name: test-logs-firehose-s3-lambda
+  name: test-kineses-lambda-s3
   labels:
     awsblueprints.io/environment: dev
 data:
