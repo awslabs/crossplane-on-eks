@@ -84,9 +84,7 @@ spec:
             matchLabels:
               awsblueprints.io/provider: aws
               awsblueprints.io/environment: dev
-              awsblueprints.io/type: zip
-          handler: main
-          runTime: go1.x
+              awsblueprints.io/type: container
           envVariables:
             APP__CONFIG__PROCESSOR: "TRUE"
       patches:
@@ -95,11 +93,8 @@ spec:
         - type: PatchSet
           patchSetName: common-lambda
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.bucketName
-          toFieldPath: spec.bucketName
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.bucketKey
-          toFieldPath: spec.bucketKey
+          fromFieldPath: spec.imageUri
+          toFieldPath: spec.imageUri
         - type: FromCompositeFieldPath
           fromFieldPath: spec.memorySize
           toFieldPath: spec.memorySize

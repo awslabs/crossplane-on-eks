@@ -26,6 +26,8 @@ spec:
           properties:
             spec:
               properties:
+                imageUri:
+                  type: string
                 bucketName:
                   type: string
                 bucketKey:
