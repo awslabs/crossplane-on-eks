@@ -4,12 +4,42 @@ This is a test Go application for serverless examples.
 ## Pre-requisites:
 - Go is installed. Find the installation instructions [here](https://go.dev/doc/install).
 - AWS CLI is installed and configured. Find the installation instructions [here](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
+- Docker is installed. Find the installation instructions [here](https://docs.docker.com/engine/install/).
 
-## Build, zip, and upload golang function code to s3
 Navigate to the function code folder
+```shell
+cd ../object-processor-app/
 ```
-cd composite-resources/serverless/app/
+## Option 1: Container
+This option contains commands to build the Go binary, build a Docker image, and create ECR repo and upload the image to it.
+First, set the region, ECR_URL, and IMAGE_NAME as environment variables.
+```shell
+AWS_REGION=<replace-me-with-aws-region> # this should make aws cli pointing to the region without explicitly passing --region 
+ECR_URL=$(aws sts get-caller-identity|jq -r ".Account" | tr -d '[:space:]').dkr.ecr.$AWS_REGION.amazonaws.com
+IMAGE_NAME=<replace-me-with-image-name>
 ```
+Log in to ECR
+```shell
+aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_URL
+```
+Create ECR repository
+```shell
+aws ecr create-repository --repository-name $IMAGE_NAME
+```
+Build the Go binary
+```shell
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o main main.go
+```
+Build the docker image
+```shell
+docker build -t $ECR_URL/$IMAGE_NAME:latest . 
+```
+Upload the docker image to ECR
+```shell
+docker push $ECR_URL/$IMAGE_NAME:latest
+```
+
+## Option 2: Zip file to S3
 Executing the `build-and-upload-zip.sh` script creates an S3 bucket in a specified region, builds and zips the Go function, and uploads the ZIP file to the S3 bucket. If the bucket already exists and you have access to it, the script will print a message and continue with the upload. If the options are not specified, the script will use the values of the S3_BUCKET and REGION environment variables.
 ```
 export S3_BUCKET=<unique-s3-bucket-name>
