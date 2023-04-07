@@ -1,7 +1,7 @@
 apiVersion: awsblueprints.io/v1alpha1
 kind: SubscriptionFilter
 metadata:
-  name: test-logs-firehose-s3-lambda
+  name: ${SUBSCRIPTION_CLAIM_NAME}
   namespace: ${NAMESPACE}
 spec:
   forProvider:
@@ -21,6 +21,6 @@ spec:
     #    firehoseapps.awsblueprints.io/app: firehose
   resourceConfig:
     providerConfigName: aws-provider-config
-    region: us-east-1
+    region: $REGION
 
 

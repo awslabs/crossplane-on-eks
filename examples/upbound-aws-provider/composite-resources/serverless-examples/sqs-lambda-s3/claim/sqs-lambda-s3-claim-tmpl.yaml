@@ -1,0 +1,17 @@
+apiVersion: awsblueprints.io/v1alpha1
+kind: ServerlessApp
+metadata:
+  name: $CLAIM_NAME
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+      serverless.awsblueprints.io/app: sqs-lambda-s3
+  bucketName: $S3_BUCKET
+  bucketKey: function.zip
+  memorySize: 128
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: $REGION
