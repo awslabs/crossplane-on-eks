@@ -30,13 +30,17 @@ Build the Go binary
 ```shell
 GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o main main.go
 ```
+Set the `DOCKER_IMAGE` env var, this step is nessasary to properly escape the ':' for the subsequent docker commands
+```shell
+export DOCKER_IMAGE=$ECR_URL/$IMAGE_NAME\:latest
+```
 Build the docker image
 ```shell
-docker build -t $ECR_URL/$IMAGE_NAME:latest . 
+docker build -t $DOCKER_IMAGE . 
 ```
 Upload the docker image to ECR
 ```shell
-docker push $ECR_URL/$IMAGE_NAME:latest
+docker push $DOCKER_IMAGE
 ```
 
 ## Option 2: Zip file to S3
