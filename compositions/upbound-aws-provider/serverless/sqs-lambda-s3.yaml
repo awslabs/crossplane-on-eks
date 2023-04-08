@@ -109,9 +109,9 @@ spec:
             variables:
               - fromFieldPath: status.ecrUrl
               - fromFieldPath: spec.imageName
-              strategy: string
-              string:
-                fmt: "%s/%s"
+            strategy: string
+            string:
+              fmt: "%s/%s"
           toFieldPath: spec.imageUri
         - type: FromCompositeFieldPath
           fromFieldPath: spec.memorySize

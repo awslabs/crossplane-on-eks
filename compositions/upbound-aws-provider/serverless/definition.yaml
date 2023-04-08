@@ -26,7 +26,7 @@ spec:
           properties:
             spec:
               properties:
-                imageUri:
+                imageName:
                   type: string
                 bucketName:
                   type: string
@@ -40,6 +40,8 @@ spec:
                   type: object
                   additionalProperties:
                     type: string
+                environmentConfigs:
+                  type: string
                 resourceConfig:
                   description: ResourceConfig defines general properties of this AWS
                     resource.
