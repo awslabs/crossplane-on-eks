@@ -38,9 +38,37 @@ Build the docker image
 ```shell
 docker build -t $DOCKER_IMAGE . 
 ```
+Expected output
+```
+[+] Building 0.5s (7/7) FINISHED
+ => [internal] load build definition from Dockerfile                                                             0.0s
+ => => transferring dockerfile: 37B                                                                              0.0s
+ => [internal] load .dockerignore                                                                                0.0s
+ => => transferring context: 2B                                                                                  0.0s
+ => [internal] load metadata for public.ecr.aws/lambda/go:1                                                      0.3s
+ => [internal] load build context                                                                                0.1s
+ => => transferring context: 13.18MB                                                                             0.1s
+ => [1/2] FROM public.ecr.aws/lambda/go:1@sha256:ea8389f1a5e7e9d29c4d65008da143985bef131cf901db63ab57e4124f7f66  0.0s
+ => CACHED [2/2] COPY main /var/task                                                                             0.0s
+ => exporting to image                                                                                           0.0s
+ => => exporting layers                                                                                          0.0s
+ => => writing image sha256:0f3ea389fa4f3761f25b2b666a8f49b458e825f1180b9c2181ecadd55fd2cc9a                     0.0s
+ => => naming to 111122223333.dkr.ecr.us-east-1.amazonaws.com/lambda-test:latest                                 0.0s
+```
 Upload the docker image to ECR
 ```shell
 docker push $DOCKER_IMAGE
+```
+Expected output
+```
+The push refers to repository [111122223333.dkr.ecr.us-east-1.amazonaws.com/lambda-test]
+8ce4b9b80622: Pushed
+02c5912fad21: Pushed
+2d244e0816c6: Pushed
+2b58bd9b1feb: Pushed
+d79a81893db4: Pushed
+2ad9f6dfcb67: Pushed
+latest: digest: sha256:86bb30cbf14d9ac538946cdd9565f09b7a4a0b9846e28a73cd27116280c0a58e size: 1579
 ```
 
 ## Option 2: Zip file to S3
