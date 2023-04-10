@@ -1,8 +1,0 @@
-apiVersion: apiextensions.crossplane.io/v1alpha1
-kind: EnvironmentConfig
-metadata:
-  name: test-sqs-lambda-s3
-  labels:
-    awsblueprints.io/environment: dev
-data:
-  ecrUrl: $ECR_URL 
