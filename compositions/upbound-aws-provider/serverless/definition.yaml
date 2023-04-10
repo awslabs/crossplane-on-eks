@@ -86,8 +86,6 @@ spec:
                   type: string
                 keyName:
                   type: string
-                ecrUrl:
-                  type: string
                 accountNumber:
                   type: string
               type: object
