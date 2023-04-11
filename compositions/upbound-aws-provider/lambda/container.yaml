@@ -95,10 +95,8 @@ spec:
           deletionPolicy: Delete
           forProvider:
             packageType: Image
-            role: "tbd"
             environment:
-              - variables:
-                  hardcoded: value
+              - variables: {}
       patches:
         - type: PatchSet
           patchSetName: common-fields
