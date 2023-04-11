@@ -5,7 +5,7 @@ This example deploys the architecture depicted on the diagram. First, it applies
 
 ## Pre-requisites:
  - [Upbound AWS Provider Crossplane Blueprint Examples](../../../README.md)
- - [This serverless application](../object-processor-app/README.md)
+ - [Option 1: Container of this Go application](../object-processor-app/README.md)
 
 ### Deploy XRDs and Compositions
 
@@ -34,40 +34,43 @@ Verify the Compositions
 kubectl get compositions
 ```
 
-Expected output
+Expected output. Note: the output might contain more compositions but these are the ones uses by the claim in the next step
 ```
-NAME                                            AGE
-read-kms.iampolicy.awsblueprints.io             5m
-read-s3.iampolicy.awsblueprints.io              5m
-read-sqs.iampolicy.awsblueprints.io             5m
-s3.lambda.aws.upbound.awsblueprints.io          5m
-s3bucket.awsblueprints.io                       5m
-sqs.esm.awsblueprints.io                        5m
-sqs.queue.aws.upbound.awsblueprints.io          5m
-write-s3.iampolicy.awsblueprints.io             5m
-xsnssqslambdas3.awsblueprints.io                5m
-xsqslambdas3.awsblueprints.io                   5m
+NAME                                                  XR-KIND              XR-APIVERSION               AGE
+container.lambda.aws.upbound.awsblueprints.io         XLambdaFunction      awsblueprints.io/v1alpha1   5m
+read-s3.iampolicy.awsblueprints.io                    IAMPolicy            awsblueprints.io/v1alpha1   5m
+read-sqs.iampolicy.awsblueprints.io                   IAMPolicy            awsblueprints.io/v1alpha1   5m
+s3bucket.awsblueprints.io                             XObjectStorage       awsblueprints.io/v1alpha1   5m
+sqs.esm.awsblueprints.io                              EventSourceMapping   awsblueprints.io/v1alpha1   5m
+sqs.queue.aws.upbound.awsblueprints.io                XQueue               awsblueprints.io/v1alpha1   5m
+write-s3.iampolicy.awsblueprints.io                   IAMPolicy            awsblueprints.io/v1alpha1   5m
+xsqslambdas3.awsblueprints.io                         XServerlessApp       awsblueprints.io/v1alpha1   5m
 ```
 
-#### Update and apply the claim
+### Update and apply the claim
 
-Replace the bucket name and region in the claim with the ones set in the pre-requizite step [This serverless application](../object-processor-app/README.md) where the `function.zip` file is uploaded.
-
+Replace the image name, and aws region in the claim with the ones set in the pre-requizite step [Option 1: Container of this Go application](../object-processor-app/README.md) where the docker image is uploaded to ECR.<br>
+Or recreate them using
 ```shell
-export REGION=replace-with-aws-region
-export S3_BUCKET=replace-with-unique-s3-bucket
+export AWS_REGION=<replace-with-aws-region> # example `us-east-1`
+export IMAGE_NAME=<replace-with-image-name> # example `lambda-test`
 ```
 
 Change the default value for `CLAIM_NAME`
 ```shell
-export CLAIM_NAME=test-sqs-lambda-s3
+export CLAIM_NAME=<replace-with-claim-name> # example `test-sqs-lambda-s3`
 ```
 
-Use the template file `sqs-lambda-s3-claim-tmpl.yaml` to create the claim file with the variables `CLAIM_NAME`, `S3_BUCKET`, and `REGION` substituted
+Use the template file `sqs-lambda-s3-claim-tmpl.yaml` to create the claim file with the variables `CLAIM_NAME`, `IMAGE_NAME`, and `AWS_REGION` substituted
 
 
 ```shell
 envsubst < "claim/sqs-lambda-s3-claim-tmpl.yaml" > "claim/sqs-lambda-s3-claim.yaml"
+```
+
+Check that the claim populated with values
+```
+cat claim/sqs-lambda-s3-claim.yaml
 ```
 
 Apply the claim
@@ -102,10 +105,10 @@ stateDiagram-v2
     Composition\nsqs --> ManagedResource\nsqs
     XR\neventsourcemapping --> Compostion\nsqsesm
     Compostion\nsqsesm --> ManagedResource\neventsourcemapping
-    XR\nxlambdafunction --> Compostion\ns3lambda
-    Compostion\ns3lambda --> ManagedResource\nfunction
-    Compostion\ns3lambda --> ManagedResource\nrole
-    Compostion\ns3lambda --> ManagedResource\nrolepolicyattachement
+    XR\nxlambdafunction --> Compostion\ncontainerlambda
+    Compostion\ncontainerlambda --> ManagedResource\nfunction
+    Compostion\ncontainerlambda --> ManagedResource\nrole
+    Compostion\ncontainerlambda --> ManagedResource\nrolepolicyattachement
     XR\nxobjectstorages --> Compostion\ns3bucket
     Compostion\ns3bucket --> ManagedResource\nbucket
     XR\niampolicies\nwrites3 --> Compostion\nwrites3
@@ -145,7 +148,7 @@ Expected output:
 #### Test
 Use the following command to get the SQS URL and store it in $SQS_URL environment variable
 ```shell
-SQS_URL=$(aws sqs list-queues --region $REGION --output json | jq -r '.QueueUrls|map(select(contains("test-sqs-lambda-s3"))) | .[0]' | tr -d '[:space:]')
+SQS_URL=$(aws sqs list-queues --output json | jq -r '.QueueUrls|map(select(contains("test-sqs-lambda-s3"))) | .[0]' | tr -d '[:space:]')
 ```
 
 The command will only store the first url that contains `test-sqs-lambda-s3` in the name. Validate you have the correct url:
@@ -155,12 +158,12 @@ echo $SQS_URL
 
 Send a message to the queue.
 ```shell
-aws sqs send-message --queue-url $SQS_URL --message-body abc --region $REGION
+aws sqs send-message --queue-url $SQS_URL --message-body abc
 ```
 
 Or send 100 messages to the queue.
 ```shell
-for i in {1..100}; do aws sqs send-message --queue-url $SQS_URL --message-body abc --region $REGION ; done
+for i in {1..100}; do aws sqs send-message --queue-url $SQS_URL --message-body abc ; done
 ```
 
 Navigate to the AWS console and observe the SQS triggering the Lambda, and publishing the result in the S3 bucket.
@@ -171,10 +174,9 @@ Delete the serverless application
 kubectl delete -f claim/sqs-lambda-s3-claim.yaml
 ```
 
-Delete the bucket
+Delete the repository
 ```shell
-aws s3 rm s3://${S3_BUCKET}/function.zip
-aws s3api delete-bucket --bucket ${S3_BUCKET} # This will fail when the bucket is not empty.
+aws ecr delete-repository $IMAGE_NAME
 ```
 
 Delete the XRDs and Compositions

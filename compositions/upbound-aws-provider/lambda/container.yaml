@@ -28,16 +28,65 @@ spec:
           policy:
             mergeOptions:
               appendSlice: true
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.name
-          toFieldPath: metadata.annotations[crossplane.io/external-name]
         - fromFieldPath: "metadata.name"
           toFieldPath: "metadata.name"
+  resources:
+    - name: function-role
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: Role
+        spec:
+          forProvider:
+            assumeRolePolicy: |
+              {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Service": "lambda.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRole"
+                  }
+                ]
+              }
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: metadata.name
           transforms:
             - type: string
               string:
-                fmt: "function-%s"
-  resources:
+                fmt: "%s-role"
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.arn
+          toFieldPath: status.functionRoleArn
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.id
+          toFieldPath: status.functionRoleName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.permissionsBoundaryArn
+          toFieldPath: spec.forProvider.permissionsBoundary
+    - name: lambda-basic-policy-attachment
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: RolePolicyAttachment
+        spec:
+          forProvider:
+            policyArn: arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+            roleSelector:
+              matchControllerRef: true
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
     - name: function
       base:
         apiVersion: lambda.aws.upbound.io/v1beta1
@@ -46,6 +95,8 @@ spec:
           deletionPolicy: Delete
           forProvider:
             packageType: Image
+            environment:
+              - variables: {}
       patches:
         - type: PatchSet
           patchSetName: common-fields
@@ -65,64 +116,17 @@ spec:
           fromFieldPath: spec.imageUri
           toFieldPath: spec.forProvider.imageUri
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.runTime
-          toFieldPath: spec.forProvider.runtime
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.handler
-          toFieldPath: spec.forProvider.handler
-        - type: FromCompositeFieldPath
           fromFieldPath: status.functionRoleArn
           toFieldPath: spec.forProvider.role
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.envVariables
+          toFieldPath: spec.forProvider.environment[0].variables
+          policy:
+            mergeOptions:
+              keepMapValues: true
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.arn
           toFieldPath: status.functionArn
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.id
           toFieldPath: status.functionName
-    - name: function-role
-      base:
-        apiVersion: iam.aws.upbound.io/v1beta1
-        kind: Role
-        spec:
-          deletionPolicy: Delete
-          forProvider:
-            assumeRolePolicy: |
-              {
-                  "Version": "2012-10-17",
-                  "Statement": [
-                      {
-                          "Effect": "Allow",
-                          "Principal": {
-                              "Service": "lambda.amazonaws.com"
-                          },
-                          "Action": "sts:AssumeRole"
-                      }
-                  ]
-              }
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.providerConfigName
-          toFieldPath: spec.providerConfigRef.name
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.arn
-          toFieldPath: status.functionRoleArn
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.permissionsBoundaryArn
-          toFieldPath: spec.forProvider.permissionsBoundary
-    - name: lambda-basic-policy-attachment
-      base:
-        apiVersion: iam.aws.upbound.io/v1beta1
-        kind: RolePolicyAttachment
-        spec:
-          forProvider:
-            policyArn: arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-            roleSelector:
-              matchControllerRef: true
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.providerConfigName
-          toFieldPath: spec.providerConfigRef.name

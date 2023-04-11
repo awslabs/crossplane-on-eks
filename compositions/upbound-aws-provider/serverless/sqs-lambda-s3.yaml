@@ -54,6 +54,16 @@ spec:
         - type: ToCompositeFieldPath
           fromFieldPath: status.queueArn
           toFieldPath: status.sourceQueueArn
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.queueArn
+          toFieldPath: status.accountNumber
+          transforms:
+            - type: string
+              string:
+                type: Regexp
+                regexp:
+                  match: 'arn:aws:sqs:.*:(\d+):.*'
+                  group: 1
     - name: processor-event-source
       base:
         apiVersion: awsblueprints.io/v1alpha1
@@ -84,9 +94,7 @@ spec:
             matchLabels:
               awsblueprints.io/provider: aws
               awsblueprints.io/environment: dev
-              awsblueprints.io/type: zip
-          handler: main
-          runTime: go1.x
+              awsblueprints.io/type: container
           envVariables:
             APP__CONFIG__PROCESSOR: "TRUE"
       patches:
@@ -94,12 +102,18 @@ spec:
           patchSetName: common-fields-composition
         - type: PatchSet
           patchSetName: common-lambda
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.bucketName
-          toFieldPath: spec.bucketName
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.bucketKey
-          toFieldPath: spec.bucketKey
+        - type: CombineFromComposite
+          policy:
+            fromFieldPath: Required
+          combine:
+            variables:
+              - fromFieldPath: status.accountNumber
+              - fromFieldPath: spec.resourceConfig.region
+              - fromFieldPath: spec.imageName
+            strategy: string
+            string:
+              fmt: "%s.dkr.ecr.%s.amazonaws.com/%s"
+          toFieldPath: spec.imageUri
         - type: FromCompositeFieldPath
           fromFieldPath: spec.memorySize
           toFieldPath: spec.memorySize
