@@ -359,10 +359,12 @@ spec:
         spec:
           forProvider:
             allocationIdSelector:
+              matchControllerRef: true
               matchLabels:
                 type: eip
             connectivityType:
             subnetIdSelector:
+              matchControllerRef: true
               matchLabels:
                 type: subnet
                 visibility: public
@@ -421,6 +423,7 @@ spec:
             routes:
               - destinationCidrBlock: 0.0.0.0/0
                 gatewayIdSelector:
+                  matchControllerRef: true
                   matchLabels:
                     type: igw
             associations:
@@ -474,6 +477,7 @@ spec:
             routes:
               - destinationCidrBlock: 0.0.0.0/0
                 natGatewayIdSelector:
+                  matchControllerRef: true
                   matchLabels:
                     type: natgw
             associations:
