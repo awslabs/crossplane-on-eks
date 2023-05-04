@@ -76,7 +76,7 @@ spec:
         spec:
           forProvider:
             policyArn: ""
-            roleNameSelector:
+            roleSelector:
               matchControllerRef: true
       patches:
         - type: PatchSet
@@ -91,7 +91,7 @@ spec:
         spec:
           forProvider:
             policyArn: ""
-            roleNameSelector:
+            roleSelector:
               matchControllerRef: true
       patches:
         - type: PatchSet
