@@ -1,0 +1,14 @@
+apiVersion: awsblueprints.io/v1alpha1
+kind: IRSA
+metadata:
+  name: irsa-example
+spec:
+  awsAccountID: "1234567890"
+  eksOIDC: "https://oidc.eks.us-west-2.amazonaws.com/id/ANKDSAL23R352"
+  permissionsBoundaryArn: "arn:aws:iam::aws:policy/POLICY"
+  serviceAccountName: irsa-example
+  resourceConfig:
+    deletionPolicy: Delete
+    region: us-west-2
+    providerConfigName: provider-upbound
+    tags: []
