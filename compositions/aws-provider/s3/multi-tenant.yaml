@@ -49,11 +49,9 @@ spec:
             configRef:
               name: vault
           forProvider:
-            acl: private
+            objectOwnership: BucketOwnerEnforced
             publicAccessBlockConfiguration:
-              blockPublicAcls: true
               blockPublicPolicy: true
-              ignorePublicAcls: true
               restrictPublicBuckets: true
             serverSideEncryptionConfiguration:
               rules:

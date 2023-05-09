@@ -42,11 +42,9 @@ spec:
         spec:
           deletionPolicy: Delete
           forProvider:
-            acl: private
+            objectOwnership: BucketOwnerEnforced
             publicAccessBlockConfiguration:
-              blockPublicAcls: true
               blockPublicPolicy: true
-              ignorePublicAcls: true
               restrictPublicBuckets: true
             serverSideEncryptionConfiguration:
               rules:
