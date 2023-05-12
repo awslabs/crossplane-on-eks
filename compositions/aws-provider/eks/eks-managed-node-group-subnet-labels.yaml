@@ -75,13 +75,11 @@ spec:
             - type: string
               string:
                 fmt: "%s-eks-cluster-conn"
+        - type: ToCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: status.clusterName
         - fromFieldPath: spec.writeConnectionSecretToRef.namespace
           toFieldPath: spec.writeConnectionSecretToRef.namespace
-#        - type: ToCompositeFieldPath
-#          fromFieldPath: status.atProvider.identity.oidc.issuer
-#          toFieldPath: status.eks.oidc
-#          policy:
-#            fromFieldPath: Optional
       connectionDetails:
         - name: cluster-ca
           fromConnectionSecretKey: clusterCA
@@ -187,6 +185,7 @@ spec:
               maxSize:
             capacityType:
             instanceTypes:
+              - m5.large
       patches:
         - type: PatchSet
           patchSetName: common-parameters
