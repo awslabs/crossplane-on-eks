@@ -1,6 +1,6 @@
 # EKS Composition examples
 
-## EKS with Cluster Auto Scaler
+## EKS with Cluster Autoscaler
 
 
 Use the [EKS CAS claim file](./eks-cas-claim.yaml) to deploy an EKS cluster wth CAS installed. 
