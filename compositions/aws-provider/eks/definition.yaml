@@ -21,15 +21,9 @@ spec:
   versions:
     - name: v1alpha1
       additionalPrinterColumns:
-      - jsonPath: .status.conditions[?(@.type=='Ready')].status
-        name: READY
+      - jsonPath: .status.clusterName
+        name: CLUSTER-NAME
         type: string
-      - jsonPath: .status.conditions[?(@.type=='Synced')].status
-        name: SYNCED
-        type: string
-      - jsonPath: .metadata.creationTimestamp
-        name: AGE
-        type: date
       served: true
       referenceable: true
       schema:
@@ -43,11 +37,10 @@ spec:
                   description: EKS Input parameters
                   type: object
                   properties:
-
                     version:
                       description: Kubernetes Version
                       type: string
-                      enum: [ "1.21", "1.22", "1.23" ]
+                      enum: [ "1.22", "1.23", "1.24", "1.25" ]
                     endpointPrivateAccess:
                       description: endpointPrivateAccess
                       type: boolean
@@ -66,6 +59,10 @@ spec:
                       description: Name of network to use for label-based subnet lookup (subnet label 'network.awsblueprints.io/network-id'). Unused in compositions that use explicit subnet Id through the 'subnetIds' parameter
                       type: string
                       default: ""
+                    adminRole:
+                      description: Name of the role in the same account to give administrator access to this cluster.
+                      type: string
+                      default: Admin
                   required:
                     - version
                 managedNodeGroups:
@@ -106,8 +103,6 @@ spec:
                         type: string
                       type: array
                       description: Instance Type.
-                      default:
-                       - m5.large
                   required:
                     - minSize
                 resourceConfig:
@@ -138,5 +133,21 @@ spec:
                 - parameters
                 - resourceConfig
                 - managedNodeGroups
+            status:
+              properties:
+                oidcIssuerUrl:
+                  type: string
+                oidcEKS:
+                  type: string
+                accountID:
+                  type: string
+                nodeGroupArn:
+                  type: string
+                clusterName:
+                  type: string
+                roleArnCAS:
+                  type: string
+                roleArnCSI:
+                  type: string
           required:
             - spec
