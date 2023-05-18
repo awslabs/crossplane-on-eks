@@ -1,0 +1,40 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+#----------------------------------------------------------------------------------
+# This example resource creates the following resources
+#     1. EKS Cluster with VPC
+#     2. EKS Cluster IAM Role
+#     3. Attaches EKS Cluster Policies to the IAM Role
+#     4. EKS Managed Node group
+#     5. IAM Role for EKS Managed Node group
+#     6. Attaches EKS Managed Node Policies to the IAM Role
+#     7. Update the aws-auth config map to allow admin access (defaults to Admin role)
+#     8. Installs Cluster Auto Scaler with proper roles.
+#----------------------------------------------------------------------------------
+---
+apiVersion: cluster.awsblueprints.io/v1alpha1
+kind: amazonEks
+metadata:
+  name: example-cas
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+      awsblueprints.io/subnet-selection: label
+      service: eks-cas
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: us-west-2
+  parameters:
+    # This field tells which role should have admin access to this cluster.
+    adminRole: Admin
+    version: "1.24"
+    endpointPrivateAccess: false
+    endpointPublicAccess: true
+  managedNodeGroups:
+    minSize: 2
+  writeConnectionSecretToRef:
+    name: xplane-eks-cluster-cas
