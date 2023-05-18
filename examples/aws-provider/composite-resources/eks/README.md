@@ -2,6 +2,7 @@
 
 ## EKS with Cluster Autoscaler
 
+_NOTE:_ Using Karpenter with the community provider is impossible due to its lack of support for necessary CloudWatch resources. See [this issue for more information](https://github.com/awslabs/crossplane-on-eks/issues/127)
 
 Use the [EKS CAS claim file](./eks-cas-claim.yaml) to deploy an EKS cluster wth CAS installed. 
 
