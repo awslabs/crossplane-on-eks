@@ -66,7 +66,6 @@ spec:
                     hub:
                       services:
                         dask-gateway:
-                          apiToken: '36b06f3dcb40d7344aa08c1189105ec96979696658dcc7dc2459ce0f224c4c66'
                           display: false
                       extraConfig:
                         # Register Dask Gateway service and setup singleuser environment.
@@ -110,8 +109,6 @@ spec:
                                   break
                           else:
                               print("dask-gateway service not found, this should not happen!")
-                        10-use-dummy-pass: |
-                          c.DummyAuthenticator.password = "mySuperSecretPassword1337"
                     singleuser:
                       image:
                         name: pangeo/base-notebook  # Image to use for singleuser environment. Must include dask-gateway.
@@ -126,9 +123,6 @@ spec:
                       prefix: "/services/dask-gateway"  # Users connect to the Gateway through the JupyterHub service.
                       auth:
                         type: jupyterhub  # Use JupyterHub to authenticate with Dask Gateway
-                        jupyterhub:
-                          apiToken: '36b06f3dcb40d7344aa08c1189105ec96979696658dcc7dc2459ce0f224c4c66'
-                          # apiUrl: http://ac7f0b1a7bf8e4cb89f7a12a5b94796b-323918181.us-west-2.elb.amazonaws.com/hub/api
 
                     traefik:
                       service:
@@ -160,6 +154,16 @@ spec:
               - configMapKeyRef:
                   key: base-config.yaml
                   name: daskhub-base-chart-values
+                  namespace: 'invalid'
+                  optional: false
+              - configMapKeyRef:
+                  key: config.yaml
+                  name: daskhub-custom-values
+                  namespace: 'invalid'
+                  optional: true
+              - secretKeyRef:
+                  key: config.yaml
+                  name: daskhub-sensitive-values # any other sensitive values should go here. 
                   namespace: 'invalid'
                   optional: false
             values:
@@ -219,6 +223,10 @@ spec:
           patchSetName: common-fields-kubernetes
         - fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
           toFieldPath: spec.forProvider.valuesFrom[0].configMapKeyRef.namespace
+        - fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+          toFieldPath: spec.forProvider.valuesFrom[1].configMapKeyRef.namespace
+        - fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+          toFieldPath: spec.forProvider.valuesFrom[2].secretKeyRef.namespace
         - fromFieldPath: spec.parameters.targetNS
           toFieldPath: spec.forProvider.namespace
     - name: s3-bucket-users
