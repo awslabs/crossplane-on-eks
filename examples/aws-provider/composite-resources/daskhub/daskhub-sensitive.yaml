@@ -9,12 +9,12 @@ stringData:
       hub:
         extraConfig:
           10-use-dummy-pass: |
-            c.DummyAuthenticator.password = "REPLACEME"
+            c.DummyAuthenticator.password = "$REPLACEME"
         services:
           dask-gateway:
-            apiToken: REPLACEME
+            apiToken: $REPLACEME
     dask-gateway:
       gateway:
         auth:
           jupyterhub:
-            apiToken: REPLACEME
+            apiToken: $REPLACEME
