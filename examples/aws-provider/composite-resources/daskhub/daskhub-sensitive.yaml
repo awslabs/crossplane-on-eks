@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: daskhub-sensitive-values
+  namespace: default
+stringData:
+  config.yaml: |
+    jupyterhub:
+      hub:
+        extraConfig:
+          10-use-dummy-pass: |
+            c.DummyAuthenticator.password = "$REPLACEME"
+        services:
+          dask-gateway:
+            apiToken: $REPLACEME
+    dask-gateway:
+      gateway:
+        auth:
+          jupyterhub:
+            apiToken: $REPLACEME

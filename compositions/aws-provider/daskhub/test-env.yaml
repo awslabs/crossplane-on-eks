@@ -1,0 +1,428 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: daskhub-password.awsblueprints.io
+  labels:
+    awsblueprints.io/configuration: password
+    awsblueprints.io/environment: test
+spec:
+  writeConnectionSecretsToNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: awsblueprints.io/v1alpha1
+    kind: XDaskHub
+  patchSets:
+    - name: common-fields-aws
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.awsProviderConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.deletionPolicy
+          toFieldPath: spec.deletionPolicy
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+    - name: common-fields-kubernetes
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.kubernetesProviderConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.deletionPolicy
+          toFieldPath: spec.deletionPolicy
+  resources:
+    - name: base-chart-values
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: v1
+              kind: ConfigMap
+              metadata:
+                name: daskhub-base-chart-values
+                namespace: invalid
+              data:
+                base-config.yaml: |-
+                  # DaskHub configuration values
+                  # ----------------------------
+                  rbac:
+                    enabled: true  # Create and use roles and service accounts on an RBAC-enabled cluster.
+
+                  jupyterhub:
+                    # JupyterHub configuration goes here.
+                    # See https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/master/jupyterhub/values.yaml
+                    proxy:
+                      service:
+                        type: ClusterIP
+                    cull:
+                      enabled: true
+                      timeout: 3600
+                      every: 300
+                    hub:
+                      services:
+                        dask-gateway:
+                          display: false
+                      extraConfig:
+                        # Register Dask Gateway service and setup singleuser environment.
+                        00-add-dask-gateway-values: |
+                          # 1. Sets `DASK_GATEWAY__PROXY_ADDRESS` in the singleuser environment.
+                          # 2. Adds the URL for the Dask Gateway JupyterHub service.
+                          import os
+
+                          # These are set by jupyterhub.
+                          release_name = os.environ["HELM_RELEASE_NAME"]
+                          release_namespace = os.environ["POD_NAMESPACE"]
+
+                          if "PROXY_HTTP_SERVICE_HOST" in os.environ:
+                              # https is enabled, we want to use the internal http service.
+                              gateway_address = "http://{}:{}/services/dask-gateway/".format(
+                                  os.environ["PROXY_HTTP_SERVICE_HOST"],
+                                  os.environ["PROXY_HTTP_SERVICE_PORT"],
+                              )
+                              print("Setting DASK_GATEWAY__ADDRESS {} from HTTP service".format(gateway_address))
+                          else:
+                              gateway_address = "http://proxy-public/services/dask-gateway"
+                              print("Setting DASK_GATEWAY__ADDRESS {}".format(gateway_address))
+
+                          # Internal address to connect to the Dask Gateway.
+                          c.KubeSpawner.environment.setdefault("DASK_GATEWAY__ADDRESS", gateway_address)
+                          # Internal address for the Dask Gateway proxy.
+                          c.KubeSpawner.environment.setdefault("DASK_GATEWAY__PROXY_ADDRESS", "gateway://traefik-{}-dask-gateway.{}:80".format(release_name, release_namespace))
+                          # Relative address for the dashboard link.
+                          c.KubeSpawner.environment.setdefault("DASK_GATEWAY__PUBLIC_ADDRESS", "/services/dask-gateway/")
+                          # Use JupyterHub to authenticate with Dask Gateway.
+                          c.KubeSpawner.environment.setdefault("DASK_GATEWAY__AUTH__TYPE", "jupyterhub")
+
+                          # Adds Dask Gateway as a JupyterHub service to make the gateway available at
+                          # {HUB_URL}/services/dask-gateway
+                          service_url = "http://traefik-{}-dask-gateway.{}".format(release_name, release_namespace)
+                          for service in c.JupyterHub.services:
+                              if service["name"] == "dask-gateway":
+                                  if not service.get("url", None):
+                                      print("Adding dask-gateway service URL")
+                                      service.setdefault("url", service_url)
+                                  break
+                          else:
+                              print("dask-gateway service not found, this should not happen!")
+                    singleuser:
+                      image:
+                        name: pangeo/base-notebook  # Image to use for singleuser environment. Must include dask-gateway.
+                        tag: "2023.01.13"
+                      defaultUrl: "/lab"  # Use jupyterlab by defualt.
+
+                  dask-gateway:
+                    enabled: true  # Enabling dask-gateway will install Dask Gateway as a dependency.
+                    # Futher Dask Gateway configuration goes here
+                    # See https://github.com/dask/dask-gateway/blob/master/resources/helm/dask-gateway/values.yaml
+                    gateway:
+                      prefix: "/services/dask-gateway"  # Users connect to the Gateway through the JupyterHub service.
+                      auth:
+                        type: jupyterhub  # Use JupyterHub to authenticate with Dask Gateway
+
+                    traefik:
+                      service:
+                        type: ClusterIP  # Access Dask Gateway through JupyterHub. To access the Gateway from outside JupyterHub, this must be changed to a `LoadBalancer`.
+
+                  dask-kubernetes:
+                    # Use dask-kubernetes, rather than Dask Gateway, for creating Dask Clusters.
+                    # Enabling this also requires
+                    # 1. Setting `jupyterhub.singleuser.serviceAccountName: daskkubernetes`.
+                    # 2. Ensuring that `dask-kubernetes` is in your singleuser environment.
+                    enabled: false
+          providerConfigRef:
+            name: default # We assume this exists and has the right privileges.
+      patches:
+        - fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+          toFieldPath: spec.forProvider.manifest.metadata.namespace
+    - name: daskhub-chart
+      base:
+        apiVersion: helm.crossplane.io/v1beta1
+        kind: Release
+        spec:
+          forProvider:
+            chart:
+              name: daskhub
+              repository: https://helm.dask.org/
+              version: 2023.1.0
+            namespace: daskhub
+            valuesFrom:
+              - configMapKeyRef:
+                  key: base-config.yaml
+                  name: daskhub-base-chart-values
+                  namespace: 'invalid'
+                  optional: false
+              - configMapKeyRef:
+                  key: config.yaml
+                  name: daskhub-custom-values
+                  namespace: 'invalid'
+                  optional: true
+              - secretKeyRef:
+                  key: config.yaml
+                  name: daskhub-sensitive-values # any other sensitive values should go here. 
+                  namespace: 'invalid'
+                  optional: false
+            values:
+              jupyterhub:
+                singleuser:
+                  serviceAccountName: jupyter-user
+                  profileList:
+                    - display_name: "Small Server"
+                      description: "Small notebook server. 1GB RAM/1 CPU reserved. Up to 4GB RAM/4 CPU as needed."
+                      default: true
+                      kubespawner_override:
+                        mem_guarantee: 1G
+                        mem_limit: 4G
+                        cpu_guarantee: 1
+                        cpu_limit: 4
+                      profile_options:
+                        image:
+                          display_name: Image
+                          choices:
+                            vanila:
+                              display_name: Vanila Notebook
+                              slug: "vanila"
+                              kubespawner_override:
+                                image: "jupyterhub/singleuser:3"
+                            tensorflow:
+                              display_name: Pangeo Tensorflow ML Notebook
+                              slug: "tensorflow"
+                              kubespawner_override:
+                                image: "pangeo/ml-notebook:latest"
+                            pytorch:
+                              display_name: Pangeo PyTorch ML Notebook
+                              default: true
+                              slug: "pytorch"
+                              kubespawner_override:
+                                image: "pangeo/pytorch-notebook:latest"
+                    - display_name: "Large Server"
+                      description: "Large notebook server. 2GB RAM/2 CPU reserved. Up to 8GB RAM/4 CPU as needed."
+                      kubespawner_override:
+                        mem_guarantee: 2G
+                        mem_limit: 8G
+                        cpu_guarantee: 2
+                        cpu_limit: 4
+                    - display_name: "Extra Large Server"
+                      description: "Extra Large notebook server. 16GB RAM/4 CPU reserved."
+                      kubespawner_override:
+                        mem_guarantee: 13G
+                        mem_limit: 16G
+                        cpu_guarantee: 3
+                        cpu_limit: 4
+                  cpu:
+                    guarantee: 1
+                  memory:
+                    guarantee: 1G
+                    limit: 4G
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-kubernetes
+        - fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+          toFieldPath: spec.forProvider.valuesFrom[0].configMapKeyRef.namespace
+        - fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+          toFieldPath: spec.forProvider.valuesFrom[1].configMapKeyRef.namespace
+        - fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+          toFieldPath: spec.forProvider.valuesFrom[2].secretKeyRef.namespace
+        - fromFieldPath: spec.parameters.targetNS
+          toFieldPath: spec.forProvider.namespace
+    - name: s3-bucket-users
+      base:
+        apiVersion: s3.aws.crossplane.io/v1beta1
+        kind: Bucket
+        spec:
+          forProvider:
+            objectOwnership: BucketOwnerEnforced
+            publicAccessBlockConfiguration:
+              blockPublicPolicy: true
+              restrictPublicBuckets: true
+            serverSideEncryptionConfiguration:
+              rules:
+                - applyServerSideEncryptionByDefault:
+                    sseAlgorithm: AES256
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-aws
+        - type: CombineFromComposite
+          combine:
+            variables:
+              - fromFieldPath: metadata.labels[crossplane.io/claim-name]
+              - fromFieldPath: metadata.uid
+            strategy: string
+            string:
+              fmt: '%s-%s'
+          toFieldPath: metadata.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tagging.tagSet
+          policy:
+            mergeOptions:
+              appendSlice: true
+              keepMapValues: true
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.locationConstraint
+        - type: ToCompositeFieldPath
+          fromFieldPath: metadata.annotations[crossplane.io/external-name]
+          toFieldPath: status.bucketNameUsers
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.arn
+          toFieldPath: status.bucketArnUsers
+    # IRSA bucket access for SA named jupyter-user
+    - name: s3-policy
+      base:
+        apiVersion: iam.aws.crossplane.io/v1beta1
+        kind: Policy
+        spec:
+          forProvider:
+            name: ""
+            document: ""
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-aws
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.arn
+          toFieldPath: status.policyArnS3
+        - fromFieldPath: metadata.labels[crossplane.io/claim-name]
+          toFieldPath: spec.forProvider.name
+          transforms:
+            - type: string
+              string:
+                fmt: "user-bucket-%s"
+        - type: ToCompositeFieldPath
+          toFieldPath: status.awsAccountId
+          fromFieldPath: status.atProvider.arn
+          transforms:
+            - type: string
+              string:
+                type: Regexp
+                regexp:
+                  match: 'arn:aws:iam::(\d+):.*'
+                  group: 1
+        - type: CombineFromComposite
+          toFieldPath: spec.forProvider.document
+          combine:
+            variables:
+            - fromFieldPath: status.bucketArnUsers
+            - fromFieldPath: status.bucketArnUsers
+            strategy: string
+            string:
+              fmt: |
+                  {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": [
+                                "s3:PutObject",
+                                "s3:GetObject",
+                                "s3:ListBucketMultipartUploads",
+                                "s3:AbortMultipartUpload",
+                                "s3:ListBucketVersions",
+                                "s3:CreateBucket",
+                                "s3:ListBucket",
+                                "s3:DeleteObject",
+                                "s3:GetBucketLocation",
+                                "s3:ListMultipartUploadParts"
+                            ],
+                            "Resource": [
+                                "%s",
+                                "%s/*"
+                            ]
+                        },
+                        {
+                            "Effect": "Allow",
+                            "Action": "s3:ListAllMyBuckets",
+                            "Resource": "*"
+                        }
+                    ]
+                  }
+    - name: single-user-role
+      base:
+        apiVersion: iam.aws.crossplane.io/v1beta1
+        kind: Role
+        metadata:
+          labels:
+            role: irsa-single-user
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-aws
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.roleID
+          toFieldPath: status.singleUserRoleName
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.arn
+          toFieldPath: status.singleUserRoleArn
+        - type: CombineFromComposite
+          combine:
+            variables:
+            - fromFieldPath: status.awsAccountId
+            - fromFieldPath: spec.parameters.eksOidc
+            - fromFieldPath: spec.parameters.eksOidc
+            - fromFieldPath: spec.parameters.eksOidc
+            - fromFieldPath: spec.parameters.targetNS
+            strategy: string
+            string:
+              fmt: |
+                 {
+                    "Version": "2012-10-17",
+                    "Statement": [{
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Federated": "arn:aws:iam::%s:oidc-provider/%s"
+                    },
+                  "Action": "sts:AssumeRoleWithWebIdentity",
+                  "Condition": {
+                    "StringEquals": {
+                    "%s:aud": "sts.amazonaws.com",
+                    "%s:sub": "system:serviceaccount:%s:jupyter-user"
+                                    }
+                                }
+                      }]
+                 }
+          toFieldPath: spec.forProvider.assumeRolePolicyDocument
+          policy:
+            fromFieldPath: Required
+    - name: s3-policy-attachment
+      base:
+        apiVersion: iam.aws.crossplane.io/v1beta1
+        kind: RolePolicyAttachment
+        spec:
+          forProvider:
+            roleNameSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: irsa-single-user
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-aws
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.policyArnS3
+          toFieldPath: spec.forProvider.policyArn
+    - name: single-user-sa
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: v1
+              kind: ServiceAccount
+              metadata:
+                annotations:
+                  eks.amazonaws.com/role-arn: arn
+                name: jupyter-user
+                namespace: invalid
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-kubernetes
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.singleUserRoleArn
+          toFieldPath: spec.forProvider.manifest.metadata.annotations[eks.amazonaws.com/role-arn]
+          policy:
+            fromFieldPath: Required
+        - fromFieldPath: spec.parameters.targetNS
+          toFieldPath: spec.forProvider.manifest.metadata.namespace
