@@ -34,6 +34,9 @@ spec:
           toFieldPath: spec.providerConfigRef.name
           policy:
             fromFieldPath: Required
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.deletionPolicy
+          toFieldPath: spec.deletionPolicy
   resources:
     - name: vpc
       base:
@@ -670,8 +673,10 @@ spec:
                 fmt: "eks-aws-auth-%s"
           policy:
             fromFieldPath: Required
-        - type: PatchSet
-          patchSetName: k8s-config
+        - fromFieldPath: metadata.labels[crossplane.io/claim-name]
+          toFieldPath: spec.providerConfigRef.name
+          policy:
+            fromFieldPath: Required
         - type: CombineFromComposite
           combine:
             strategy: string
