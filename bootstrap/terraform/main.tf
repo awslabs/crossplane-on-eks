@@ -89,7 +89,7 @@ module "ebs_csi_driver_irsa" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.10"
+  version = "~> 19.13"
 
   cluster_name                   = local.name
   cluster_version                = local.cluster_version
@@ -98,17 +98,10 @@ module "eks" {
   cluster_addons = {
     aws-ebs-csi-driver = {
       service_account_role_arn = module.ebs_csi_driver_irsa.iam_role_arn
-      most_recent              = true
     }
-    coredns = {
-      most_recent = true
-    }
-    kube-proxy = {
-      most_recent = true
-    }
-    vpc-cni = {
-      most_recent = true
-    }
+    coredns =    {}
+    kube-proxy = {}
+    vpc-cni =    {}
   }
 
   vpc_id     = module.vpc.vpc_id
@@ -133,23 +126,23 @@ module "eks" {
 # EKS Addons
 #---------------------------------------------------------------
 
-module "eks_blueprints_kubernetes_addons" {
-  source = "github.com/aws-ia/terraform-aws-eks-blueprints-addons"
+module "eks_blueprints_addons" {
+  source  = "aws-ia/eks-blueprints-addons/aws"
+  version = "0.2.0"
 
   cluster_name          = module.eks.cluster_name
   cluster_endpoint      = module.eks.cluster_endpoint
   cluster_version       = module.eks.cluster_version
-  oidc_provider         = module.eks.oidc_provider
   oidc_provider_arn     = module.eks.oidc_provider_arn
   enable_argocd         = true
-  argocd_helm_config = {
-    namespace = local.argocd_namespace
-    version   = "5.28.0" # ArgoCD v2.6.7
-    values    = [file("${path.module}/argocd-values.yaml")]
+  argocd = {
+    namespace       = local.argocd_namespace
+    chart_version   = "5.34.6" # ArgoCD v2.7.3
+    values          = [file("${path.module}/argocd-values.yaml")]
   }
-  enable_karpenter      = true
-  enable_metrics_server = true
-  enable_prometheus     = true
+  enable_karpenter                 = true
+  enable_metrics_server            = true
+  enable_kube_prometheus_stack     = true
 
   depends_on = [module.eks.managed_node_groups]
 }
@@ -162,7 +155,7 @@ module "eks_blueprints_crossplane_addons" {
   # Default helm chart and providers values set at https://github.com/aws-ia/terraform-aws-eks-blueprints/blob/main/modules/kubernetes-addons/crossplane/locals.tf
   enable_crossplane = true
   crossplane_helm_config = {
-    version = "1.11.2"
+    version = "1.12.1"
     values = [yamlencode({
       args    = ["--enable-environment-configs"]
       metrics = {
@@ -195,9 +188,9 @@ module "eks_blueprints_crossplane_addons" {
   #---------------------------------------------------------
   crossplane_aws_provider = {
     # !NOTE!: only enable one AWS provider at a time
-    enable          = true
+    enable          = false
     provider_config = "aws-provider-config"
-    provider_aws_version = "v0.38.0"
+    provider_aws_version = "v0.40.0"
     # to override the default irsa policy:
     # additional_irsa_policies = ["arn:aws:iam::aws:policy/AmazonS3FullAccess"]
   }
@@ -209,7 +202,7 @@ module "eks_blueprints_crossplane_addons" {
     # !NOTE!: only enable one AWS provider at a time
     enable          = true
     provider_config = "aws-provider-config"
-    provider_aws_version = "v0.32.1"
+    provider_aws_version = "v0.35.0"
     # to override the default irsa policy:
     # additional_irsa_policies = ["arn:aws:iam::aws:policy/AmazonS3FullAccess"]
   }
@@ -219,7 +212,7 @@ module "eks_blueprints_crossplane_addons" {
   #---------------------------------------------------------
   crossplane_kubernetes_provider = {
     enable = true
-    provider_kubernetes_version = "v0.7.0"
+    provider_kubernetes_version = "v0.9.0"
   }
 
   #---------------------------------------------------------
@@ -227,10 +220,10 @@ module "eks_blueprints_crossplane_addons" {
   #---------------------------------------------------------
   crossplane_helm_provider = {
     enable = true
-    provider_helm_version = "v0.14.0"
+    provider_helm_version = "v0.15.0"
   }
 
-  depends_on = [module.eks.managed_node_groups, module.eks_blueprints_kubernetes_addons]
+  depends_on = [module.eks.managed_node_groups, module.eks_blueprints_addons]
 }
 
 
@@ -240,7 +233,7 @@ module "eks_blueprints_crossplane_addons" {
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 3.0"
+  version = "~> 5.0"
 
   name = local.vpc_name
   cidr = local.vpc_cidr
@@ -251,15 +244,6 @@ module "vpc" {
 
   enable_nat_gateway   = true
   single_nat_gateway   = true
-  enable_dns_hostnames = true
-
-  # Manage so we can name
-  manage_default_network_acl    = true
-  default_network_acl_tags      = { Name = "${local.name}-default" }
-  manage_default_route_table    = true
-  default_route_table_tags      = { Name = "${local.name}-default" }
-  manage_default_security_group = true
-  default_security_group_tags   = { Name = "${local.name}-default" }
 
   public_subnet_tags = {
     "kubernetes.io/role/elb" = 1
