@@ -55,6 +55,10 @@ locals {
 
   argocd_namespace = "argocd"
 
+  # !NOTE!: only enable one AWS provider at a time
+  crossplane_aws_provider_enable         = true
+  crossplane_upbound_aws_provider_enable = true
+
   tags = {
     Blueprint  = local.name
     GithubRepo = "github.com/awslabs/crossplane-on-eks"
@@ -138,7 +142,11 @@ module "eks_blueprints_addons" {
   argocd = {
     namespace       = local.argocd_namespace
     chart_version   = "5.34.6" # ArgoCD v2.7.3
-    values          = [file("${path.module}/argocd-values.yaml")]
+    values          = [
+      templatefile("${path.module}/argocd-values.yaml", {
+        crossplane_aws_provider_enable = local.crossplane_aws_provider_enable
+        crossplane_upbound_aws_provider_enable = local.crossplane_upbound_aws_provider_enable
+      })]
   }
   enable_karpenter                 = true
   enable_metrics_server            = true
@@ -188,7 +196,7 @@ module "eks_blueprints_crossplane_addons" {
   #---------------------------------------------------------
   crossplane_aws_provider = {
     # !NOTE!: only enable one AWS provider at a time
-    enable          = false
+    enable          = local.crossplane_aws_provider_enable
     provider_config = "aws-provider-config"
     provider_aws_version = "v0.40.0"
     # to override the default irsa policy:
@@ -200,7 +208,7 @@ module "eks_blueprints_crossplane_addons" {
   #---------------------------------------------------------
   crossplane_upbound_aws_provider = {
     # !NOTE!: only enable one AWS provider at a time
-    enable          = true
+    enable          = local.crossplane_upbound_aws_provider_enable
     provider_config = "aws-provider-config"
     provider_aws_version = "v0.35.0"
     # to override the default irsa policy:
