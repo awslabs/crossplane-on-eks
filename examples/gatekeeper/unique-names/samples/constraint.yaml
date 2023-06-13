@@ -1,0 +1,9 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: RequireComposition
+metadata:
+  name: crossplane-provider-config-ns
+spec:
+  match:
+    kinds:
+      - apiGroups: ["network.awsblueprints.io"]
+        kinds: ["amazonVpc"]
