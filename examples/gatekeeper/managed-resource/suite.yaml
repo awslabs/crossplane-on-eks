@@ -8,11 +8,11 @@ tests:
   constraint: samples/constraint.yaml
   cases:
   - name: missing owner ref
-    object: samples/missing_owner_ref_disallowed.yaml
+    object: samples/missing-owner-ref-disallowed.yaml
     assertions:
     - violations: yes
   - name: invalid owner ref
-    object: samples/invalid_ownere_ref_disallowed.yaml
+    object: samples/invalid-ownere-ref-disallowed.yaml
     assertions:
     - violations: yes
   - name: allowed
