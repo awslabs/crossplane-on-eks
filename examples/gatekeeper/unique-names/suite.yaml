@@ -8,14 +8,14 @@ tests:
   constraint: samples/constraint.yaml
   cases:
   - name: have duplicate name
-    object: samples/duplicate_name.yaml
+    object: samples/duplicate-name.yaml
     inventory:
-    - samples/duplicate_name_data.yaml # This contains a sample to mock an already existing object
+    - samples/duplicate-name-data.yaml # This contains a sample to mock an already existing object
     assertions:
     - violations: yes
   - name: allowed
     object: samples/allowed.yaml
     inventory:
-    - samples/allowed_data.yaml # This contains a sample to mock an already existing object
+    - samples/allowed-data.yaml # This contains a sample to mock an already existing object
     assertions:
     - violations: no
