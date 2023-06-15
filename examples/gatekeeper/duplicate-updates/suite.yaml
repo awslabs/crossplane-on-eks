@@ -1,0 +1,27 @@
+kind: Suite
+apiVersion: test.gatekeeper.sh/v1alpha1
+metadata:
+  name: block-duplicate-updates
+tests:
+- name: block-duplicate-updates
+  template: template.yaml
+  constraint: samples/constraint.yaml
+  cases:
+  - name: have duplicate name
+    object: samples/duplicate-name-full.yaml
+    inventory:
+    - samples/duplicate-name-data.yaml # This contains a sample to mock an already existing object
+    assertions:
+    - violations: 1
+  - name: allow to have duplicate name with observe only
+    object: samples/duplicate-name-observe.yaml
+    inventory:
+    - samples/duplicate-name-data.yaml # This contains a sample to mock an already existing object
+    assertions:
+    - violations: no
+  - name: allowed unique names
+    object: samples/allowed-unique.yaml
+    inventory:
+    - samples/allowed-data.yaml # This contains a sample to mock an already existing object
+    assertions:
+    - violations: no
