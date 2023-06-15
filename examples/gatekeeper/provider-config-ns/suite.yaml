@@ -8,11 +8,11 @@ tests:
   constraint: samples/constraint.yaml
   cases:
   - name: missing-claim-namespace
-    object: samples/missing_claim_disallowed.yaml
+    object: samples/missing-claim-disallowed.yaml
     assertions:
     - violations: yes
   - name: provider-config-name-mismatch
-    object: samples/namespace_mismatch_disallowed.yaml
+    object: samples/namespace-mismatch-disallowed.yaml
     assertions:
     - violations: yes
   - name: allowed
@@ -20,6 +20,6 @@ tests:
     assertions:
     - violations: no
   - name: allowed-not-applicable
-    object: samples/not_applicable_allowed.yaml
+    object: samples/not-applicable-allowed.yaml
     assertions:
     - violations: no
