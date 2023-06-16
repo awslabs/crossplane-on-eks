@@ -1,0 +1,24 @@
+apiVersion: s3.aws.crossplane.io/v1beta1
+kind: Bucket
+metadata:
+  annotations:
+    crossplane.io/external-create-pending: "2023-06-15T21:17:04Z"
+    crossplane.io/external-create-succeeded: "2023-06-15T21:17:05Z"
+    crossplane.io/external-name: my-bucket-456
+  labels:
+    crossplane.io/claim-name: standard-object-storage
+    crossplane.io/claim-namespace: default
+    crossplane.io/composite: standard-object-storage-xwghv
+  name: standard-object-storage-new
+spec:
+  deletionPolicy: Delete
+  forProvider:
+    locationConstraint: us-west-2
+    objectOwnership: BucketOwnerEnforced
+    paymentConfiguration:
+      payer: BucketOwner
+    publicAccessBlockConfiguration:
+      blockPublicAcls: true
+      blockPublicPolicy: true
+      ignorePublicAcls: true
+      restrictPublicBuckets: true

@@ -1,0 +1,29 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: awsblueprints.io/v1alpha1
+kind: ObjectStorage
+metadata:
+  name: standard-object-storage-copy
+  namespace: default
+  annotations:
+    crossplane.io/external-name: standard-object-storage-c7lgj-bhg9s
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+      s3.awsblueprints.io/configuration: standard
+  writeConnectionSecretToRef:
+    name: bucket-info
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: us-west-2
+    tags:
+      - key: env
+        value: test
+      - key: anotherKey
+        value: anotherValue
+      - key: newkeyfromcopy
+        value: fromcopy
+
