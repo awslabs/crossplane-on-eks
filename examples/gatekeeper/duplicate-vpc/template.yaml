@@ -25,13 +25,10 @@ spec:
             obj := data.inventory.namespace[_]["network.awsblueprints.io/v1alpha1"].amazonVpc[_]
             not identicalMetadata(obj, review)
             review.object.spec.parameters.vpcName == obj.spec.parameters.vpcName
-            managementPolicy := obj.spec.resourceConfig.managementPolicy
-            managementPolicy != "ObserveOnly"
-            review.object.spec.resourceConfig.managementPolicy != "ObserveOnly"
 
             msg := sprintf(
-              "vpcName %v is already managed by %v amazonVpc Claim in %v namespace with managementPolicy %v",
-              [review.object.spec.parameters.vpcName, obj.metadata.name, obj.metadata.namespace, managementPolicy],
+              "vpcName %v is already managed by %v amazonVpc Claim in %v namespace",
+              [review.object.spec.parameters.vpcName, obj.metadata.name, obj.metadata.namespace],
             )
         }
 

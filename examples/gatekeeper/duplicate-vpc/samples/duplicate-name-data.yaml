@@ -1,0 +1,26 @@
+apiVersion: network.awsblueprints.io/v1alpha1
+kind: amazonVpc
+metadata:
+  name: xplane-amazon-vpc-1
+  namespace: team1
+spec:
+  resourceConfig:
+    providerConfigName: aws-provider-config
+  parameters:
+    vpcName: us-east-1-acme-team-1
+    vpccidrBlock: "10.20.0.0/16"
+    amazonProvidedIpv6CidrBlock: true
+---
+apiVersion: network.awsblueprints.io/v1alpha1
+kind: amazonVpc
+metadata:
+  name: xplane-amazon-vpc-2
+  namespace: team2
+spec:
+  resourceConfig:
+    providerConfigName: aws-provider-config
+  parameters:
+    vpcName: us-east-1-acme-team-2
+    vpccidrBlock: "10.20.0.0/16"
+    amazonProvidedIpv6CidrBlock: true
+
