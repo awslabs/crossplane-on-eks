@@ -31,5 +31,3 @@ tests:
     - samples/existing-buckets.yaml # This contains a sample to mock an already existing object
     assertions:
     - violations: no
-
-

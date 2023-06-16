@@ -24,7 +24,7 @@ spec:
             obj.metadata.labels["crossplane.io/claim-name"] == review.object.metadata.name
         }
 
-        identicalMetadata(obj, review) {
+        sameBucketMR(obj, review) {
             obj.metadata.name == review.object.metadata.name
             obj.kind == review.object.kind
         }
@@ -49,7 +49,7 @@ spec:
             review := input.review
             review.object.kind == "Bucket"
             obj := data.inventory.cluster["s3.aws.crossplane.io/v1beta1"].Bucket[_]
-            not identicalMetadata(obj, review)
+            not sameBucketMR(obj, review)
             newBucket := review.object.metadata.annotations["crossplane.io/external-name"]
             existingBucket := obj.metadata.annotations["crossplane.io/external-name"]
             newBucket == existingBucket
@@ -59,4 +59,3 @@ spec:
               [review.object.metadata.name,newBucket,obj.metadata.name],
             )
         }
-
