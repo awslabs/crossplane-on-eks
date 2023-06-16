@@ -1,0 +1,37 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: requirecomposition
+  annotations:
+    description: >-
+      Disallows two vpcs with the name name
+spec:
+  crd:
+    spec:
+      names:
+        kind: RequireComposition
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package resourcealreadymanagedbycrossplane
+
+        identicalMetadata(obj, review) {
+            obj.metadata.namespace == review.object.metadata.namespace
+            obj.metadata.name == review.object.metadata.name
+        }
+
+        violation[{"msg": msg}] {
+            review := input.review
+            obj := data.inventory.namespace[_]["network.awsblueprints.io/v1alpha1"].amazonVpc[_]
+            not identicalMetadata(obj, review)
+            review.object.spec.parameters.vpcName == obj.spec.parameters.vpcName
+            managementPolicy := obj.spec.resourceConfig.managementPolicy
+            managementPolicy != "ObserveOnly"
+            review.object.spec.resourceConfig.managementPolicy != "ObserveOnly"
+
+            msg := sprintf(
+              "vpcName %v is already managed by %v amazonVpc Claim in %v namespace with managementPolicy %v",
+              [review.object.spec.parameters.vpcName, obj.metadata.name, obj.metadata.namespace, managementPolicy],
+            )
+        }
+

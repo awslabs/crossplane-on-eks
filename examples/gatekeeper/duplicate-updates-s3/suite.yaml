@@ -1,0 +1,33 @@
+kind: Suite
+apiVersion: test.gatekeeper.sh/v1alpha1
+metadata:
+  name: block-duplicate-s3-buckets
+tests:
+- name: crossplane-block-duplicate-s3-buckets
+  template: template.yaml
+  constraint: samples/constraint.yaml
+  cases:
+  - name: do not allow claim with duplicate bucket name
+    object: samples/not-allowed-claim.yaml
+    inventory:
+    - samples/existing-buckets.yaml # This contains a sample to mock an already existing object
+    assertions:
+    - violations: yes
+  - name: do not allow bucket MR with duplicate names
+    object: samples/not-allowed-bucket.yaml
+    inventory:
+    - samples/existing-buckets.yaml # This contains a sample to mock an already existing object
+    assertions:
+    - violations: yes
+  - name: allow claim with unique bucket name
+    object: samples/allowed-claim.yaml
+    inventory:
+    - samples/existing-buckets.yaml # This contains a sample to mock an already existing object
+    assertions:
+    - violations: no
+  - name: allow bucket MR with unique name
+    object: samples/allowed-bucket.yaml
+    inventory:
+    - samples/existing-buckets.yaml # This contains a sample to mock an already existing object
+    assertions:
+    - violations: no

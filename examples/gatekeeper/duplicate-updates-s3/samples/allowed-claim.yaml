@@ -1,0 +1,22 @@
+apiVersion: awsblueprints.io/v1alpha1
+kind: ObjectStorage
+metadata:
+  name: standard-object-storage
+  namespace: team-a
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+      s3.awsblueprints.io/configuration: standard
+  writeConnectionSecretToRef:
+    name: bucket-info
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    name: my-bucket-456
+    region: us-west-2
+    tags:
+      - key: env
+        value: test
+      - key: anotherKey
+        value: anotherValue

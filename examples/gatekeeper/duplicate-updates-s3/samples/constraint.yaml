@@ -1,0 +1,11 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: RequireS3
+metadata:
+  name: crossplane-s3
+spec:
+  match:
+    kinds:
+      - apiGroups: ["awsblueprints.io"]
+        kinds: ["ObjectStorage"]
+      - apiGroups: ["s3.aws.crossplane.io"]
+        kinds: ["Bucket"]

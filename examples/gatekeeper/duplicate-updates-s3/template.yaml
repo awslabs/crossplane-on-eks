@@ -1,0 +1,61 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: requires3
+  annotations:
+    description: >-
+      Disallows claims requesting bucket already managed
+spec:
+  crd:
+    spec:
+      names:
+        kind: RequireS3
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package resourcealreadymanagedbycrossplane
+
+        #violation[{"msg": msg}] {
+        #  msg := sprintf("REVIEW OBJECT: %v", [input.review])
+        #}
+
+        sameClaim(obj, review) {
+            obj.metadata.labels["crossplane.io/claim-namespace"] == review.object.metadata.namespace
+            obj.metadata.labels["crossplane.io/claim-name"] == review.object.metadata.name
+        }
+
+        sameBucketMR(obj, review) {
+            obj.metadata.name == review.object.metadata.name
+            obj.kind == review.object.kind
+        }
+
+        violation[{"msg": msg}] {
+            review := input.review
+            review.object.kind == "ObjectStorage"
+            obj := data.inventory.cluster["s3.aws.crossplane.io/v1beta1"].Bucket[_]
+            not sameClaim(obj, review)
+            claimName := review.object.metadata.name
+            claimNameSpace := review.object.metadata.namespace
+            bucket := review.object.spec.resourceConfig.name
+            bucket == obj.metadata.annotations["crossplane.io/external-name"]
+
+            msg := sprintf(
+              "Claim %v in namespace %v requesting Bucket %v is already managed by Bucket MR %v",
+              [claimName,claimNameSpace,bucket,obj.metadata.name],
+            )
+        }
+
+        violation[{"msg": msg}] {
+            review := input.review
+            review.object.kind == "Bucket"
+            obj := data.inventory.cluster["s3.aws.crossplane.io/v1beta1"].Bucket[_]
+            not sameBucketMR(obj, review)
+            newBucket := review.object.metadata.annotations["crossplane.io/external-name"]
+            existingBucket := obj.metadata.annotations["crossplane.io/external-name"]
+            newBucket == existingBucket
+
+            msg := sprintf(
+              "MR %v requesting Bucket %v is already managed by Bucket MR %v",
+              [review.object.metadata.name,newBucket,obj.metadata.name],
+            )
+        }
