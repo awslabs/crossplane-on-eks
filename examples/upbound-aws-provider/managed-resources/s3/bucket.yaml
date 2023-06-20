@@ -2,8 +2,6 @@ apiVersion: s3.aws.upbound.io/v1beta1
 kind: Bucket
 metadata:
   generateName: upbound-test-bucket-
-  annotations:
-    crossplane.io/external-name: aws-provider-upbound-s3-bucket
   labels:
     testing.upbound.io/example-name: s3
 spec:
