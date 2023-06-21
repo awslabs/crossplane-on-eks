@@ -5,7 +5,6 @@ metadata:
 spec:
   awsAccountID: "111122223333"
   eksOIDC: "oidc.eks.us-east-1.amazonaws.com/id/ABCDEFGHIJKLMNOPQRSTUVWXYZ123456"
-  serviceAccountName: irsa-example
   resourceConfig:
     providerConfigName: aws-provider-config
     region: us-east-1
