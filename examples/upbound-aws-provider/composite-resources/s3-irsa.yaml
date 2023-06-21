@@ -1,7 +1,7 @@
 apiVersion: awsblueprints.io/v1alpha1
-kind: IRSA
+kind: S3IRSA
 metadata:
-  name: irsa-example
+  name: s3-irsa-test
 spec:
   awsAccountID: "111122223333"
   eksOIDC: "oidc.eks.us-east-1.amazonaws.com/id/ABCDEFGHIJKLMNOPQRSTUVWXYZ123456"
