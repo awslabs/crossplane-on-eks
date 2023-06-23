@@ -9,6 +9,11 @@ spec:
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
     kind: XIRSA
+  environment:
+    environmentConfigs:
+      - type: Reference
+        ref:
+          name: irsa
   patchSets:
     - name: common-fields
       patches:
@@ -32,6 +37,22 @@ spec:
       patches:
         - type: PatchSet
           patchSetName: common-fields
+        - type: FromEnvironmentFieldPath
+          fromFieldPath: awsAccountID
+          toFieldPath: metadata.annotations[crossplane.io/awsaccountid]
+        - type: ToCompositeFieldPath
+          fromFieldPath: metadata.annotations[crossplane.io/awsaccountid]
+          toFieldPath: status.awsAccountID
+          policy:
+            fromFieldPath: Required
+        - type: FromEnvironmentFieldPath
+          fromFieldPath: eksOIDC
+          toFieldPath: metadata.annotations[crossplane.io/eksoidc]
+        - type: ToCompositeFieldPath
+          fromFieldPath: metadata.annotations[crossplane.io/eksoidc]
+          toFieldPath: status.eksOIDC
+          policy:
+            fromFieldPath: Required
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.arn
           toFieldPath: status.roleArn
@@ -41,8 +62,6 @@ spec:
           transforms:
             - type: string
               string:
-                type: TrimPrefix
-                trim: 'arn:aws:iam::.*:role/'
                 type: Regexp
                 regexp:
                   match: 'arn:aws:iam::(\d+):role/(.*)'
@@ -52,14 +71,12 @@ spec:
           toFieldPath: spec.forProvider.permissionsBoundary
         - type: CombineFromComposite
           toFieldPath: spec.forProvider.assumeRolePolicy
-          policy:
-            fromFieldPath: Required
           combine:
             variables:
-            - fromFieldPath: spec.awsAccountID
-            - fromFieldPath: spec.eksOIDC
-            - fromFieldPath: spec.eksOIDC
-            - fromFieldPath: spec.eksOIDC
+            - fromFieldPath: status.awsAccountID
+            - fromFieldPath: status.eksOIDC
+            - fromFieldPath: status.eksOIDC
+            - fromFieldPath: status.eksOIDC
             - fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
             - fromFieldPath: spec.serviceAccountName
             strategy: string

@@ -24,10 +24,6 @@ spec:
             spec:
               description: S3IRSASpec defines the desired state of S3IRSA
               properties:
-                awsAccountID:
-                  type: string
-                eksOIDC:
-                  type: string
                 policyArns:
                   items:
                     type: string
@@ -69,8 +65,6 @@ spec:
                 serviceAccountName:
                   type: string
               required:
-              - awsAccountID
-              - eksOIDC
               - resourceConfig
               type: object
             status:

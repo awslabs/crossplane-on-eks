@@ -3,8 +3,6 @@ kind: IRSA
 metadata:
   name: irsa-example
 spec:
-  awsAccountID: "111122223333"
-  eksOIDC: "oidc.eks.us-east-1.amazonaws.com/id/ABCDEFGHIJKLMNOPQRSTUVWXYZ123456"
   serviceAccountName: irsa-example
   resourceConfig:
     providerConfigName: aws-provider-config

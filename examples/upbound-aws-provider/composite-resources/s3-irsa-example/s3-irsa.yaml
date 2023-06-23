@@ -3,8 +3,6 @@ kind: S3IRSA
 metadata:
   name: s3-irsa-test
 spec:
-  awsAccountID: "111122223333"
-  eksOIDC: "oidc.eks.us-east-1.amazonaws.com/id/ABCDEFGHIJKLMNOPQRSTUVWXYZ123456"
   resourceConfig:
     providerConfigName: aws-provider-config
     region: us-east-1

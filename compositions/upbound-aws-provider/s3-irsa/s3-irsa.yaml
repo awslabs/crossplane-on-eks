@@ -42,12 +42,6 @@ spec:
         - type: PatchSet
           patchSetName: common-fields-composition
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.awsAccountID
-          toFieldPath: spec.awsAccountID
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.eksOIDC
-          toFieldPath: spec.eksOIDC
-        - type: FromCompositeFieldPath
           fromFieldPath: metadata.labels[crossplane.io/claim-name]
           toFieldPath: spec.serviceAccountName
         - type: ToCompositeFieldPath
@@ -62,7 +56,7 @@ spec:
             matchLabels:
               awsblueprints.io/provider: aws
               awsblueprints.io/environment: dev
-              iam.awsblueprints.io/policy-type: read
+              iam.awsblueprints.io/policy-type: write
               iam.awsblueprints.io/service: s3
       patches:
         - type: PatchSet

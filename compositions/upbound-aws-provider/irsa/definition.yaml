@@ -71,8 +71,6 @@ spec:
                 serviceAccountName:
                   type: string
               required:
-              - awsAccountID
-              - eksOIDC
               - serviceAccountName
               - resourceConfig
               type: object
@@ -82,6 +80,10 @@ spec:
                 roleArn:
                   type: string
                 roleName:
+                  type: string
+                awsAccountID:
+                  type: string
+                eksOIDC:
                   type: string
               type: object
           type: object
