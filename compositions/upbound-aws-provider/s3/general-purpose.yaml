@@ -98,3 +98,29 @@ spec:
           toFieldPath: spec.providerConfigRef.name
         - fromFieldPath: spec.resourceConfig.region
           toFieldPath: spec.forProvider.region
+    - name: config-map
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: v1
+              kind: ConfigMap
+              metadata:
+                name: #to-be-patched
+                namespace: #to-be-patched
+              data:
+                bucketName: #to-be-patched
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+          toFieldPath: spec.forProvider.manifest.metadata.namespace
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.labels[crossplane.io/claim-name]
+          toFieldPath: spec.forProvider.manifest.metadata.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.bucketName
+          toFieldPath: spec.forProvider.manifest.data.bucketName
+          policy:
+            fromFieldPath: Required
