@@ -94,5 +94,8 @@ The username is `admin` and the password can be obtained by executing:
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 ```
 
-### Sync the app and watch the s3-irsa-app come up.
-![S3 IRSA App Diagram](../../diagrams/argo-cd-s3-irsa-sync.gif)
+### Sync the ArgoCD app and watch the s3-irsa-app come up.
+![S3 IRSA App ArgoCD](../../diagrams/argo-cd-s3-irsa-sync.gif)
+
+### Check the pod logs to validate the application has access to the bucket
+![S3 IRSA App Logs](../../diagrams/s3-irsa-app-check-pod-logs.gif)
