@@ -48,7 +48,7 @@ export CLUSTER=$(kubectl config current-context)
 export EKS_OIDC=$(aws eks describe-cluster --name $CLUSTER --query "cluster.identity.oidc.issuer" --output text | cut -c 9-)
 export AWS_ACCOUNT=$(aws sts get-caller-identity --query "Account" --output text)
 ```
-Validate they populated
+Validate environment variables populated
 ```
 echo "$CLUSTER\n$EKS_OIDC\n$AWS_ACCOUNT"
 ```
@@ -59,6 +59,7 @@ oidc.eks.us-east-1.amazonaws.com/id/EXAMPLED539D4633E53DE1B71EXAMPLE
 111122223333
 ```
 
+Substitute values in the claim from environment variables
 ```shell
 envsubst < "environmentconfig-tmpl.yaml" > "environmentconfig.yaml"
 ```
