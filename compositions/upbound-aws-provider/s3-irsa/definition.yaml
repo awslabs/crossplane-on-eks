@@ -4,32 +4,26 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: xirsas.awsblueprints.io
+  name: xs3irsas.awsblueprints.io
 spec:
   claimNames:
-    kind: IRSA
-    plural: irsas
+    kind: S3IRSA
+    plural: s3irsas
   group: awsblueprints.io
   names:
-    kind: XIRSA
-    plural: xirsas
+    kind: XS3IRSA
+    plural: xs3irsas
   versions:
     - name: v1alpha1
       served: true
       referenceable: true
       schema:
         openAPIV3Schema:
-          description: IRSA is the Schema for the irsas API
+          description: S3IRSA is the Schema for the s3irsas API
           properties:
             spec:
-              description: IRSASpec defines the desired state of IRSA
+              description: S3IRSASpec defines the desired state of S3IRSA
               properties:
-                awsAccountID:
-                  type: string
-                eksOIDC:
-                  type: string
-                permissionsBoundaryArn:
-                  type: string
                 policyArns:
                   items:
                     type: string
@@ -71,19 +65,14 @@ spec:
                 serviceAccountName:
                   type: string
               required:
-              - serviceAccountName
               - resourceConfig
               type: object
             status:
-              description: IRSAStatus defines the observed state of IRSA
+              description: S3IRSAStatus defines the observed state of S3IRSA
               properties:
-                roleArn:
+                bucketArn:
                   type: string
                 roleName:
-                  type: string
-                awsAccountID:
-                  type: string
-                eksOIDC:
                   type: string
               type: object
           type: object

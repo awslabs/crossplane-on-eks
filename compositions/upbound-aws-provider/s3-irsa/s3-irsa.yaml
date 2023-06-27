@@ -1,0 +1,69 @@
+
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xs3irsa.awsblueprints.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+  labels:
+    awsblueprints.io/provider: aws
+    awsblueprints.io/environment: dev
+spec:
+  compositeTypeRef:
+    apiVersion: awsblueprints.io/v1alpha1
+    kind: XS3IRSA
+  patchSets:
+    - name: common-fields-composition
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig
+          toFieldPath: spec.resourceConfig
+  resources:
+    - name: bucket
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: XObjectStorage
+        metadata:
+          name: standard-object-storage
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-composition
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.bucketArn
+          toFieldPath: status.bucketArn
+    - name: irsa
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: XIRSA
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-composition
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.labels[crossplane.io/claim-name]
+          toFieldPath: spec.serviceAccountName
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.roleName
+          toFieldPath: status.roleName
+    - name: irsa-bucket-policy
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: IAMPolicy
+        spec:
+          compositionSelector:
+            matchLabels:
+              awsblueprints.io/provider: aws
+              awsblueprints.io/environment: dev
+              iam.awsblueprints.io/policy-type: write
+              iam.awsblueprints.io/service: s3
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-composition
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.roleName
+          toFieldPath: spec.roleName
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.bucketArn
+          toFieldPath: spec.resourceArn

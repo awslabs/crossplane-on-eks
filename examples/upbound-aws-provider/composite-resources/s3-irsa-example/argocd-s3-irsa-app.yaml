@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: s3-irsa-app
+  namespace: argocd
+spec:
+  destination:
+    namespace: default
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: s3-irsa-app
+    repoURL: https://github.com/awslabs/crossplane-on-eks/examples/upbound-aws-provider/composite-resources/s3-irsa-example/helm-charts.git
+    targetRevision: HEAD
+    helm:
+      values: |- 
+        s3irsa:
+          enabled: true
+  syncPolicy: {}
