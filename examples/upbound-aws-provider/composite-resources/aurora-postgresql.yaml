@@ -1,0 +1,58 @@
+apiVersion: db.awsblueprint.io/v1alpha1
+kind: RelationalDatabase
+metadata:
+  name: test-aurora-postgresql-db
+  namespace: default
+spec:
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+      cluster.awsblueprints.io/configuration: standard
+  networkConfig:
+    # the below ids needs to be updated before use. 
+    vpcId: vpc-123455
+    subnetIds:
+      - "subnet-123455"
+      - "subnet-123455"
+      - "subnet-123455"
+  resourceConfig:
+    providerConfigName: provider-config-irsa
+    region: us-east-1
+    deletionPolicy: Delete
+    parameterGroupFamily: aurora-postgresql15
+    # Cluster Parameters
+    databaseName: "auroraclusterwithproxy"
+    engineVersion: "15.2"
+    storageType: aurora-iopt1
+    availabilityZones:
+      - "us-east-1a"
+      - "us-east-1b"
+      - "us-east-1c"
+    backupRetentionPeriod: 7
+    preferredBackupWindow: "02:00-03:00"
+    preferredMaintenanceWindow: "sun:04:00-sun:05:00"
+    # Cluster Instance parameter
+    clusterInstanceClass: db.r6g.xlarge
+    # monitoringRoleArn needs to provided for RDS
+    # to create and send log to Cloudwatch.
+    monitoringRoleArn: arn:aws:iam::12345678901:role/name-of-the-rds-role
+    monitoringInterval: 10
+    performanceInsightsRetentionPeriod: 7
+    # The below applyImmediately parameter is required for any immediate upgrade
+    # Or else it can be ommited.
+    applyImmediately: true
+    finalSnapshotIdentifier: "aurora-cluster-final-snapshot-v1"
+    tags:
+      cluster: aurora-cluster
+      namespace: team-a
+      environment: dev
+      application: my-app
+  proxyConfig:
+    debugLogging: true
+    idleClientTimeout: 3600
+    # role for aurora proxy to get the secrets from secret manager
+    proxyRoleArn: arn:aws:iam::12345678901:role/name-of-the-proxy-role
+    connectionBorrowTimeout: 11
+    maxConnectionsPercent: 55
+    maxIdleConnectionsPercent: 40

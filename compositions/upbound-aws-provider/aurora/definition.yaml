@@ -1,0 +1,187 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xrelationaldatabases.db.awsblueprint.io
+spec:
+  group: db.awsblueprint.io
+  names:
+    kind: XRelationalDatabase
+    plural: xrelationaldatabases
+  claimNames:
+    kind: RelationalDatabase
+    plural: relationaldatabases
+  connectionSecretKeys:
+    - subnetGroupArn
+    - subnetGroupName
+    - securityGroupId
+    - securityGroupArn
+    - securityGroupName
+    - clusterParameterGroupName
+    - clusterParameterGroupArn
+    - clusterIdentifier
+    - clusterArn
+    - clusterReaderEndpoint
+    - clusterEndpoint
+    - clusterMasterSecretArn 
+    - proxyArn
+    - proxyEndpoint
+    - defaultProxyTgName
+    - targetGroupName 
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          description: RelationalDatabase is the Schema for the Aurora database
+            API. Provides a Aurora Cluster.
+          properties:
+            spec:
+              type: object
+              description: "Aurora Cluster with Proxy Specification"
+              properties:
+                networkConfig:
+                  description: parameter for Aurora network configuration
+                  type: object
+                  properties:
+                    subnetIds:
+                      type: array
+                      items:
+                        type: string
+                      minItems: 1
+                    vpcId: 
+                      type: string
+                resourceConfig:
+                  description: parameter for Aurora general configuration
+                    resource.
+                  type: object
+                  properties:
+                    providerConfigName:
+                      type: string
+                    region:
+                      type: string
+                    deletionPolicy:
+                      description: Defaults to Delete
+                      enum:
+                      - Delete
+                      - Orphan
+                      type: string
+                    parameterGroupFamily:
+                      description: Parameter group family name.
+                      type: string
+                    databaseName:
+                      description: name of the aurora database
+                      type: string
+                    engineVersion:
+                      description: engine version
+                      type: string
+                    storageType:
+                      type: string
+                    availabilityZones:
+                      type: array
+                      items:
+                        type: string
+                    finalDBSnapshotIdentifier:
+                      type: string
+                    backupRetentionPeriod:
+                      type: integer
+                    preferredBackupWindow: 
+                      type: string
+                    preferredMaintenanceWindow:
+                      type: string 
+                    clusterInstanceClass:
+                      type: string 
+                    monitoringRoleArn:
+                      type: string
+                    monitoringInterval:
+                      type: integer
+                    performanceInsightsRetentionPeriod:
+                      type: integer
+                    enabledCloudwatchLogsExports:
+                      type: array
+                      items:
+                        type: string
+                    applyImmediately:
+                      type: boolean
+                    snapshotIdentifier:
+                      type: string
+                    finalSnapshotIdentifier:
+                      type: string
+                    tags:
+                      additionalProperties:
+                        type: string
+                      description: Key-value map of resource tags.
+                      type: object 
+                  required:
+                  - providerConfigName
+                  - region
+                proxyConfig:
+                  description: parameter for Aurora Proxy configuration
+                  type: object    
+                  properties:  
+                    debugLogging:
+                      description: Parameter to set whether the proxy includes detailed 
+                        information about SQL statements in its logs.
+                      type: boolean
+                    idleClientTimeout:  
+                      description: Parameter to set the number of seconds that a connection 
+                        to the proxy can be inactive before the proxy disconnects it.
+                      type: number   
+                    proxyRoleArn:
+                      description: Role Arn for the database proxy.
+                      type: string
+                    secretArn:
+                      description: Arn of the db credential secret.
+                      type: string
+                    connectionBorrowTimeout:
+                      description: The number of seconds for a proxy to wait for a connection
+                        to become available in the connection pool.
+                      type: number
+                    maxIdleConnectionsPercent:
+                      description: Controls how actively the proxy closes idle database 
+                        connections in the connection pool.
+                      type: number
+                    maxConnectionsPercent:
+                      description: The maximum size of the connection pool for each target 
+                        in a target group.
+                      type: number
+                    initQuery:
+                      description: One or more SQL statements for the proxy to run when 
+                        opening each new database connection.
+                      type: string  
+            status:
+              properties:
+                subnetGroupArn:
+                  type: string
+                subnetGroupName:
+                  type: string
+                securityGroupId:
+                  type: string
+                securityGroupArn:
+                  type: string
+                securityGroupName:
+                  type: string 
+                clusterParameterGroupName:
+                  type: string 
+                clusterParameterGroupArn:
+                  type: string
+                clusterIdentifier:
+                  type: string
+                clusterArn:
+                  type: string
+                clusterReaderEndpoint:
+                  type: string
+                clusterEndpoint:
+                  type: string  
+                clusterMasterSecretArn:
+                  type: string  
+                proxyArn:
+                  type: string
+                proxyEndpoint:
+                  type: string
+                defaultProxyTgName:
+                  type: string
+                targetGroupName:
+                  type: string  
+              type: object
+          type: object
