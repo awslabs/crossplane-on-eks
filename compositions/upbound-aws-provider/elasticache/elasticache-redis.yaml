@@ -1,0 +1,230 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xredisclusters.aws.cache.awsblueprints.io
+  labels:
+    provider: aws
+    environment: dev
+    configuration: standard
+spec:
+  writeConnectionSecretsToNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: cache.awsblueprints.io/v1alpha1
+    kind: XRedisCluster
+  patchSets:
+    - name: common-fields
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.uid
+          toFieldPath: spec.forProvider.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            mergeOptions:
+              keepMapValues: true
+    - name: cluster-options
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.nodeType
+          toFieldPath: spec.forProvider.nodeType
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.replicasPerNodeGroup
+          toFieldPath: spec.forProvider.clusterMode[0].replicasPerNodeGroup
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.numNodeGroups
+          toFieldPath: spec.forProvider.clusterMode[0].numNodeGroups
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.multiAzEnabled
+          toFieldPath: spec.forProvider.multiAzEnabled
+  resources:
+    - name: redis-rg
+      connectionDetails:
+        - type: FromFieldPath
+          name: clusterArn
+          fromFieldPath: status.atProvider.arn
+        - type: FromFieldPath
+          name: clusterId
+          fromFieldPath: status.atProvider.id
+        - type: FromFieldPath
+          name: clusterAddress
+          fromFieldPath: status.atProvider.cacheNodes[0].address
+        - type: FromFieldPath
+          name: clusterPort
+          fromFieldPath: status.atProvider.cacheNodes[0].port
+      base:
+        apiVersion: elasticache.aws.upbound.io/v1beta1
+        kind: ReplicationGroup
+        metadata:
+          name: ec-redis-rg
+        spec:
+          forProvider:
+            description: "ec-redis-rg"
+            engine: redis
+            engineVersion: "7.0"
+            nodeType: cache.t4g.micro
+            clusterMode:
+              - numNodeGroups: 1
+                replicasPerNodeGroup: 0
+            multiAzEnabled: false
+            port: 6379
+            parameterGroupName: default.redis7.cluster.on
+            atRestEncryptionEnabled: true
+            transitEncryptionEnabled: true
+            automaticFailoverEnabled: true
+            subnetGroupNameRef:
+              name: subnetgroup-ec-cluster-via-composition
+            tags:
+              cluster: test-cluster
+              namespace: team-a
+              environment: dev
+              application: my-app
+              snapshotName:
+              from: composition
+            snapshotRetentionLimit: 0
+            snapshotWindow: "09:00-10:00"
+            applyImmediately: true
+            autoMinorVersionUpgrade: "true"
+            maintenanceWindow: "mon:10:40-mon:11:40"
+            notificationTopicArn: arn:aws:sns:us-east-1:791573251752:doNotUse
+            logDeliveryConfiguration:
+              - destination: /aws/elasticache/crossplane-team-c-dev-redis-claim
+                destinationType: cloudwatch-logs
+                logFormat: text
+                logType: engine-log
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: PatchSet
+          patchSetName: cluster-options
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.arn
+          toFieldPath: status.clusterArn
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.id
+          toFieldPath: status.clusterId
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.securityGroupId
+          toFieldPath: spec.forProvider.securityGroupIds[0]
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.subnetGroupName
+          toFieldPath: spec.forProvider.subnetGroupNameRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.logGroupName
+          toFieldPath: spec.forProvider.logDeliveryConfiguration[0].destination
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.snapshotRetentionLimit
+          toFieldPath: spec.forProvider.snapshotRetentionLimit
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.snapshotWindow
+          toFieldPath: spec.forProvider.snapshotWindow
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.snapshotName
+          toFieldPath: spec.forProvider.snapshotName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.applyImmediately
+          toFieldPath: spec.forProvider.applyImmediately
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.autoMinorVersionUpgrade
+          toFieldPath: spec.forProvider.autoMinorVersionUpgrade
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.maintenanceWindow
+          toFieldPath: spec.forProvider.maintenanceWindow
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.notificationTopicArn
+          toFieldPath: spec.forProvider.notificationTopicArn
+    - name: redis-sg
+      base:
+        apiVersion: ec2.aws.upbound.io/v1beta1
+        kind: SecurityGroup
+        metadata:
+          name: security-group-redis-cluster-via-composition
+          labels:
+            security-group-name: sg-for-elasticache-redis-cluster-composition-label
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - fromFieldPath: spec.clusterNetwork.vpcId
+          toFieldPath: spec.forProvider.vpcId
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.id
+          toFieldPath: status.securityGroupId
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.arn
+          toFieldPath: status.securityGroupArn
+    - name: redis-sg-rule
+      base:
+        apiVersion: ec2.aws.upbound.io/v1beta1
+        kind: SecurityGroupRule
+        metadata:
+          name: security-group-rule-via-composition
+        spec:
+          forProvider:
+            cidrBlocks:
+              - 10.0.0.0/8
+            fromPort: 6379
+            protocol: tcp
+            securityGroupIdSelector:
+              matchLabels:
+                security-group-name: sg-for-elasticache-redis-cluster-composition-label
+            toPort: 6379
+            type: ingress
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+    - name: redis-subnetgroup
+      base:
+        apiVersion: elasticache.aws.upbound.io/v1beta1
+        kind: SubnetGroup
+        metadata:
+          name: subnetgroup-ec-cluster-via-composition
+        spec:
+          forProvider:
+            region: us-east-1
+            tags:
+              cluster: test-cluster
+              namespace: team-a
+              environment: dev
+              application: my-app
+              from: composition
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - fromFieldPath: spec.clusterNetwork.subnetIds
+          toFieldPath: spec.forProvider.subnetIds
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.arn
+          toFieldPath: status.subnetGroupArn
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.id
+          toFieldPath: status.subnetGroupName
+    - name: redis-cw-loggroup
+      base:
+        apiVersion: cloudwatchlogs.aws.upbound.io/v1beta1
+        kind: Group
+        metadata:
+          name: cw-loggroup-ec-cluster-via-composition
+        spec:
+          forProvider:
+            retentionInDays: 1
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: metadata.name
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.arn
+          toFieldPath: status.logGroupArn
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.id
+          toFieldPath: status.logGroupName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.logGroup.retentionInDays
+          toFieldPath: spec.forProvider.retentionInDays

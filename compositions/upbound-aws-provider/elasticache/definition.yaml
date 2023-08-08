@@ -1,0 +1,118 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xredisclusters.cache.awsblueprints.io
+spec:
+  group: cache.awsblueprints.io
+  names:
+    kind: XRedisCluster
+    plural: xredisclusters
+  claimNames:
+    kind: RedisCluster
+    plural: redisclusters
+  connectionSecretKeys:
+    - clusterArn
+    - clusterId
+    - clusterAddress
+    - clusterPort
+  versions:
+  - name: v1alpha1
+    served: true
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            description: "AWS ElastiCache Cluster Spec"
+            properties:
+              clusterNetwork:
+                type: object
+                properties:
+                  subnetGroupName:
+                    type: string
+                  vpcId:
+                    type: string
+                  subnetIds:
+                    type: array
+                    items:
+                      type: string
+              resourceConfig:
+                description: ResourceConfig defines general properties of this AWS
+                type: object
+                properties:
+                  region:
+                    description: Defining region where resources are provisioned.
+                    type: string
+                  providerConfigName:
+                    description: Provider config for IAM Role
+                    type: string
+                  nodeType:
+                    type: string
+                  replicasPerNodeGroup:
+                    type: integer
+                  numNodeGroups:
+                    type: integer
+                  multiAzEnabled:
+                    type: boolean
+                  tags:
+                    additionalProperties:
+                      type: string
+                    description: Key-value map of resource tags.
+                    type: object
+                  snapshotRetentionLimit:
+                    description: Automated snapshot retention limit (in days)
+                    type: integer
+                  snapshotWindow:
+                    description: Time window to take automated snapshot
+                    type: string
+                  snapshotName:
+                    description: Name of the snapshot to restore from
+                    type: string
+                  applyImmediately:
+                    description: Apply minor version changes immediately
+                    type: boolean
+                  autoMinorVersionUpgrade:
+                    description: Automatic upgrade minor version of the clsuter
+                    type: string
+                  maintenanceWindow:
+                    description: Maintenance window for the cluster
+                    type: string
+                  notificationTopicArn:
+                    description: Notification SNS ARN
+                    type: string
+                  parameterGroupName:
+                    type: string
+                  logGroup:
+                    type: object
+                    properties:
+                      retentionInDays:
+                        type: integer
+                required:
+                - region
+                - providerConfigName
+                - notificationTopicArn
+          status:
+            type: object
+            properties:
+              clusterArn:
+                type: string
+              clusterId:
+                type: string
+              clusterAddress:
+                type: string
+              clusterPort:
+                type: string
+              securityGroupArn:
+                type: string
+              securityGroupId:
+                type: string
+              subnetGroupArn:
+                type: string
+              subnetGroupName:
+                type: string
+              logGroupArn:
+                type: string
+              logGroupName:
+                type: string
