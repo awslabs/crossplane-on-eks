@@ -1,0 +1,33 @@
+apiVersion: cache.awsblueprints.io/v1alpha1
+kind: RedisCluster
+metadata:
+  name: test-cluster-team-a
+  namespace: team-a
+spec:
+  clusterNetwork:
+    vpcId: vpc-0e2fef3e6642bbf88
+    subnetIds:
+      - "subnet-0bd0375a3e60e0406"
+      - "subnet-0ae57e68c63a6c60b"
+  compositionSelector:
+    matchLabels:
+      provider: aws
+      environment: dev
+      configuration: standard
+  resourceConfig:
+    providerConfigName: provider-config-irsa
+    parameterGroupName: default.redis7
+    region: us-east-1
+    tags:
+      cluster: crossplane
+      namespace: team-a
+      environment: dev
+      application: my-app-1
+    snapshotRetentionLimit: 7
+    snapshotWindow: "04:00-06:00"
+    applyImmediately: true
+    autoMinorVersionUpgrade: "true"
+    maintenanceWindow: "tue:08:00-tue:10:00"
+    notificationTopicArn: arn:aws:sns:us-east-1:791573251752:sampleNotification
+    logGroup:
+      retentionInDays: 14
