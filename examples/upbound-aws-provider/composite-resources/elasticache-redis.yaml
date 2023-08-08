@@ -5,10 +5,10 @@ metadata:
   namespace: team-a
 spec:
   clusterNetwork:
-    vpcId: vpc-0e2fef3e6642bbf88
+    vpcId: vpc-123abc
     subnetIds:
-      - "subnet-0bd0375a3e60e0406"
-      - "subnet-0ae57e68c63a6c60b"
+      - "subnet-001"
+      - "subnet-002"
   compositionSelector:
     matchLabels:
       provider: aws
