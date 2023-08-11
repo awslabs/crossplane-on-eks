@@ -15,19 +15,21 @@ spec:
       environment: dev
       configuration: standard
   resourceConfig:
-    providerConfigName: provider-config-irsa
-    parameterGroupName: default.redis7
     region: us-east-1
+    providerConfigName: aws-provider-config
     tags:
       cluster: crossplane
       namespace: team-a
       environment: dev
       application: my-app-1
-    snapshotRetentionLimit: 7
-    snapshotWindow: "04:00-06:00"
-    applyImmediately: true
-    autoMinorVersionUpgrade: "true"
-    maintenanceWindow: "tue:08:00-tue:10:00"
-    notificationTopicArn: arn:aws:sns:us-east-1:791573251752:sampleNotification
+    # Below parameters have default set up in definition
+    parameterGroupName: default.redis7        # Default default.redis7.cluster.on (String)
+    snapshotRetentionLimit: 7                 # Default 7 (integer)
+    snapshotWindow: "04:00-06:00"             # Default "01:00-02:00" (string)
+    applyImmediately: true                    # Default true (boolean)
+    autoMinorVersionUpgrade: "true"           # Default "true" (string)
+    maintenanceWindow: "tue:03:00-tue:04:00"  # Default "tue:03:00-tue:04:00" (string)
     logGroup:
-      retentionInDays: 14
+      retentionInDays: 14                     # Default 14 (integer)
+    # Notification Topic Arn is optional
+    notificationTopicArn: arn:aws:sns:us-east-1:111122223333:sampleNotification

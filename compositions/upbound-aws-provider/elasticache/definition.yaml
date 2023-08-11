@@ -50,6 +50,7 @@ spec:
                     type: string
                   nodeType:
                     type: string
+                    default: cache.t4g.micro
                   replicasPerNodeGroup:
                     type: integer
                   numNodeGroups:
@@ -64,35 +65,42 @@ spec:
                   snapshotRetentionLimit:
                     description: Automated snapshot retention limit (in days)
                     type: integer
+                    default: 7
                   snapshotWindow:
                     description: Time window to take automated snapshot
                     type: string
+                    default: "01:00-02:00"
                   snapshotName:
                     description: Name of the snapshot to restore from
                     type: string
                   applyImmediately:
                     description: Apply minor version changes immediately
                     type: boolean
+                    default: true
                   autoMinorVersionUpgrade:
                     description: Automatic upgrade minor version of the clsuter
                     type: string
+                    default: "true"
                   maintenanceWindow:
                     description: Maintenance window for the cluster
                     type: string
+                    default: "tue:03:00-tue:04:00"
                   notificationTopicArn:
                     description: Notification SNS ARN
                     type: string
                   parameterGroupName:
                     type: string
+                    default: default.redis7.cluster.on
                   logGroup:
                     type: object
                     properties:
                       retentionInDays:
                         type: integer
+                        default: 14
                 required:
                 - region
+                - subnetIds
                 - providerConfigName
-                - notificationTopicArn
           status:
             type: object
             properties:

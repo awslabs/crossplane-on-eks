@@ -68,13 +68,11 @@ spec:
             description: "ec-redis-rg"
             engine: redis
             engineVersion: "7.0"
-            nodeType: cache.t4g.micro
             clusterMode:
               - numNodeGroups: 1
                 replicasPerNodeGroup: 0
             multiAzEnabled: false
             port: 6379
-            parameterGroupName: default.redis7.cluster.on
             atRestEncryptionEnabled: true
             transitEncryptionEnabled: true
             automaticFailoverEnabled: true
@@ -87,12 +85,6 @@ spec:
               application: my-app
               snapshotName:
               from: composition
-            snapshotRetentionLimit: 0
-            snapshotWindow: "09:00-10:00"
-            applyImmediately: true
-            autoMinorVersionUpgrade: "true"
-            maintenanceWindow: "mon:10:40-mon:11:40"
-            notificationTopicArn: arn:aws:sns:us-east-1:791573251752:doNotUse
             logDeliveryConfiguration:
               - destination: /aws/elasticache/crossplane-team-c-dev-redis-claim
                 destinationType: cloudwatch-logs
