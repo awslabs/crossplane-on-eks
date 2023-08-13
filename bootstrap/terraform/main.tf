@@ -56,8 +56,8 @@ locals {
   argocd_namespace = "argocd"
 
   # !NOTE!: only enable one AWS provider at a time
-  crossplane_aws_provider_enable         = true
-  crossplane_upbound_aws_provider_enable = true
+  crossplane_aws_provider_enable         = false
+  crossplane_upbound_aws_provider_enable = false
 
   tags = {
     Blueprint  = local.name
@@ -98,7 +98,7 @@ module "eks" {
   cluster_name                   = local.name
   cluster_version                = local.cluster_version
   cluster_endpoint_public_access = true
-
+ . kms_key_enable_default_policy = true
   cluster_addons = {
     aws-ebs-csi-driver = {
       service_account_role_arn = module.ebs_csi_driver_irsa.iam_role_arn
@@ -115,7 +115,7 @@ module "eks" {
   eks_managed_node_groups = {
     initial = {
       instance_types  = ["m6i.large", "m5.large", "m5n.large", "m5zn.large"]
-      capacity_type   = "SPOT"
+      capacity_type   = "ON_DEMAND"
       min_size        = 1
       max_size        = 5
       desired_size    = 3
