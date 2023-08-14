@@ -53,11 +53,14 @@ spec:
           name: clusterId
           fromFieldPath: status.atProvider.id
         - type: FromFieldPath
-          name: clusterAddress
-          fromFieldPath: status.atProvider.cacheNodes[0].address
+          name: primaryEndpoint
+          fromFieldPath: status.atProvider.primaryEndpointAddress
+        - type: FromFieldPath
+          name: readerEndpoint
+          fromFieldPath: status.atProvider.readerEndpointAddress
         - type: FromFieldPath
           name: clusterPort
-          fromFieldPath: status.atProvider.cacheNodes[0].port
+          fromFieldPath: status.atProvider.port
       base:
         apiVersion: elasticache.aws.upbound.io/v1beta1
         kind: ReplicationGroup
@@ -75,15 +78,10 @@ spec:
             port: 6379
             atRestEncryptionEnabled: true
             transitEncryptionEnabled: true
-            automaticFailoverEnabled: true
+            automaticFailoverEnabled: false
             subnetGroupNameRef:
               name: subnetgroup-ec-cluster-via-composition
             tags:
-              cluster: test-cluster
-              namespace: team-a
-              environment: dev
-              application: my-app
-              snapshotName:
               from: composition
             logDeliveryConfiguration:
               - destination: /aws/elasticache/crossplane-team-c-dev-redis-claim
@@ -131,6 +129,10 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.notificationTopicArn
           toFieldPath: spec.forProvider.notificationTopicArn
+        - fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+          toFieldPath: spec.writeConnectionSecretToRef.namespace
+        - fromFieldPath: metadata.name
+          toFieldPath: spec.writeConnectionSecretToRef.name
     - name: redis-sg
       base:
         apiVersion: ec2.aws.upbound.io/v1beta1
@@ -180,10 +182,6 @@ spec:
           forProvider:
             region: us-east-1
             tags:
-              cluster: test-cluster
-              namespace: team-a
-              environment: dev
-              application: my-app
               from: composition
       patches:
         - type: PatchSet

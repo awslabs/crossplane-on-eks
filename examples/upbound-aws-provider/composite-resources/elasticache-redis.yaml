@@ -6,17 +6,21 @@ metadata:
 spec:
   clusterNetwork:
     vpcId: vpc-123abc
+    # Required Fields (subnetIds)
     subnetIds:
       - "subnet-001"
       - "subnet-002"
+      - "subnet-003"
   compositionSelector:
     matchLabels:
       provider: aws
       environment: dev
       configuration: standard
   resourceConfig:
+    # Required Fields (region, providerConfigName)
     region: us-east-1
     providerConfigName: aws-provider-config
+    # Optional Fields
     tags:
       cluster: crossplane
       namespace: team-a

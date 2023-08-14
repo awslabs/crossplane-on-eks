@@ -13,7 +13,8 @@ spec:
   connectionSecretKeys:
     - clusterArn
     - clusterId
-    - clusterAddress
+    - primaryEndpoint
+    - readerEndpoint
     - clusterPort
   versions:
   - name: v1alpha1
@@ -38,6 +39,8 @@ spec:
                     type: array
                     items:
                       type: string
+                required:
+                  - subnetIds
               resourceConfig:
                 description: ResourceConfig defines general properties of this AWS
                 type: object
@@ -98,9 +101,8 @@ spec:
                         type: integer
                         default: 14
                 required:
-                - region
-                - subnetIds
-                - providerConfigName
+                  - region
+                  - providerConfigName
           status:
             type: object
             properties:
@@ -108,7 +110,9 @@ spec:
                 type: string
               clusterId:
                 type: string
-              clusterAddress:
+              primaryEndpoint:
+                type: string
+              readerEndpoint:
                 type: string
               clusterPort:
                 type: string
