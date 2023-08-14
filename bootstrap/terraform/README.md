@@ -92,9 +92,10 @@ kubectl get nodes
 ```shell script
 kubectl get pods -n crossplane-system
 ```
-#### Step8: Verify the names provider and provider configs
-Run the following command to get the list of providers:
+#### Step8: Install and verify the names provider and provider configs
+Run the following command to create the necessary providers:
 ```shell script
+kubectl apply -f providers.yaml
 kubectl get providers
 ```
 The expected output looks like this:
