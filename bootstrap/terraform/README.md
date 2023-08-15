@@ -135,10 +135,6 @@ echo "$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.
 ## How to Destroy
 The following command destroys the resources created by `terraform apply`
 
-Step1: Delete resources created by Crossplane
-
-Step2: Terraform Destroy
-
 ```bash
 ./destroy.sh
 ```
