@@ -208,12 +208,3 @@ Delete the XRDs and Compositions
 ```shell
 kubectl delete -k .
 ```
-
-### Troubleshooting
-1. If terraform apply errors out in the middle of executing, try running the command:
-```shell
-aws eks --region <enter-your-region> update-kubeconfig --name <cluster-name>
-```
-and executing terraform apply again.
-
-1. Make sure you are on the latest AWS CLI version, which should be at least version 2.0. Make sure your AWS credentials are properly configured as well.
