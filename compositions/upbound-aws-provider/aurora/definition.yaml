@@ -1,32 +1,21 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: xrelationaldatabases.db.awsblueprint.io
+  name: xauroras.db.awsblueprint.io
 spec:
   group: db.awsblueprint.io
   names:
-    kind: XRelationalDatabase
-    plural: xrelationaldatabases
+    kind: XAurora
+    plural: xauroras
   claimNames:
-    kind: RelationalDatabase
-    plural: relationaldatabases
+    kind: Aurora
+    plural: auroras
   connectionSecretKeys:
-    - subnetGroupArn
-    - subnetGroupName
-    - securityGroupId
-    - securityGroupArn
-    - securityGroupName
-    - clusterParameterGroupName
-    - clusterParameterGroupArn
-    - clusterIdentifier
-    - clusterArn
     - clusterReaderEndpoint
     - clusterEndpoint
+    - clusterUsername
     - clusterMasterSecretArn 
-    - proxyArn
     - proxyEndpoint
-    - defaultProxyTgName
-    - targetGroupName 
   versions:
     - name: v1alpha1
       served: true
@@ -175,6 +164,8 @@ spec:
                   type: string  
                 clusterMasterSecretArn:
                   type: string  
+                clusterUsername:
+                  type: string
                 proxyArn:
                   type: string
                 proxyEndpoint:

@@ -1,8 +1,8 @@
 apiVersion: db.awsblueprint.io/v1alpha1
-kind: RelationalDatabase
+kind: Aurora
 metadata:
-  name: test-aurora-postgresql-db
-  namespace: default
+  name: test-aurora-postgresql-cluster
+  namespace: team-a
 spec:
   compositionSelector:
     matchLabels:

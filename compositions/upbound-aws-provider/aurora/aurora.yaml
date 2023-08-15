@@ -1,7 +1,7 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: xrelationaldatabases.db.awsblueprint.io
+  name: xauroras.db.awsblueprint.io
   labels:
     awsblueprints.io/provider: aws
     awsblueprints.io/environment: dev
@@ -10,7 +10,7 @@ spec:
   writeConnectionSecretsToNamespace: crossplane-system
   compositeTypeRef:
     apiVersion: db.awsblueprint.io/v1alpha1
-    kind: XRelationalDatabase
+    kind: XAurora
   patchSets:
     - name: common-fields
       patches:
@@ -200,12 +200,6 @@ spec:
     - name: aurora-cluster 
       connectionDetails:
         - type: FromFieldPath
-          name: clusterIdentifier
-          fromFieldPath: status.atProvider.id
-        - type: FromFieldPath
-          name: clusterArn
-          fromFieldPath: status.atProvider.arn
-        - type: FromFieldPath
           name: clusterReaderEndpoint
           fromFieldPath: status.atProvider.readerEndpoint
         - type: FromFieldPath
@@ -214,6 +208,9 @@ spec:
         - type: FromFieldPath
           name: clusterMasterSecretArn
           fromFieldPath: status.atProvider.masterUserSecret.secretArn
+        - type: FromFieldPath
+          name: clusterUsername
+          fromFieldPath: status.atProvider.masterUsername
       base:
         apiVersion: rds.aws.upbound.io/v1beta1
         kind: Cluster
@@ -310,6 +307,17 @@ spec:
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.masterUserSecret[0].secretArn
           toFieldPath: status.clusterMasterSecretArn
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.masterUsername
+          toFieldPath: status.clusterUsername
+        - fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+          toFieldPath: spec.writeConnectionSecretToRef.namespace
+        - fromFieldPath: metadata.name
+          toFieldPath: spec.writeConnectionSecretToRef.name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-cluster-secret"
     - name: aurora-cluster-instance-01
       base:
         apiVersion: rds.aws.upbound.io/v1beta1
@@ -454,9 +462,6 @@ spec:
     - name: aurora-cluster-proxy
       connectionDetails:
         - type: FromFieldPath
-          name: proxyArn
-          fromFieldPath: status.atProvider.arn
-        - type: FromFieldPath
           name: proxyEndpoint
           fromFieldPath: status.atProvider.endpoint
       base:
@@ -512,6 +517,14 @@ spec:
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.endpoint
           toFieldPath: status.proxyEndpoint
+        - fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+          toFieldPath: spec.writeConnectionSecretToRef.namespace
+        - fromFieldPath: metadata.name
+          toFieldPath: spec.writeConnectionSecretToRef.name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-proxy-endpoint-secret"
     - name: aurora-cluster-proxy-default-tg
       base:
         apiVersion: rds.aws.upbound.io/v1beta1
