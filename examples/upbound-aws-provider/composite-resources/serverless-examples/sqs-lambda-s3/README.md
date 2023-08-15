@@ -10,6 +10,15 @@ For users new to Crossplane, we recommend first completing this tutorial: https:
 - [AWS CLI >= v2.0](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 - [Terraform >=v1.0.0](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 
+### Troubleshooting
+1. If terraform apply errors out in the middle of executing, try running the command:
+```shell
+aws eks --region <enter-your-region> update-kubeconfig --name <cluster-name>
+```
+and executing terraform apply again.
+
+1. Make sure you have upgraded to the latest version of AWS CLI. Make sure your AWS credentials are properly configured as well.
+
 ### Deploy Crossplane
 Create an EKS cluster and install Crossplane with [this terraform code](https://github.com/awslabs/crossplane-on-eks/blob/main/bootstrap/terraform/README.md).
 
