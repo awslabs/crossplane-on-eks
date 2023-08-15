@@ -115,7 +115,7 @@ spec:
               readerEndpoint:
                 type: string
               clusterPort:
-                type: string
+                type: integer
               securityGroupArn:
                 type: string
               securityGroupId:

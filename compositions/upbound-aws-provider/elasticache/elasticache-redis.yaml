@@ -99,6 +99,15 @@ spec:
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.id
           toFieldPath: status.clusterId
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.port
+          toFieldPath: status.clusterPort
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.primaryEndpointAddress
+          toFieldPath: status.primaryEndpoint
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.readerEndpointAddress
+          toFieldPath: status.readerEndpoint
         - type: FromCompositeFieldPath
           fromFieldPath: status.securityGroupId
           toFieldPath: spec.forProvider.securityGroupIds[0]
@@ -133,6 +142,10 @@ spec:
           toFieldPath: spec.writeConnectionSecretToRef.namespace
         - fromFieldPath: metadata.name
           toFieldPath: spec.writeConnectionSecretToRef.name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-rg-secret"
     - name: redis-sg
       base:
         apiVersion: ec2.aws.upbound.io/v1beta1
