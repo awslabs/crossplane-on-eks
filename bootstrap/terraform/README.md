@@ -39,8 +39,17 @@ graph TD;
 ### Prerequisites:
 Ensure that you have installed the following tools in your Mac or Windows Laptop before start working with this module and run Terraform Plan and Apply
 1. [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
-3. [Kubectl](https://Kubernetes.io/docs/tasks/tools/)
-4. [Terraform >=v1.0.0](https://learn.hashicorp.com/tutorials/terraform/install-cli)
+1. [Kubectl](https://Kubernetes.io/docs/tasks/tools/)
+1. [Terraform >=v1.0.0](https://learn.hashicorp.com/tutorials/terraform/install-cli)
+
+### Troubleshooting
+1. If terraform apply errors out in the middle of executing, try running the command:
+```shell
+aws eks --region <enter-your-region> update-kubeconfig --name <cluster-name>
+```
+and executing terraform apply again.
+
+1. Make sure you have upgraded to the latest version of AWS CLI. Make sure your AWS credentials are properly configured as well.
 
 ### Deployment Steps
 #### Step1: Clone the repo using the command below
