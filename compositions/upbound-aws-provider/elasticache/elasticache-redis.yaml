@@ -67,6 +67,8 @@ spec:
         metadata:
           name: ec-redis-rg
         spec:
+          writeConnectionSecretToRef:
+            namespace: crossplane-system
           forProvider:
             description: "ec-redis-rg"
             engine: redis
@@ -138,14 +140,6 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.notificationTopicArn
           toFieldPath: spec.forProvider.notificationTopicArn
-        - fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
-          toFieldPath: spec.writeConnectionSecretToRef.namespace
-        - fromFieldPath: metadata.name
-          toFieldPath: spec.writeConnectionSecretToRef.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-rg-secret"
     - name: redis-sg
       base:
         apiVersion: ec2.aws.upbound.io/v1beta1
