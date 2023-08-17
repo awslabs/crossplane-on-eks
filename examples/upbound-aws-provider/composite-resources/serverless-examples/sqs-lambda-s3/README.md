@@ -3,7 +3,7 @@ This example deploys the architecture depicted on the diagram. First, it applies
 ![Serverless diagram](../../../diagrams/sqs-lambda-s3.png)
 
 ## Context
-For users new to Crossplane, we recommend first completing this tutorial: https://docs.crossplane.io/master/getting-started/provider-aws/ in order to grasp the fundamentals of Crossplane. This tutorial will describe how to authenticate a local Kubernetes cluster to AWS and create a Managed Resource in AWS directly from your cluster.
+For users new to Crossplane, we recommend first completing Crossplane's official getting started guide: https://docs.crossplane.io/master/getting-started/provider-aws/ in order to grasp the fundamentals of Crossplane. The getting started guide will describe how to authenticate the Crossplane `aws-provider` to an AWS account and create AWS resources from your cluster.
 
 ## Pre-requisites:
 - [Kubectl](https://kubernetes.io/docs/tasks/tools/)
