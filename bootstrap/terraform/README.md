@@ -59,7 +59,7 @@ git clone https://github.com/aws-samples/crossplane-aws-blueprints.git
 ```
 
 > [!IMPORTANT]  
-> This tutorial only makes use of the `crossplane_upbound_aws_provider_enable` provider, so make sure to set the [`crossplane_aws_provider_enable`](https://github.com/awslabs/crossplane-on-eks/blob/main/bootstrap/terraform/main.tf#L59) to `false` in order to not overload the Kubernetes control plane.
+> The examples in this repository make use of one of the Crossplane AWS providers. For example, if you are using the `crossplane_upbound_aws_provider_enable` provider, make sure to set the [`crossplane_aws_provider_enable`](https://github.com/awslabs/crossplane-on-eks/blob/main/bootstrap/terraform/main.tf#L59) to `false` in order install only the necessary CRDs to the Kubernetes cluster.
 
 #### Step2: Run Terraform INIT
 Initialize a working directory with configuration files
