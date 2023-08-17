@@ -43,7 +43,7 @@ Ensure that you have installed the following tools in your Mac or Windows Laptop
 1. [Terraform >=v1.0.0](https://learn.hashicorp.com/tutorials/terraform/install-cli)
 
 ### Troubleshooting
-1. If terraform apply errors out in the middle of executing, try running the command:
+1. If `terraform apply` errors out after creating the cluster when trying to apply the helm charts, try running the command:
 ```shell
 aws eks --region <enter-your-region> update-kubeconfig --name <cluster-name>
 ```
