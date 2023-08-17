@@ -145,7 +145,9 @@ echo "$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.
 ```
 
 ## Clean up
-The following command destroys the resources created by `terraform apply`
+1. Delete resources created by Crossplane such as XRDs, Compositions, and Claims.
+
+1. Delete the EKS cluster and it's resources with the following command
 ```bash
 ./destroy.sh
 ```
