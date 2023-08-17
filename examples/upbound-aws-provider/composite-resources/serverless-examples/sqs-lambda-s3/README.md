@@ -2,7 +2,7 @@
 This example deploys the architecture depicted on the diagram. First, it applies the Crossplane Composite Resource Definitions (XRDs) and Compositions. Then it applies the Claim which creates all the AWS resources, and deploys the code to the Lambda function. Last, it sends a message to the SQS Queue, that triggers the Lambda function, which posts the results in the S3 bucket.
 ![Serverless diagram](../../../diagrams/sqs-lambda-s3.png)
 
-## Context
+## Before you continue
 For users new to Crossplane, we recommend first completing Crossplane's official getting started guide: https://docs.crossplane.io/master/getting-started/provider-aws/ in order to grasp the fundamentals of Crossplane. The getting started guide will describe how to authenticate the Crossplane `aws-provider` to an AWS account and create AWS resources from your cluster.
 
 ## Pre-requisites:
