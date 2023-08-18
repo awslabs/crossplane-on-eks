@@ -4,6 +4,8 @@ metadata:
   name: test-aurora-postgresql-cluster
   namespace: team-a
 spec:
+  writeConnectionSecretToRef:
+    name: aurora-cluster-secrets
   compositionSelector:
     matchLabels:
       awsblueprints.io/provider: aws
@@ -16,43 +18,52 @@ spec:
       - "subnet-123455"
       - "subnet-123455"
       - "subnet-123455"
+    # either the app CIDR or the SG id has to be provided for ingress traffic rule
+    allowedCidrBlocks:
+      - 10.0.0.0/8
+    # allowedSecurityGroupId: sg-0dd0ff1bsgd345
   resourceConfig:
-    providerConfigName: provider-config-irsa
+    # Required Fields for Cluster
+    providerConfigName: aws-provider-config
     region: us-east-1
+    monitoringRoleArn: arn:aws:iam::12345678901:role/name-of-the-rds-role
+    # Below parameters have default set up in definition
+    # This can be patched to a different value based on req.
     deletionPolicy: Delete
+    databaseName: aurorapgsqldb
     parameterGroupFamily: aurora-postgresql15
-    # Cluster Parameters
-    databaseName: "auroraclusterwithproxy"
+    engine: aurora-postgresql
+    masterUsername: adminuser
     engineVersion: "15.2"
     storageType: aurora-iopt1
-    availabilityZones:
-      - "us-east-1a"
-      - "us-east-1b"
-      - "us-east-1c"
     backupRetentionPeriod: 7
     preferredBackupWindow: "02:00-03:00"
     preferredMaintenanceWindow: "sun:04:00-sun:05:00"
-    # Cluster Instance parameter
-    clusterInstanceClass: db.r6g.xlarge
-    # monitoringRoleArn needs to provided for RDS
-    # to create and send log to Cloudwatch.
-    monitoringRoleArn: arn:aws:iam::12345678901:role/name-of-the-rds-role
-    monitoringInterval: 10
-    performanceInsightsRetentionPeriod: 7
-    # The below applyImmediately parameter is required for any immediate upgrade
-    # Or else it can be ommited.
+    clusterInstanceClass: db.r6g.large
     applyImmediately: true
-    finalSnapshotIdentifier: "aurora-cluster-final-snapshot-v1"
+    skipFinalSnapshot: false
+    # provide finalSnapshotIdentifier if skipFinalSnapshot is false
+    finalSnapshotIdentifier: "aurora-cluster-final-snapshot"
+    performanceInsightsEnabled: true
+    performanceInsightsRetentionPeriod: 7
+    monitoringInterval: 60
+    #Optional Field
+    enabledCloudwatchLogsExports:
+    - "postgresql"
     tags:
       cluster: aurora-cluster
       namespace: team-a
       environment: dev
       application: my-app
   proxyConfig:
-    debugLogging: true
-    idleClientTimeout: 3600
-    # role for aurora proxy to get the secrets from secret manager
+    # Required Fields for proxy
+    # Role for aurora proxy to get the secrets from secret manager
     proxyRoleArn: arn:aws:iam::12345678901:role/name-of-the-proxy-role
-    connectionBorrowTimeout: 11
-    maxConnectionsPercent: 55
-    maxIdleConnectionsPercent: 40
+    # Below parameters have default set up in definition
+    iamAuth: REQUIRED
+    debugLogging: true
+    # Recommendation ::this needs to be updated based on the instance size
+    idleClientTimeout: 3600
+    connectionBorrowTimeout: 120
+    maxConnectionsPercent: 50
+    maxIdleConnectionsPercent: 50

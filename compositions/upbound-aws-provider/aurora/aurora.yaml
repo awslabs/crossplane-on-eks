@@ -31,13 +31,6 @@ spec:
               appendSlice: true
   resources:
     - name: aurora-cluster-subnetgroup
-      connectionDetails:
-        - type: FromFieldPath
-          name: subnetGroupArn
-          fromFieldPath: status.atProvider.arn
-        - type: FromFieldPath
-          name: subnetGroupName
-          fromFieldPath: status.atProvider.id      
       base:
         apiVersion: rds.aws.upbound.io/v1beta1
         kind: SubnetGroup
@@ -47,9 +40,9 @@ spec:
           forProvider:
             description: "aurora subnet group"
             tags:
-              namespace: team-a
               environment: dev
               application: my-app
+              bu: test
       patches:
         - type: PatchSet
           patchSetName: common-fields
@@ -62,16 +55,6 @@ spec:
           fromFieldPath: status.atProvider.id
           toFieldPath: status.subnetGroupName 
     - name: aurora-cluster-sg
-      connectionDetails:
-        - type: FromFieldPath
-          name: securityGroupArn
-          fromFieldPath: status.atProvider.arn
-        - type: FromFieldPath
-          name: securityGroupId
-          fromFieldPath: status.atProvider.id
-        - type: FromFieldPath
-          name: securityGroupName
-          fromFieldPath: status.atProvider.securityGroupName  
       base:
         apiVersion: ec2.aws.upbound.io/v1beta1
         kind: SecurityGroup
@@ -104,10 +87,8 @@ spec:
           name: aurora-cluster-sg-self-rule
         spec:
           forProvider:
-            fromPort: 5432
             protocol: tcp
             self: true
-            toPort: 5432
             type: ingress
             securityGroupIdSelector:
               matchLabels:
@@ -116,8 +97,14 @@ spec:
         - type: PatchSet
           patchSetName: common-fields
         - type: FromCompositeFieldPath
+          fromFieldPath: spec.networkConfig.allowedPort
+          toFieldPath: spec.forProvider.fromPort
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.networkConfig.allowedPort
+          toFieldPath: spec.forProvider.toPort
+        - type: FromCompositeFieldPath
           fromFieldPath: status.securityGroupId
-          toFieldPath: spec.forProvider.securityGroupId     
+          toFieldPath: spec.forProvider.securityGroupId
     - name: aurora-cluster-sg-app-rule
       base:
         apiVersion: ec2.aws.upbound.io/v1beta1
@@ -126,11 +113,7 @@ spec:
           name: aurora-cluster-sg-app-rule
         spec:
           forProvider:
-            fromPort: 5432
             protocol: tcp
-            cidrBlocks:
-              - 10.0.0.0/8
-            toPort: 5432
             type: ingress
             securityGroupIdSelector:
               matchLabels:
@@ -138,6 +121,18 @@ spec:
       patches:
         - type: PatchSet
           patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.networkConfig.allowedPort
+          toFieldPath: spec.forProvider.fromPort
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.networkConfig.allowedPort
+          toFieldPath: spec.forProvider.toPort
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.networkConfig.allowedCidrBlocks
+          toFieldPath: spec.forProvider.cidrBlocks
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.networkConfig.allowedSecurityGroupId
+          toFieldPath: spec.forProvider.sourceSecurityGroupId
         - type: FromCompositeFieldPath
           fromFieldPath: status.securityGroupId
           toFieldPath: spec.forProvider.securityGroupId
@@ -149,9 +144,7 @@ spec:
           name: aurora-cluster-sg-egress-rule
         spec:
           forProvider:
-            fromPort: 5432
             protocol: tcp
-            toPort: 5432
             type: egress
             securityGroupIdSelector:
               matchLabels:
@@ -160,19 +153,18 @@ spec:
         - type: PatchSet
           patchSetName: common-fields
         - type: FromCompositeFieldPath
+          fromFieldPath: spec.networkConfig.allowedPort
+          toFieldPath: spec.forProvider.fromPort
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.networkConfig.allowedPort
+          toFieldPath: spec.forProvider.toPort
+        - type: FromCompositeFieldPath
           fromFieldPath: status.securityGroupId
           toFieldPath: spec.forProvider.securityGroupId
         - type: FromCompositeFieldPath
           fromFieldPath: status.securityGroupId
-          toFieldPath: spec.forProvider.sourceSecurityGroupId           
+          toFieldPath: spec.forProvider.sourceSecurityGroupId
     - name: rds-cluster-para-group
-      connectionDetails:
-        - type: FromFieldPath
-          name: clusterParameterGroupArn
-          fromFieldPath: status.atProvider.arn
-        - type: FromFieldPath
-          name: clusterParameterGroupName
-          fromFieldPath: status.atProvider.id
       base:
         apiVersion: rds.aws.upbound.io/v1beta1
         kind: ClusterParameterGroup
@@ -199,51 +191,40 @@ spec:
           toFieldPath: status.clusterParameterGroupName
     - name: aurora-cluster 
       connectionDetails:
-        - type: FromFieldPath
-          name: clusterReaderEndpoint
-          fromFieldPath: status.atProvider.readerEndpoint
-        - type: FromFieldPath
-          name: clusterEndpoint
-          fromFieldPath: status.atProvider.endpoint
-        - type: FromFieldPath
-          name: clusterMasterSecretArn
-          fromFieldPath: status.atProvider.masterUserSecret.secretArn
-        - type: FromFieldPath
-          name: clusterUsername
-          fromFieldPath: status.atProvider.masterUsername
+      - type: FromFieldPath
+        name: clusterUsername
+        fromFieldPath: status.atProvider.masterUsername
       base:
         apiVersion: rds.aws.upbound.io/v1beta1
         kind: Cluster
         spec:
           forProvider:
-            # DEFAULT VALUES
+            writeConnectionSecretToRef:
+              namespace: crossplane-system
             engine: aurora-postgresql
             engineVersion: "15.2"
             manageMasterUserPassword: true
-            masterUsername: root
-            skipFinalSnapshot: false
+            masterUsername: adminuser
+            skipFinalSnapshot: true
             storageEncrypted: true
             enableHttpEndpoint: false
             copyTagsToSnapshot: true
-            enabledCloudwatchLogsExports:
-              - "postgresql"
-            # CONFIGURABLE VALUES
-            databaseName: aurorapgsql
+            databaseName: auroradb
             storageType: "aurora-iopt1"
-            availabilityZones: 
-              - us-east-1a 
-              - us-east-1b 
-            finalSnapshotIdentifier: "to-be-patched"
+            finalSnapshotIdentifier: "aurora-cluster-final-snapshot"
             backupRetentionPeriod: 7
             preferredBackupWindow: 02:00-03:00
             preferredMaintenanceWindow: sun:04:00-sun:05:00
-            # DYNAMICALLY PASSED VALUES
             dbClusterParameterGroupName: default.aurora-postgresql15
             vpcSecurityGroupIDs: [] 
             vpcSecurityGroupIDSelector:
               matchControllerRef: true
             dbSubnetGroupNameSelector:
-              matchControllerRef: true 
+              matchControllerRef: true
+            tags:
+              environment: dev
+              application: my-app
+              bu: bu-name
       patches:
         - type: PatchSet
           patchSetName: common-fields
@@ -251,8 +232,17 @@ spec:
           fromFieldPath: spec.resourceConfig.databaseName
           toFieldPath: spec.forProvider.databaseName
         - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.engine
+          toFieldPath: spec.forProvider.engine
+        - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.engineVersion
           toFieldPath: spec.forProvider.engineVersion
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.masterUsername
+          toFieldPath: spec.forProvider.masterUsername
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.skipFinalSnapshot
+          toFieldPath: spec.forProvider.skipFinalSnapshot
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.storageType
           toFieldPath: spec.forProvider.storageType
@@ -262,9 +252,6 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.availabilityZones
           toFieldPath: spec.forProvider.availabilityZones
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.finalDBSnapshotIdentifier
-          toFieldPath: spec.forProvider.finalDBSnapshotIdentifier
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.backupRetentionPeriod
           toFieldPath: spec.forProvider.backupRetentionPeriod
@@ -310,46 +297,39 @@ spec:
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.masterUsername
           toFieldPath: status.clusterUsername
-        - fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
-          toFieldPath: spec.writeConnectionSecretToRef.namespace
-        - fromFieldPath: metadata.name
-          toFieldPath: spec.writeConnectionSecretToRef.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-cluster-secret"
     - name: aurora-cluster-instance-01
       base:
         apiVersion: rds.aws.upbound.io/v1beta1
         kind: ClusterInstance
         spec:
           forProvider:
-            # DEFAULT VALUES
             promotionTier: 0
+            engine: aurora-postgresql
+            engineVersion: "15.2"
+            instanceClass: db.r6g.large
             publiclyAccessible: false
             autoMinorVersionUpgrade: true
             copyTagsToSnapshot: true
+            performanceInsightsEnabled: true
             dbSubnetGroupNameSelector:
               matchControllerRef: true
-            engine: aurora-postgresql
-            performanceInsightsEnabled: true
-            # CONFIGURABLE VALUES
-            engineVersion: "15.2" 
-            instanceClass: db.r6g.large
-            monitoringInterval: 5
-            performanceInsightsRetentionPeriod: 7
-            # DYNAMICALLY PASSED VALUES
             clusterIdentifierSelector:
               matchControllerRef: true
       patches:
         - type: PatchSet
           patchSetName: common-fields
         - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.engine
+          toFieldPath: spec.forProvider.engine
+        - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.engineVersion
           toFieldPath: spec.forProvider.engineVersion
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.clusterInstanceClass
           toFieldPath: spec.forProvider.instanceClass
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.performanceInsightsEnabled
+          toFieldPath: spec.forProvider.performanceInsightsEnabled
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.monitoringRoleArn
           toFieldPath: spec.forProvider.monitoringRoleArn  
@@ -371,32 +351,33 @@ spec:
         kind: ClusterInstance
         spec:
           forProvider:
-            # DEFAULT VALUES
             promotionTier: 1
+            engine: aurora-postgresql
+            engineVersion: "15.2"
+            instanceClass: db.r6g.large
             publiclyAccessible: false
             autoMinorVersionUpgrade: true
             copyTagsToSnapshot: true
+            performanceInsightsEnabled: true
             dbSubnetGroupNameSelector:
               matchControllerRef: true
-            engine: aurora-postgresql
-            performanceInsightsEnabled: true
-            # CONFIGURABLE VALUES
-            engineVersion: "15.2"
-            instanceClass: db.r6g.large
-            monitoringInterval: 5
-            performanceInsightsRetentionPeriod: 7
-            # DYNAMICALLY PASSED VALUES
             clusterIdentifierSelector:
               matchControllerRef: true
       patches:
         - type: PatchSet
           patchSetName: common-fields
         - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.engine
+          toFieldPath: spec.forProvider.engine
+        - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.engineVersion
           toFieldPath: spec.forProvider.engineVersion
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.clusterInstanceClass
           toFieldPath: spec.forProvider.instanceClass
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.performanceInsightsEnabled
+          toFieldPath: spec.forProvider.performanceInsightsEnabled
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.monitoringRoleArn
           toFieldPath: spec.forProvider.monitoringRoleArn  
@@ -418,32 +399,33 @@ spec:
         kind: ClusterInstance
         spec:
           forProvider:
-            # DEFAULT VALUES
             promotionTier: 2
+            engine: aurora-postgresql
+            engineVersion: "15.2"
+            instanceClass: db.r6g.large
             publiclyAccessible: false
             autoMinorVersionUpgrade: true
             copyTagsToSnapshot: true
+            performanceInsightsEnabled: true
             dbSubnetGroupNameSelector:
               matchControllerRef: true
-            engine: aurora-postgresql
-            performanceInsightsEnabled: true
-            # CONFIGURABLE VALUES
-            engineVersion: "15.2" 
-            instanceClass: db.r6g.large
-            monitoringInterval: 5
-            performanceInsightsRetentionPeriod: 7
-            # DYNAMICALLY PASSED VALUES
             clusterIdentifierSelector:
               matchControllerRef: true
       patches:
         - type: PatchSet
           patchSetName: common-fields
         - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.engine
+          toFieldPath: spec.forProvider.engine
+        - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.engineVersion
           toFieldPath: spec.forProvider.engineVersion
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.clusterInstanceClass
           toFieldPath: spec.forProvider.instanceClass
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.performanceInsightsEnabled
+          toFieldPath: spec.forProvider.performanceInsightsEnabled
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.monitoringRoleArn
           toFieldPath: spec.forProvider.monitoringRoleArn  
@@ -458,7 +440,7 @@ spec:
           toFieldPath: spec.forProvider.performanceInsightsRetentionPeriod
         - type: FromCompositeFieldPath
           fromFieldPath: status.clusterIdentifier
-          toFieldPath: spec.forProvider.clusterIdentifier           
+          toFieldPath: spec.forProvider.clusterIdentifier
     - name: aurora-cluster-proxy
       connectionDetails:
         - type: FromFieldPath
@@ -471,23 +453,20 @@ spec:
           name: aurora-proxy
         spec:
           forProvider:
-            # DEFAULT VALUES
+            writeConnectionSecretToRef:
+              namespace: crossplane-system
             auth:
-              - authScheme: SECRETS
-                description: "auth for aurora proxy"
-                iamAuth: REQUIRED
+            - authScheme: SECRETS
+              description: "auth for aurora proxy"
+              iamAuth: REQUIRED
             engineFamily: POSTGRESQL
             requireTls: true
-            # CONFIGURABLE VALUES
             debugLogging: true
             idleClientTimeout: 1800
-            # DYNAMICALLY PASSED VALUES
             vpcSecurityGroupIds: []
             vpcSecurityGroupIDSelector:
               matchControllerRef: true
             tags:
-              cluster: test-cluster
-              namespace: team-a
               environment: dev
               application: my-app
               bu: test
@@ -496,7 +475,7 @@ spec:
           patchSetName: common-fields
         - type: FromCompositeFieldPath
           fromFieldPath: spec.proxyConfig.debugLogging
-          toFieldPath: spec.forProvider.debugLogging\
+          toFieldPath: spec.forProvider.debugLogging
         - type: FromCompositeFieldPath
           fromFieldPath: spec.proxyConfig.idleClientTimeout
           toFieldPath: spec.forProvider.idleClientTimeout
@@ -509,6 +488,9 @@ spec:
           fromFieldPath: status.clusterMasterSecretArn
           toFieldPath: spec.forProvider.auth[0].secretArn
         - type: FromCompositeFieldPath
+          fromFieldPath: spec.proxyConfig.iamAuth
+          toFieldPath: spec.forProvider.auth[0].iamAuth
+        - type: FromCompositeFieldPath
           fromFieldPath: status.securityGroupId
           toFieldPath: spec.forProvider.vpcSecurityGroupIds[0]  
         - type: ToCompositeFieldPath
@@ -517,14 +499,6 @@ spec:
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.endpoint
           toFieldPath: status.proxyEndpoint
-        - fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
-          toFieldPath: spec.writeConnectionSecretToRef.namespace
-        - fromFieldPath: metadata.name
-          toFieldPath: spec.writeConnectionSecretToRef.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-proxy-endpoint-secret"
     - name: aurora-cluster-proxy-default-tg
       base:
         apiVersion: rds.aws.upbound.io/v1beta1
@@ -534,9 +508,9 @@ spec:
         spec:
           forProvider:
             connectionPoolConfig:
-              - connectionBorrowTimeout: 10
-                maxConnectionsPercent: 50
-                maxIdleConnectionsPercent: 50
+            - connectionBorrowTimeout: 10
+              maxConnectionsPercent: 50
+              maxIdleConnectionsPercent: 50
             dbProxyNameSelector:
               matchControllerRef: true
       patches:

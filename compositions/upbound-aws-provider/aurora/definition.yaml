@@ -11,10 +11,7 @@ spec:
     kind: Aurora
     plural: auroras
   connectionSecretKeys:
-    - clusterReaderEndpoint
-    - clusterEndpoint
     - clusterUsername
-    - clusterMasterSecretArn 
     - proxyEndpoint
   versions:
     - name: v1alpha1
@@ -40,6 +37,19 @@ spec:
                       minItems: 1
                     vpcId: 
                       type: string
+                    allowedPort:
+                      type: number
+                      default: 5432
+                    allowedCidrBlocks:
+                      type: array
+                      items:
+                        type: string
+                      minItems: 1
+                    allowedSecurityGroupId:
+                      type: string
+                  required:
+                  - subnetIds
+                  - vpcId
                 resourceConfig:
                   description: parameter for Aurora general configuration
                     resource.
@@ -55,17 +65,33 @@ spec:
                       - Delete
                       - Orphan
                       type: string
+                      default: Delete
                     parameterGroupFamily:
                       description: Parameter group family name.
                       type: string
+                      default: aurora-postgresql15
                     databaseName:
                       description: name of the aurora database
                       type: string
+                    engine:
+                      description: engine type
+                      type: string
+                      default: aurora-postgresql
                     engineVersion:
                       description: engine version
                       type: string
+                      default: "15.2"
+                    masterUsername:
+                      description: cluster user name
+                      type: string
+                      default: adminuser
+                    skipFinalSnapshot:
+                      description: Whether a final DB snapshot is created before the DB cluster is deleted
+                      type: boolean
+                      default: true
                     storageType:
                       type: string
+                      default: aurora-iopt1
                     availabilityZones:
                       type: array
                       items:
@@ -74,24 +100,35 @@ spec:
                       type: string
                     backupRetentionPeriod:
                       type: integer
+                      default: 7
                     preferredBackupWindow: 
                       type: string
+                      default: "02:00-03:00"
                     preferredMaintenanceWindow:
-                      type: string 
+                      type: string
+                      default: "sun:04:00-sun:05:00"
                     clusterInstanceClass:
-                      type: string 
+                      type: string
+                      default: db.r6g.large
+                    performanceInsightsEnabled:
+                      description: Specifies whether Performance Insights is enabled or not.
+                      type: boolean
+                      default: true
                     monitoringRoleArn:
                       type: string
                     monitoringInterval:
                       type: integer
+                      default: 60
                     performanceInsightsRetentionPeriod:
                       type: integer
+                      default: 7
                     enabledCloudwatchLogsExports:
                       type: array
                       items:
                         type: string
                     applyImmediately:
                       type: boolean
+                      default: true
                     snapshotIdentifier:
                       type: string
                     finalSnapshotIdentifier:
@@ -104,40 +141,55 @@ spec:
                   required:
                   - providerConfigName
                   - region
+                  - monitoringRoleArn
                 proxyConfig:
                   description: parameter for Aurora Proxy configuration
                   type: object    
                   properties:  
+                    iamAuth:
+                      enum:
+                      - REQUIRED
+                      - DISABLED
+                      type: string
+                      default: REQUIRED
+                      description: Whether to require or disallow IAM authentication for connections.
                     debugLogging:
                       description: Parameter to set whether the proxy includes detailed 
                         information about SQL statements in its logs.
                       type: boolean
+                      default: true
                     idleClientTimeout:  
                       description: Parameter to set the number of seconds that a connection 
                         to the proxy can be inactive before the proxy disconnects it.
-                      type: number   
+                      type: number
+                      default: 3600
                     proxyRoleArn:
                       description: Role Arn for the database proxy.
                       type: string
-                    secretArn:
-                      description: Arn of the db credential secret.
-                      type: string
+                    # secretArn:
+                    #   description: Arn of the db credential secret.
+                    #   type: string
                     connectionBorrowTimeout:
                       description: The number of seconds for a proxy to wait for a connection
                         to become available in the connection pool.
                       type: number
+                      default: 120
                     maxIdleConnectionsPercent:
                       description: Controls how actively the proxy closes idle database 
                         connections in the connection pool.
                       type: number
+                      default: 50
                     maxConnectionsPercent:
                       description: The maximum size of the connection pool for each target 
                         in a target group.
                       type: number
+                      default: 50
                     initQuery:
                       description: One or more SQL statements for the proxy to run when 
                         opening each new database connection.
-                      type: string  
+                      type: string
+                  required:
+                  - proxyRoleArn
             status:
               properties:
                 subnetGroupArn:
