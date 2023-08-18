@@ -1,14 +1,28 @@
 # Example to deploy serverless architecture
-This example deploys the architecture depicted on the diagram. First, it applies the Crossplane XRD and Compositions. Then it applies the Claim which creates all the AWS resources, and deploys the code to the Lambda funtion. Last, it send a message to the SQS Queue, that triggers the Lambda fuction, which posts the results in the S3 bucket.
-
+This example deploys the architecture depicted on the diagram. First, it applies the Crossplane Composite Resource Definitions (XRDs) and Compositions. Then it applies the Claim which creates all the AWS resources, and deploys the code to the Lambda function. Last, it sends a message to the SQS Queue, that triggers the Lambda function, which posts the results in the S3 bucket.
 ![Serverless diagram](../../../diagrams/sqs-lambda-s3.png)
 
+## Before you continue
+For users new to Crossplane, we recommend first completing Crossplane's official getting started guide: https://docs.crossplane.io/master/getting-started/provider-aws/ in order to grasp the fundamentals of Crossplane. The getting started guide will describe how to authenticate the Crossplane `aws-provider` to an AWS account and create AWS resources from your cluster.
+
 ## Pre-requisites:
- - [Upbound AWS Provider Crossplane Blueprint Examples](../../../README.md)
- - [Option 1: Container of this Go application](../object-processor-app/README.md)
+- [Kubectl](https://kubernetes.io/docs/tasks/tools/)
+- [AWS CLI >= v2.0](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+- [Terraform >=v1.0.0](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+
+### Deploy Crossplane
+Create an EKS cluster and install Crossplane with [this terraform code](https://github.com/awslabs/crossplane-on-eks/blob/main/bootstrap/terraform/README.md).
+
+### Build and deploy a docker image
+As described in [Option 1: Container of this Go application](https://github.com/awslabs/crossplane-on-eks/blob/main/examples/upbound-aws-provider/composite-resources/serverless-examples/object-processor-app/README.md#option-1-container), build the Docker image with a sample app, create an ECR repo, and upload the image to it. The container image contains the source code for the Lambda function.
 
 ### Deploy XRDs and Compositions
+Navigate to the following directory:
+```shell
+cd examples/upbound-aws-provider/composite-resources/serverless-examples/sqs-lambda-s3/
+```
 
+and run the command below
 ```shell
 kubectl apply -k .
 ```
@@ -49,21 +63,23 @@ xsqslambdas3.awsblueprints.io                         XServerlessApp       awsbl
 
 ### Update and apply the claim
 
-Replace the image name, and aws region in the claim with the ones set in the pre-requizite step [Option 1: Container of this Go application](../object-processor-app/README.md) where the docker image is uploaded to ECR.<br>
-Or recreate them using
+Make sure you are in the following directory:
+```shell
+cd examples/upbound-aws-provider/composite-resources/serverless-examples/sqs-lambda-s3/
+```
+
+Set the image name and AWS region in the claim with the ones set in the previous step “Build and deploy a docker image” where the docker image is uploaded to ECR.
 ```shell
 export AWS_REGION=<replace-with-aws-region> # example `us-east-1`
 export IMAGE_NAME=<replace-with-image-name> # example `lambda-test`
 ```
 
-Change the default value for `CLAIM_NAME`
+Change the default value for `CLAIM_NAME` with any name you choose.
 ```shell
 export CLAIM_NAME=<replace-with-claim-name> # example `test-sqs-lambda-s3`
 ```
 
-Use the template file `sqs-lambda-s3-claim-tmpl.yaml` to create the claim file with the variables `CLAIM_NAME`, `IMAGE_NAME`, and `AWS_REGION` substituted
-
-
+Run the below command to use the template file `sqs-lambda-s3-claim-tmpl.yaml` in the `claim` folder to create the claim file with the variables `CLAIM_NAME`, `IMAGE_NAME`, and `AWS_REGION` substituted.
 ```shell
 envsubst < "claim/sqs-lambda-s3-claim-tmpl.yaml" > "claim/sqs-lambda-s3-claim.yaml"
 ```
@@ -145,7 +161,7 @@ Expected output:
     Name:         test-sqs-lambda-s3-hc2m5-2qzfl
 ```
 
-#### Test
+### Test
 Use the following command to get the SQS URL and store it in $SQS_URL environment variable
 ```shell
 SQS_URL=$(aws sqs list-queues --output json | jq -r '.QueueUrls|map(select(contains("test-sqs-lambda-s3"))) | .[0]' | tr -d '[:space:]')

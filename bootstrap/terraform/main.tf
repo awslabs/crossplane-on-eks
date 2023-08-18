@@ -98,6 +98,7 @@ module "eks" {
   cluster_name                   = local.name
   cluster_version                = local.cluster_version
   cluster_endpoint_public_access = true
+  kms_key_enable_default_policy  = true
 
   cluster_addons = {
     aws-ebs-csi-driver = {
