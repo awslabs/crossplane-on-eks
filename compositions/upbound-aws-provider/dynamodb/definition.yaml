@@ -112,11 +112,8 @@ spec:
                         type: array
                     type: object
                     required:
-                      - hashKey
                       - name
                       - rangeKey
-                      - readCapacity
-                      - writeCapacity
                       - projectionType
                       - nonKeyAttributes
                   type: array
