@@ -1,0 +1,101 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: table.dynamodb.awsblueprints.io
+  labels:
+    awsblueprints.io/provider: aws
+    awsblueprints.io/environment: dev
+spec:
+  writeConnectionSecretsToNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: awsblueprints.io/v1alpha1
+    kind: XDynamoDBTable
+  patchSets:
+    - name: common-fields
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.name
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+  resources:
+    - name: table
+      connectionDetails:
+        - type: FromFieldPath
+          name: tableName
+          fromFieldPath: status.atProvider.id
+        - type: FromFieldPath
+          name: tableArn
+          fromFieldPath: status.atProvider.arn
+        - type: FromFieldPath
+          name: region
+          fromFieldPath: metadata.annotations[crossplane.io/region]
+      base:
+        apiVersion: dynamodb.aws.upbound.io/v1beta1
+        kind: Table
+        spec:
+          forProvider:
+            writeConnectionSecretToRef:
+              namespace: crossplane-system
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.attribute
+          toFieldPath: spec.forProvider.attribute
+          policy:
+            mergeOptions:
+              appendSlice: true
+              keepMapValues: true
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            mergeOptions:
+              keepMapValues: true
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.hashKey
+          toFieldPath: spec.forProvider.hashKey
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.billingMode
+          toFieldPath: spec.forProvider.billingMode
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.rangeKey
+          toFieldPath: spec.forProvider.rangeKey
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.readCapacity
+          toFieldPath: spec.forProvider.readCapacity 
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.writeCapacity
+          toFieldPath: spec.forProvider.writeCapacity
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.globalSecondaryIndex
+          toFieldPath: spec.forProvider.globalSecondaryIndex
+          policy:
+            mergeOptions:
+              keepMapValues: true
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.localSecondaryIndex
+          toFieldPath: spec.forProvider.localSecondaryIndex
+          policy:
+            mergeOptions:
+              keepMapValues: true
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.id
+          toFieldPath: status.tableName
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.arn
+          toFieldPath: status.tableArn
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.region
+          toFieldPath: metadata.annotations[crossplane.io/region]
+        - type: ToCompositeFieldPath
+          fromFieldPath: metadata.annotations[crossplane.io/region]
+          toFieldPath: status.region

@@ -1,0 +1,19 @@
+apiVersion: awsblueprints.io/v1alpha1
+kind: DynamoDBTable
+metadata:
+  name: test-pro-dynamodb-table
+  namespace: default
+spec:
+  writeConnectionSecretToRef:
+    name: dynamo
+  attribute:
+    - name: UserId
+      type: S
+  billingMode: PROVISIONED
+  readCapacity: 2
+  writeCapacity: 2
+  hashKey: UserId
+  region: us-east-1
+  tags:
+    namespace: team-x
+    cluster: crossplane
