@@ -17,13 +17,13 @@ spec:
     - name: common-fields
       patches:
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.providerConfigName
+          fromFieldPath: spec.resourceConfig.providerConfigName
           toFieldPath: spec.providerConfigRef.name
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.region
+          fromFieldPath: spec.resourceConfig.region
           toFieldPath: spec.forProvider.region
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.name
+          fromFieldPath: spec.resourceConfig.name
           toFieldPath: metadata.annotations[crossplane.io/external-name]
   resources:
     - name: table
@@ -34,9 +34,6 @@ spec:
         - type: FromFieldPath
           name: tableArn
           fromFieldPath: status.atProvider.arn
-        - type: FromFieldPath
-          name: region
-          fromFieldPath: metadata.annotations[crossplane.io/region]
       base:
         apiVersion: dynamodb.aws.upbound.io/v1beta1
         kind: Table
@@ -48,41 +45,41 @@ spec:
         - type: PatchSet
           patchSetName: common-fields
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.attribute
+          fromFieldPath: spec.resourceConfig.attribute
           toFieldPath: spec.forProvider.attribute
           policy:
             mergeOptions:
               appendSlice: true
               keepMapValues: true
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.tags
+          fromFieldPath: spec.resourceConfig.tags
           toFieldPath: spec.forProvider.tags
           policy:
             mergeOptions:
               keepMapValues: true
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.hashKey
+          fromFieldPath: spec.resourceConfig.hashKey
           toFieldPath: spec.forProvider.hashKey
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.billingMode
+          fromFieldPath: spec.resourceConfig.billingMode
           toFieldPath: spec.forProvider.billingMode
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.rangeKey
+          fromFieldPath: spec.resourceConfig.rangeKey
           toFieldPath: spec.forProvider.rangeKey
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.readCapacity
+          fromFieldPath: spec.resourceConfig.readCapacity
           toFieldPath: spec.forProvider.readCapacity 
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.writeCapacity
+          fromFieldPath: spec.resourceConfig.writeCapacity
           toFieldPath: spec.forProvider.writeCapacity
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.globalSecondaryIndex
+          fromFieldPath: spec.resourceConfig.globalSecondaryIndex
           toFieldPath: spec.forProvider.globalSecondaryIndex
           policy:
             mergeOptions:
               keepMapValues: true
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.localSecondaryIndex
+          fromFieldPath: spec.resourceConfig.localSecondaryIndex
           toFieldPath: spec.forProvider.localSecondaryIndex
           policy:
             mergeOptions:
@@ -93,9 +90,3 @@ spec:
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.arn
           toFieldPath: status.tableArn
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.region
-          toFieldPath: metadata.annotations[crossplane.io/region]
-        - type: ToCompositeFieldPath
-          fromFieldPath: metadata.annotations[crossplane.io/region]
-          toFieldPath: status.region

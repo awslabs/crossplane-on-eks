@@ -29,98 +29,102 @@ spec:
             spec:
               type: object
               properties:
-                attribute: #required for hashKey and/or rangeKey
-                  items:
-                    properties:
-                      name: #name of the hashKey and/or rangeKey
+                resourceConfig:
+                  properties:
+                    attribute: #required for hashKey and/or rangeKey
+                      items:
+                        properties:
+                          name: #name of the hashKey and/or rangeKey
+                            type: string
+                          type:
+                            enum:
+                            - B #binary
+                            - N #number
+                            - S #string
+                            type: string
+                        required:
+                        - name
+                        - type
+                        type: object
+                      type: array
+                    hashKey:
+                      type: string
+                    rangeKey:
+                      type: string
+                    billingMode:
+                      type: string
+                      default: PAY_PER_REQUEST
+                    readCapacity:
+                      type: number
+                    writeCapacity:
+                      type: number              
+                    name:
+                      type: string
+                    providerConfigName:
+                      type: string
+                      default: aws-provider-config
+                    region:
+                      type: string
+                    tags:
+                      additionalProperties:
                         type: string
-                      type:
-                        enum:
-                        - B #binary
-                        - N #number
-                        - S #string
-                        type: string
-                    required:
-                    - name
-                    - type
-                    type: object
-                  type: array
-                hashKey:
-                  type: string
-                rangeKey:
-                  type: string
-                billingMode:
-                  type: string
-                  default: PAY_PER_REQUEST
-                readCapacity:
-                  type: number
-                writeCapacity:
-                  type: number              
-                name:
-                  type: string
-                providerConfigName:
-                  type: string
-                  default: aws-provider-config
-                region:
-                  type: string
-                tags:
-                  additionalProperties:
-                    type: string
-                  description: Key-value map of resource tags.
+                      description: Key-value map of resource tags.
+                      type: object
+                    globalSecondaryIndex:
+                      items:
+                        properties:
+                          hashKey:
+                            type: string
+                          name:
+                            type: string  
+                          rangeKey:
+                            type: string
+                          readCapacity:
+                            type: number
+                          writeCapacity:
+                            type: number
+                          projectionType:
+                            type: string
+                          nonKeyAttributes: #required for gsi
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                        required:
+                          - hashKey
+                          - name
+                          - rangeKey
+                          - readCapacity
+                          - writeCapacity
+                          - projectionType
+                          - nonKeyAttributes
+                      type: array
+                    localSecondaryIndex:
+                      items:
+                        properties:
+                          name:
+                            type: string  
+                          rangeKey:
+                            type: string
+                          projectionType:
+                            type: string
+                          nonKeyAttributes: #required for lsi
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                        required:
+                          - name
+                          - rangeKey
+                          - projectionType
+                          - nonKeyAttributes
+                      type: array
+                  required:
+                    - hashKey
+                    - attribute
                   type: object
-                globalSecondaryIndex:
-                  items:
-                    properties:
-                      hashKey:
-                        type: string
-                      name:
-                        type: string  
-                      rangeKey:
-                        type: string
-                      readCapacity:
-                        type: number
-                      writeCapacity:
-                        type: number
-                      projectionType:
-                        type: string
-                      nonKeyAttributes: #required for gsi
-                        items:
-                          type: string
-                        type: array
-                    type: object
-                    required:
-                      - hashKey
-                      - name
-                      - rangeKey
-                      - readCapacity
-                      - writeCapacity
-                      - projectionType
-                      - nonKeyAttributes
-                  type: array
-                localSecondaryIndex:
-                  items:
-                    properties:
-                      name:
-                        type: string  
-                      rangeKey:
-                        type: string
-                      projectionType:
-                        type: string
-                      nonKeyAttributes: #required for gsi
-                        items:
-                          type: string
-                        type: array
-                    type: object
-                    required:
-                      - name
-                      - rangeKey
-                      - projectionType
-                      - nonKeyAttributes
-                  type: array
               required:
-                - region
-                - hashKey
-                - attribute
+              - resourceConfig    
             status:
               type: object
               description: TableStatus defines the observed state of Table
