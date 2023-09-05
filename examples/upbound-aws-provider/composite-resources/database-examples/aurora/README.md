@@ -157,7 +157,7 @@ Create an  policy to allow the pod to connect to the Aurora Database
             }
         ]
     }'
-    ```
+  ```
     
     Create a service account passing the above policy arn
 
@@ -169,10 +169,10 @@ Create an  policy to allow the pod to connect to the Aurora Database
         --attach-policy-arn ${POLICY_ARN} \
         --approve \
         -override-existing-serviceaccounts
-        ``` 
+    ``` 
     Generate a DB token which can be used for password when asked
     
-    ```shell
+  ```shell
     
     PROXY_TERGET-ENDPOINT=k get secrets aurora-cluster-secrets  -n team-a -o json | jq -r .data.proxyEndpoint | base64 --decode
     CLUSTER_USER_NAME=k get secrets aurora-cluster-secrets  -n team-a -o json | jq -r .data.clusterUsername | base64 --decode
@@ -182,7 +182,8 @@ Create an  policy to allow the pod to connect to the Aurora Database
     --port 5432 \
     --region us-east-1 \
     --username ${CLUSTER_USER_NAME}
-    ```
+    
+  ```
    create the pod with pgsql client:
 
   ```shell
@@ -207,7 +208,7 @@ Create an  policy to allow the pod to connect to the Aurora Database
         - name: secret-volume
         secret:
             secretName: aurora-cluster-secrets # This secret name can be changed in the claim
-   ```
+  ```
 
    Exec into the pod
 
