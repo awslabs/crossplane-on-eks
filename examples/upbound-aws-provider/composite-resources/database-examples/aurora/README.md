@@ -88,17 +88,19 @@ Create an IAM role and attach policy to the role (This role is required for auro
 ```
   ### Provide value to the claim before applying.
      
-     1. Open the claim and substitute the above 2 role arn with monitoringRoleArn and proxyRoleArn respectively.
-     2. Make sure to go over the claim and substitute other field variable which has been mentioned e.g CIDR block
+     1. Open the claim and substitute aurora-monitoring role arn with monitoringRoleArn and rds-proxy role arn with proxyRoleArn respectively.
+     2. Make sure check the CIDR block for application and provide in the claim. This will used as the security group 
+        ingress rule for proxy from application ( we can also provide the security group id instead of CIDR).    
     
-     Assuming that we have already applied the XRD and composition , if we run the below we can see a similar output as below
  ### Verify your XRDS and composition
 
-    Verify the XRDs
+  Verify the XRDs
+
 ```shell
     kubectl get xrds
 ```
-    Expected output
+
+ Expected output
 
     NAME                          ESTABLISHED   OFFERED   AGE
     xauroras.db.awsblueprint.io   True          True      5m
@@ -109,8 +111,10 @@ Create an IAM role and attach policy to the role (This role is required for auro
  ```shell
     
      kubectl get compositions
-```    
-    Expected output. Note: the output might contain more compositions but these are the ones uses by the claim in the next step
+```
+
+    Expected output. 
+    Note: the output might contain more compositions but these are the ones uses by the claim in the next step
        
     NAME                          XR-KIND   XR-APIVERSION                 AGE
     xauroras.db.awsblueprint.io   XAurora   db.awsblueprint.io/v1alpha1   5m
@@ -123,8 +127,10 @@ Create an IAM role and attach policy to the role (This role is required for auro
      k apply -f aurora-postgresql.yaml
 
 ```
+
     We can check the execution of claim by following command:
 
+ 
  ```shell
      
      k get Aurora -n team-a
