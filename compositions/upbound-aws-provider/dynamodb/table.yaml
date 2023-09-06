@@ -31,9 +31,6 @@ spec:
         - type: FromFieldPath
           name: tableName
           fromFieldPath: status.atProvider.id
-        - type: FromFieldPath
-          name: tableArn
-          fromFieldPath: status.atProvider.arn
       base:
         apiVersion: dynamodb.aws.upbound.io/v1beta1
         kind: Table

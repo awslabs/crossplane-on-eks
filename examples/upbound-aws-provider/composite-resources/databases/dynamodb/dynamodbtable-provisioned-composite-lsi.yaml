@@ -2,7 +2,6 @@ apiVersion: awsblueprints.io/v1alpha1
 kind: DynamoDBTable
 metadata:
   name: test-lsi2-dynamodb-table
-  namespace: default
 spec:
   writeConnectionSecretToRef:
     name: dynamolsi

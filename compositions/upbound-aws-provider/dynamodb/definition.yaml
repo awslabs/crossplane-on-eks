@@ -14,9 +14,7 @@ spec:
     kind: DynamoDBTable
     plural: dynamodbtables
   connectionSecretKeys:
-    - region
     - tableName
-    - tableArn
   versions:
     - name: v1alpha1
       served: true
@@ -129,8 +127,6 @@ spec:
               type: object
               description: TableStatus defines the observed state of Table
               properties:
-                region:
-                  type: string
                 tableArn:
                   description: Indicates this table's ARN
                   type: string
