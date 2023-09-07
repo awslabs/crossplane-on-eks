@@ -29,6 +29,19 @@ spec:
               properties:
                 resourceConfig:
                   properties:
+                    providerConfigName:
+                      type: string
+                      default: aws-provider-config
+                    region:
+                      type: string
+                    tags:
+                      additionalProperties:
+                        type: string
+                      description: Key-value map of resource tags.
+                      type: object
+                  type: object
+                dynamoConfig:
+                  properties:
                     attribute: #required for hashKey and/or rangeKey
                       items:
                         properties:
@@ -58,16 +71,6 @@ spec:
                       type: number              
                     name:
                       type: string
-                    providerConfigName:
-                      type: string
-                      default: aws-provider-config
-                    region:
-                      type: string
-                    tags:
-                      additionalProperties:
-                        type: string
-                      description: Key-value map of resource tags.
-                      type: object
                     globalSecondaryIndex:
                       items:
                         properties:
@@ -122,7 +125,8 @@ spec:
                     - attribute
                   type: object
               required:
-              - resourceConfig    
+              - resourceConfig 
+              - dynamoConfig    
             status:
               type: object
               description: TableStatus defines the observed state of Table

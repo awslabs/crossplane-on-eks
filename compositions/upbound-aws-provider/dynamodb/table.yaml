@@ -23,7 +23,7 @@ spec:
           fromFieldPath: spec.resourceConfig.region
           toFieldPath: spec.forProvider.region
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.name
+          fromFieldPath: spec.dynamoConfig.name
           toFieldPath: metadata.annotations[crossplane.io/external-name]
   resources:
     - name: table
@@ -42,7 +42,7 @@ spec:
         - type: PatchSet
           patchSetName: common-fields
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.attribute
+          fromFieldPath: spec.dynamoConfig.attribute
           toFieldPath: spec.forProvider.attribute
           policy:
             mergeOptions:
@@ -55,28 +55,28 @@ spec:
             mergeOptions:
               keepMapValues: true
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.hashKey
+          fromFieldPath: spec.dynamoConfig.hashKey
           toFieldPath: spec.forProvider.hashKey
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.billingMode
+          fromFieldPath: spec.dynamoConfig.billingMode
           toFieldPath: spec.forProvider.billingMode
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.rangeKey
+          fromFieldPath: spec.dynamoConfig.rangeKey
           toFieldPath: spec.forProvider.rangeKey
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.readCapacity
+          fromFieldPath: spec.dynamoConfig.readCapacity
           toFieldPath: spec.forProvider.readCapacity 
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.writeCapacity
+          fromFieldPath: spec.dynamoConfig.writeCapacity
           toFieldPath: spec.forProvider.writeCapacity
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.globalSecondaryIndex
+          fromFieldPath: spec.dynamoConfig.globalSecondaryIndex
           toFieldPath: spec.forProvider.globalSecondaryIndex
           policy:
             mergeOptions:
               keepMapValues: true
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.localSecondaryIndex
+          fromFieldPath: spec.dynamoConfig.localSecondaryIndex
           toFieldPath: spec.forProvider.localSecondaryIndex
           policy:
             mergeOptions:

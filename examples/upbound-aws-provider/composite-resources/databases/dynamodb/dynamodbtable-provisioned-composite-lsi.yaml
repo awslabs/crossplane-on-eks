@@ -6,6 +6,11 @@ spec:
   writeConnectionSecretToRef:
     name: dynamolsi
   resourceConfig:
+    region: us-west-2
+    tags:
+      namespace: team-x
+      cluster: crossplane
+  dynamoConfig:
     attribute:
       - name: Artist
         type: S
@@ -24,7 +29,3 @@ spec:
     writeCapacity: 20
     hashKey: Artist
     rangeKey: SongTitle
-    region: us-west-2
-    tags:
-      namespace: team-x
-      cluster: crossplane

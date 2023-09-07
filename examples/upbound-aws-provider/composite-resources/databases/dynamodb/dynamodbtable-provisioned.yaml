@@ -6,6 +6,11 @@ spec:
   writeConnectionSecretToRef:
     name: dynamo
   resourceConfig:
+    region: us-west-2
+    tags:
+      namespace: team-x
+      cluster: crossplane
+  dynamoConfig:
     attribute:
       - name: UserId
         type: S
@@ -13,7 +18,3 @@ spec:
     readCapacity: 2
     writeCapacity: 2
     hashKey: UserId
-    region: us-west-2
-    tags:
-      namespace: team-x
-      cluster: crossplane
