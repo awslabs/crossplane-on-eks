@@ -1,0 +1,31 @@
+apiVersion: awsblueprints.io/v1alpha1
+kind: DynamoDBTable
+metadata:
+  name: test-lsi2-dynamodb-table
+spec:
+  writeConnectionSecretToRef:
+    name: dynamolsi
+  resourceConfig:
+    region: us-west-2
+    tags:
+      namespace: team-x
+      cluster: crossplane
+  dynamoConfig:
+    attribute:
+      - name: Artist
+        type: S
+      - name: SongTitle
+        type: S
+      - name: AlbumTitle
+        type: S
+    billingMode: PROVISIONED
+    localSecondaryIndex:
+      - name: AlbumTitleIndex
+        nonKeyAttributes:
+          - Genre
+        projectionType: INCLUDE
+        rangeKey: AlbumTitle
+    readCapacity: 20
+    writeCapacity: 20
+    hashKey: Artist
+    rangeKey: SongTitle

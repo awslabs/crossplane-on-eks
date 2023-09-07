@@ -1,0 +1,34 @@
+apiVersion: awsblueprints.io/v1alpha1
+kind: DynamoDBTable
+metadata:
+  name: test-gsi-dynamodb-table
+spec:
+  writeConnectionSecretToRef:
+    name: dynamogsi
+  resourceConfig:
+    region: us-west-2
+    tags:
+      namespace: team-x
+      cluster: crossplane
+  dynamoConfig:
+    attribute:
+      - name: UserId
+        type: S
+      - name: UserName
+        type: S
+      - name: Pass
+        type: B
+    billingMode: PROVISIONED
+    globalSecondaryIndex:
+      - hashKey: UserName
+        name: UserNameIndex
+        nonKeyAttributes:
+          - UserId
+        projectionType: INCLUDE
+        rangeKey: Pass
+        readCapacity: 10
+        writeCapacity: 10
+    readCapacity: 20
+    writeCapacity: 20
+    hashKey: UserId
+    rangeKey: UserName
