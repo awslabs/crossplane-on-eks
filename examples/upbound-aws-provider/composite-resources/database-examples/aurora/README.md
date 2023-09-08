@@ -26,16 +26,13 @@ aws iam attach-role-policy \
 --policy-arn arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
 ```
 
-Create an 2nd IAM role and attach policy to the role (This role is required for aurora proxy to fetch db secrets from secret manager )
+Create second IAM role and attach policy to the role (This role is required for aurora proxy to fetch db secrets from secret manager )
 
 ```shell
 aws iam create-role \
 --role-name rds-proxy \
 --assume-role-policy-document file://rds-proxy.json
 ```
-
-Note: Before executing the below please navigate to rds-proxy-policy.json and replace 
-[REGIONNAME] with your current region.
  
  ```shell
 CURRENT_REGION=<REGION_NAME> # replace <REGION_NAME> with current region name e.g us-east-1.
@@ -137,7 +134,7 @@ CLUSTER_USER_NAME=kubectl get secrets aurora-cluster-secrets  -n team-a -o json 
 aws rds generate-db-auth-token \
 --hostname ${PROXY_TERGET-ENDPOINT}  \
 --port 5432 \
---region ${REGION} \
+--region ${CURRENT_REGION} \
 --username ${CLUSTER_USER_NAME}
 ```
 create the pod with psql client:
