@@ -38,11 +38,12 @@ Note: Before executing the below please navigate to rds-proxy-policy.json and re
 [REGIONNAME] with your current region.
  
  ```shell
-current_region=us-east-1 # provide your current region
+CURRENT_REGION=<REGION_NAME> # replace <REGION_NAME> with current region name e.g us-east-1.
+CLUSTER_NAME=<EKS_CLUSTER_NAME> # replace <EKS_CLUSTER_NAME> with eks cluster name.
 ```
 
 ```shell
-sed -i -e "s/REGION-NAME/$current_region/g" rds-proxy-policy.json
+sed -i -e "s/REGION-NAME/$CURRENT_REGION/g" rds-proxy-policy.json
 aws iam put-role-policy \
 --role-name rds-proxy \
 --policy-name rds-proxy-policy \
@@ -106,7 +107,7 @@ Below is the default behaviour of the resource which will be provisioned through
  5. The Aurora DB has been configured with logging and monitoring.
 
 ### Steps to check the connectivity from a pod 
-Create an  policy to allow the pod to connect to the Aurora Database
+Create a  policy to allow the pod to connect to the Aurora Database
   
 ```shell
 aws iam create-policy \
@@ -117,7 +118,6 @@ Create a service account passing the above policy arn
 
 ```shell
 POLICY_ARN=$(aws iam list-policies --query 'Policies[?PolicyName==`rdsproxy-access`].Arn' --output text)
-CLUSTER_NAME=$(aws eks list-clusters --query 'clusters[]' --output text | grep <YOUR-CLUSTER-NAME>)
 
 eksctl create iamserviceaccount \
 --name rds-access \
