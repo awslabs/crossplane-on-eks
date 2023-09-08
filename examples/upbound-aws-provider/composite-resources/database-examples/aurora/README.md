@@ -39,6 +39,9 @@ Note: Before executing the below please navigate to rds-proxy-policy.json and re
  
  ```shell
 current_region=us-east-1 # provide your current region
+```
+
+```shell
 sed -i -e "s/REGION-NAME/$current_region/g" rds-proxy-policy.json
 aws iam put-role-policy \
 --role-name rds-proxy \
