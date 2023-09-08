@@ -45,7 +45,7 @@ Ensure that you have installed the following tools in your Mac or Windows Laptop
 ### Troubleshooting
 1. If `terraform apply` errors out after creating the cluster when trying to apply the helm charts, try running the command:
 ```shell
-aws eks --region <enter-your-region> update-kubeconfig --name <cluster-name>
+aws eks --region <enter-your-region> update-kubeconfig --name <cluster-name> --alias <cluster-name>
 ```
 and executing terraform apply again.
 

@@ -152,19 +152,26 @@ module "eks_blueprints_addons" {
   enable_karpenter                 = true
   enable_metrics_server            = true
   enable_kube_prometheus_stack     = true
+  kube_prometheus_stack = {
+    values = [yamlencode({
+      prometheus = {
+        service = {
+          type = "LoadBalancer"
+        }
+      }
+    })]
+  }
 
-  depends_on = [module.eks.managed_node_groups]
+  depends_on = [module.eks.eks_managed_node_groups]
 }
 
-module "eks_blueprints_crossplane_addons" {
-  source = "github.com/aws-ia/terraform-aws-eks-blueprints//modules/kubernetes-addons?ref=v4.32.1"
-
-  eks_cluster_id = module.eks.cluster_name
-  # Deploy Crossplane
-  # Default helm chart and providers values set at https://github.com/aws-ia/terraform-aws-eks-blueprints/blob/main/modules/kubernetes-addons/crossplane/locals.tf
+#---------------------------------------------------------------
+# Crossplane
+#---------------------------------------------------------------
+module "crossplane" {
+  source = "./addon/"
   enable_crossplane = true
-  crossplane_helm_config = {
-    version = "1.12.1"
+  crossplane = {
     values = [yamlencode({
       args    = ["--enable-environment-configs"]
       metrics = {
@@ -192,48 +199,111 @@ module "eks_blueprints_crossplane_addons" {
       }
     })]
   }
-  #---------------------------------------------------------
-  # Crossplane community AWS Provider deployment
-  #---------------------------------------------------------
-  crossplane_aws_provider = {
-    # !NOTE!: only enable one AWS provider at a time
-    enable          = local.crossplane_aws_provider_enable
-    provider_config = "aws-provider-config"
-    provider_aws_version = "v0.40.0"
-    # to override the default irsa policy:
-    # additional_irsa_policies = ["arn:aws:iam::aws:policy/AmazonS3FullAccess"]
-  }
-
-  #---------------------------------------------------------
-  # Crossplane Upbound AWS Provider deployment
-  #---------------------------------------------------------
-  crossplane_upbound_aws_provider = {
-    # !NOTE!: only enable one AWS provider at a time
-    enable          = local.crossplane_upbound_aws_provider_enable
-    provider_config = "aws-provider-config"
-    provider_aws_version = "v0.35.0"
-    # to override the default irsa policy:
-    # additional_irsa_policies = ["arn:aws:iam::aws:policy/AmazonS3FullAccess"]
-  }
-
-  #---------------------------------------------------------
-  # Crossplane Kubernetes Provider deployment
-  #---------------------------------------------------------
-  crossplane_kubernetes_provider = {
-    enable = true
-    provider_kubernetes_version = "v0.9.0"
-  }
-
-  #---------------------------------------------------------
-  # Crossplane Helm Provider deployment
-  #---------------------------------------------------------
-  crossplane_helm_provider = {
-    enable = true
-    provider_helm_version = "v0.15.0"
-  }
-
-  depends_on = [module.eks.managed_node_groups, module.eks_blueprints_addons]
 }
+
+locals {
+  crossplane_namespace = "crossplane-system"
+  crossplane_sa_prefix = "provider-aws-*"
+}
+
+module "crossplane_irsa_aws" {
+#todo count
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "~> 5.30"
+
+  role_name_prefix = "crossplane-${local.crossplane_sa_prefix}"
+
+  role_policy_arns = {
+    policy = "arn:aws:iam::aws:policy/AdministratorAccess"
+  }
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["${local.crossplane_namespace}:${local.crossplane_sa_prefix}"]
+    }
+  }
+
+  tags = local.tags
+}
+#module "eks_blueprints_crossplane_addons" {
+#  source = "github.com/aws-ia/terraform-aws-eks-blueprints//modules/kubernetes-addons?ref=v4.32.1"
+#
+#  eks_cluster_id = module.eks.cluster_name
+#  # Deploy Crossplane
+#  # Default helm chart and providers values set at https://github.com/aws-ia/terraform-aws-eks-blueprints/blob/main/modules/kubernetes-addons/crossplane/locals.tf
+#  enable_crossplane = true
+#  crossplane_helm_config = {
+#    version = "1.12.1"
+#    values = [yamlencode({
+#      args    = ["--enable-environment-configs"]
+#      metrics = {
+#        enabled = true
+#      }
+#      resourcesCrossplane = {
+#        limits = {
+#          cpu = "1"
+#          memory = "2Gi"
+#        }
+#        requests = {
+#          cpu = "100m"
+#          memory = "1Gi"
+#        }
+#      }
+#      resourcesRBACManager = {
+#        limits = {
+#          cpu = "500m"
+#          memory = "1Gi"
+#        }
+#        requests = {
+#          cpu = "100m"
+#          memory = "512Mi"
+#        }
+#      }
+#    })]
+#  }
+#  #---------------------------------------------------------
+#  # Crossplane community AWS Provider deployment
+#  #---------------------------------------------------------
+#  crossplane_aws_provider = {
+#    # !NOTE!: only enable one AWS provider at a time
+#    enable          = local.crossplane_aws_provider_enable
+#    provider_config = "aws-provider-config"
+#    provider_aws_version = "v0.40.0"
+#    # to override the default irsa policy:
+#    # additional_irsa_policies = ["arn:aws:iam::aws:policy/AmazonS3FullAccess"]
+#  }
+#
+#  #---------------------------------------------------------
+#  # Crossplane Upbound AWS Provider deployment
+#  #---------------------------------------------------------
+#  crossplane_upbound_aws_provider = {
+#    # !NOTE!: only enable one AWS provider at a time
+#    enable          = local.crossplane_upbound_aws_provider_enable
+#    provider_config = "aws-provider-config"
+#    provider_aws_version = "v0.35.0"
+#    # to override the default irsa policy:
+#    # additional_irsa_policies = ["arn:aws:iam::aws:policy/AmazonS3FullAccess"]
+#  }
+#
+#  #---------------------------------------------------------
+#  # Crossplane Kubernetes Provider deployment
+#  #---------------------------------------------------------
+#  crossplane_kubernetes_provider = {
+#    enable = true
+#    provider_kubernetes_version = "v0.9.0"
+#  }
+#
+#  #---------------------------------------------------------
+#  # Crossplane Helm Provider deployment
+#  #---------------------------------------------------------
+#  crossplane_helm_provider = {
+#    enable = true
+#    provider_helm_version = "v0.15.0"
+#  }
+#
+#  depends_on = [module.eks.managed_node_groups, module.eks_blueprints_addons]
+#}
 
 
 #---------------------------------------------------------------
