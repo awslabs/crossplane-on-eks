@@ -1,0 +1,15 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "",
+        "Effect": "Allow",
+        "Action": [
+          "rds-db:connect"
+        ],
+        "Resource": [
+          "arn:aws:rds-db:us-east-1:277030185641:dbuser:*/*"
+        ]
+      }
+    ]
+}
