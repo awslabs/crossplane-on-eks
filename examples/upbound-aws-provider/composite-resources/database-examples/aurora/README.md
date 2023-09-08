@@ -5,7 +5,9 @@ Below are the steps to create a cluster and connect from a pod with an psql clie
 ## Pre-requisites
  - [Upbound AWS Provider Crossplane Blueprint Examples](../../README.md)
 
-
+Note : aurora-monitoring & rds-proxy role will eventually be part of composition , till then we need to create that 2 role external to the composition.
+Reference of the issue created for tracking: 
+- [Add Aurora monitoring and rds proxy role as part of the aurora composition](https://github.com/awslabs/crossplane-on-eks/issues/144)
 ### Create 2 roles, one for RDS Monitoring and one for RDS Proxy
 
 Create an IAM role and attach policy to the role (This role is required for aurora to perform monitoring)
@@ -54,9 +56,10 @@ kubectl get xrds | grep xauroras.db.awsblueprint.io
 
 Expected output:
 
+```shell
 NAME                          ESTABLISHED   OFFERED   AGE
 xauroras.db.awsblueprint.io   True          True      5m
-
+```
 
 Verify the Compositions
     
@@ -66,22 +69,23 @@ kubectl get compositions | grep xauroras.db.awsblueprint.io
 
 Expected output:
 
+```shell
 NAME                          XR-KIND   XR-APIVERSION                 AGE
 xauroras.db.awsblueprint.io   XAurora   db.awsblueprint.io/v1alpha1   5m
-
+```
 
 If we have about same kind of output as above we can apply th claim: ( We are using a namespace as team-a in this example, if you want to change , please go ahead and create and update the same in the claim)
 
  ```shell
 cd ../composite-resources/database-examples/aurora
-k apply -f aurora-postgresql.yaml
+kubectl apply -f aurora-postgresql.yaml
 ```
 
 We can check the execution of claim by following command:
 
 ```shell
-k get Aurora -n team-a
-k describe Aurora -n team-a
+kubectl get Aurora -n team-a
+kubectl describe Aurora -n team-a
 ```
 (It should take about 15-20 min to provision the Aurora RDS cluster.)
 Below is the default behaviour of the resource which will be provisioned through the claim, just to mention all this default behaviour can be overridden through patching .
@@ -118,8 +122,8 @@ eksctl create iamserviceaccount \
 Generate a DB token which can be used for password when asked
 
 ```shell
-PROXY_TERGET-ENDPOINT=k get secrets aurora-cluster-secrets  -n team-a -o json | jq -r .data.proxyEndpoint | base64 --decode
-CLUSTER_USER_NAME=k get secrets aurora-cluster-secrets  -n team-a -o json | jq -r .data.clusterUsername | base64 --decode
+PROXY_TERGET-ENDPOINT=kubectl get secrets aurora-cluster-secrets  -n team-a -o json | jq -r .data.proxyEndpoint | base64 --decode
+CLUSTER_USER_NAME=kubectl get secrets aurora-cluster-secrets  -n team-a -o json | jq -r .data.clusterUsername | base64 --decode
 
 
 aws rds generate-db-auth-token \
@@ -131,44 +135,68 @@ aws rds generate-db-auth-token \
 create the pod with psql client:
 
 ```shell
-k apply -f psql-client-pod.yaml
+kubectl apply -f psql-client-pod.yaml
 ```
 
 Exec into the pod
 
 ```shell
-k exec -it postgres-client -n team-a  -- sh
+kubectl exec -it postgres-client -n team-a  -- sh
 ```
 
 create a DB connection and provide the token which you generate earlier for password.
 
 ```shell
-psql -h ${PROXY_TERGET-ENDPOINT}  -U ${CLUSTER_USER_NAME} -d aurorapgsqldb -W
+psql -h $proxyEndpoint  -U $clusterUsername -d aurorapgsqldb -W
 ```
-You should be able to connect to the db now then, lets check the list of default table 
+You should be able to connect to the db. Now lets check the list of default table
+Note : we are providing the name of the database in the claim as:  aurorapgsqldb
 
 ```shell
 \dt
 ```
-Now we can do all the required database operation.
-Note : we are providing the name of the database in the claim as:  aurorapgsqldb
+We should be able to do the required database operation.
+
 
 ### Deleting the resources:
 
-First delete the psql client 
+First delete the psql client pod
 ```shell
-k delete -f psql-client-pod.yaml
+kubectl delete -f psql-client-pod.yaml
 ```
 Delete the PostgreSQL Database by deleting the claim
 ```shell
-k delete -f aurora-postgresql.yaml
+kubectl delete -f aurora-postgresql.yaml
 ```
 Note: It will take around ~15-20 min delete the whole cluster
+
+
+Delete the Roles created
+```shell
+# Delete the serviceaccount
+eksctl delete iamserviceaccount --name rds-access --cluster ${CLUSTER_NAME} --namespace team-a
+
+# delete the policy created for serviceaccount
+aws iam delete-policy --policy-arn $(aws iam list-policies --query 'Policies[?PolicyName==`rdsproxy-access`].Arn' --output text)
+
+# Delete the rds-proxy-policy attached to the role
+aws iam delete-role-policy --policy-name rds-proxy-policy --role-name rds-proxy
+
+# Delete the rds-proxy role
+aws iam delete-role --role-name rds-proxy
+
+# Delete the rds-proxy-policy attached to the role
+aws iam detach-role-policy \
+--role-name aurora-monitoring \
+--policy-arn arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
+
+# Delete aurora-monitoring role
+aws iam delete-role --role-name aurora-monitoring
+``` 
 
 Delete the composition and XRDs
 ```shell
 cd ../composition/upbound-aws-provider/aurora
-k delete -f aurora.yaml
-k delete -f defination.yaml
+kubectl delete -f aurora.yaml
+kubectl delete -f defination.yaml
 ```
-Note : The role aurora-monitoring & rds-proxy will eventually be part of composition , till then it will be required to create these roles external to the composition.
