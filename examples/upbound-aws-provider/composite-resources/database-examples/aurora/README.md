@@ -12,74 +12,31 @@ Create an IAM role and attach policy to the role (This role is required for auro
 
     
 ```shell
-aws iam create-role --role-name aurora-monitoring \
-                    --assume-role-policy-document '{
-                        "Version": "2012-10-17",
-                        "Statement": [
-                            {
-                            "Sid": "",
-                            "Effect": "Allow",
-                            "Principal": {
-                                "Service": "monitoring.rds.amazonaws.com"
-                            },
-                            "Action": "sts:AssumeRole"
-                            }
-                        ]
-                        }'
+aws iam create-role \
+--role-name aurora-monitoring \
+--assume-role-policy-document file://aurora-monitoring.json
  ```
  (Attach the IAM role with AmazonRDSEnhancedMonitoringRole policy.)
 
 ```shell
-    
-aws iam attach-role-policy --role-name aurora-monitoring \
-                        --policy-arn arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
-
+aws iam attach-role-policy \
+--role-name aurora-monitoring \
+--policy-arn arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
 ```
 
-  Create an 2nd IAM role and attach policy to the role (This role is required for aurora proxy to fetch db secrets from secret manager )
+Create an 2nd IAM role and attach policy to the role (This role is required for aurora proxy to fetch db secrets from secret manager )
 
 ```shell
-aws iam create-role --role-name rds-proxy \
-                    --assume-role-policy-document '{
-                            "Version": "2012-10-17",
-                            "Statement": [
-                                {
-                                "Sid": "",
-                                "Effect": "Allow",
-                                "Principal": {
-                                    "Service": "rds.amazonaws.com"
-                                },
-                                "Action": "sts:AssumeRole"
-                                }
-                            ]
-                            }'
+aws iam create-role \
+--role-name rds-proxy \
+--assume-role-policy-document file://rds-proxy.json
 ```
 
  ```shell
-aws iam put-role-policy --role-name rds-proxy \
-                        --policy-name rds-proxy-policy \  
-                        --policy-document '{
-                            "Version": "2012-10-17",
-                            "Statement": [
-                                {
-                                "Sid": "getsm",
-                                "Effect": "Allow",
-                                "Action": "secretsmanager:GetSecretValue",
-                                "Resource": "*"
-                                },
-                                {
-                                "Sid": "kmsdecrypt",
-                                "Effect": "Allow",
-                                "Action": "kms:Decrypt",
-                                "Resource": "*",
-                                "Condition": {
-                                    "StringEquals": {
-                                    "kms:ViaService": "secretsmanager.us-east-1.amazonaws.com"
-                                    }
-                                }
-                                }
-                            ]
-                            }'
+aws iam put-role-policy \
+--role-name rds-proxy \
+--policy-name rds-proxy-policy \
+--policy-document file://rds-proxy-policy.json
 ```
   ### Provide value to the claim before applying.
      
@@ -113,11 +70,11 @@ NAME                          XR-KIND   XR-APIVERSION                 AGE
 xauroras.db.awsblueprint.io   XAurora   db.awsblueprint.io/v1alpha1   5m
 
 
-if we have about same kind of output as above we can apply th claim: ( We are using a namespace as team-a in this example, if you want to change , please go ahead and create and update the same in the claim)
+If we have about same kind of output as above we can apply th claim: ( We are using a namespace as team-a in this example, if you want to change , please go ahead and create and update the same in the claim)
 
  ```shell
-    cd ../composite-resources/database-examples/aurora
-    k apply -f aurora-postgresql.yaml
+cd ../composite-resources/database-examples/aurora
+k apply -f aurora-postgresql.yaml
 ```
 
 We can check the execution of claim by following command:
@@ -140,26 +97,16 @@ Below is the default behaviour of the resource which will be provisioned through
 Create an  policy to allow the pod to connect to the Aurora Database
   
 ```shell
-aws iam create-role --role-name aurora-monitoring \
-                    --assume-role-policy-document '{
-                            "Version": "2012-10-17",
-                            "Statement": [
-                                {
-                                "Sid": "",
-                                "Effect": "Allow",
-                                "Action": [
-                                    "rds-db:connect"
-                                ],
-                                "Resource": [
-                                    "arn:aws:rds-db:${REGION_NAME}:${ACCOUNT_NUMBER}:dbuser:*/*"
-                                ]
-                                }
-                            ]
-                        }'
+aws iam create-policy \
+--policy-name rdsproxy-access \
+--policy-document file://rdsproxy-access.json
 ```
 Create a service account passing the above policy arn
 
 ```shell
+POLICY_ARN=$(aws iam list-policies --query 'Policies[?PolicyName==`rdsproxy-access`].Arn' --output text)
+CLUSTER_NAME=$(aws eks list-clusters --query 'clusters[]' --output text | grep <YOUR-CLUSTER-NAME>)
+
 eksctl create iamserviceaccount \
 --name rds-access \
 --namespace team-a \
@@ -174,10 +121,11 @@ Generate a DB token which can be used for password when asked
 PROXY_TERGET-ENDPOINT=k get secrets aurora-cluster-secrets  -n team-a -o json | jq -r .data.proxyEndpoint | base64 --decode
 CLUSTER_USER_NAME=k get secrets aurora-cluster-secrets  -n team-a -o json | jq -r .data.clusterUsername | base64 --decode
 
+
 aws rds generate-db-auth-token \
 --hostname ${PROXY_TERGET-ENDPOINT}  \
 --port 5432 \
---region us-east-1 \
+--region ${REGION} \
 --username ${CLUSTER_USER_NAME}
 ```
 create the pod with psql client:
@@ -223,4 +171,4 @@ cd ../composition/upbound-aws-provider/aurora
 k delete -f aurora.yaml
 k delete -f defination.yaml
 ```
-Note : The role aurora-monitoring & rds-proxy will eventually be part of composition , till then it will required be create these roles external to the composition.
+Note : The role aurora-monitoring & rds-proxy will eventually be part of composition , till then it will be required to create these roles external to the composition.
