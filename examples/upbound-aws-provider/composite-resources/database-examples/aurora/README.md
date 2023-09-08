@@ -1,240 +1,226 @@
 # Steps to to deploy aurora rds cluster
-This example deploys an aurora postgresql database cluster when applied the claim. Below are the steps to execute to
-create a cluster and connect the cluster from a pod with an psql client.
+This example deploys an Aurora PostgreSQL database cluster.
+Below are the steps to create a cluster and connect from a pod with an psql client.
 
 ## Pre-requisites
  - [Upbound AWS Provider Crossplane Blueprint Examples](../../README.md)
 
 
-### create 2 role, one for RDS Monitoring and one for RDS Proxy
+### Create 2 roles, one for RDS Monitoring and one for RDS Proxy
 
 Create an IAM role and attach policy to the role (This role is required for aurora to perform monitoring)
+
     
 ```shell
-    aws iam create-role --role-name aurora-monitoring \
-                            --assume-role-policy-document '{
-            "Version": "2012-10-17",
-            "Statement": [
-            {
-                "Sid": "",
-                "Effect": "Allow",
-                    "Principal":
-                    {
-                    "Service": "monitoring.rds.amazonaws.com"
-                    },
-                    "Action": "sts:AssumeRole"
-
-            }
-        ]
-        }'
+aws iam create-role --role-name aurora-monitoring \
+                    --assume-role-policy-document '{
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                            "Sid": "",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "monitoring.rds.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                            }
+                        ]
+                        }'
  ```
  (Attach the IAM role with AmazonRDSEnhancedMonitoringRole policy.)
 
 ```shell
     
-    aws iam attach-role-policy --role-name aurora-monitoring \
-                           --policy-arn arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
+aws iam attach-role-policy --role-name aurora-monitoring \
+                        --policy-arn arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
 
 ```
 
   Create an 2nd IAM role and attach policy to the role (This role is required for aurora proxy to fetch db secrets from secret manager )
 
 ```shell
-    aws iam create-role --role-name rds-proxy \
-                        --assume-role-policy-document '{    
-        "Version": "2012-10-17",
-        "Statement": [
-        {
-            "Sid": "",
-            "Effect": "Allow",
-                "Principal":
-                {
-                "Service": "rds.amazonaws.com"
-                },
-                "Action": "sts:AssumeRole"
-
-        }
-    ]
-    }'
-```
-
- ```shell
-
-    aws iam put-role-policy --role-name rds-proxy \
-                            --policy-name rds-proxy-policy \  
-                            --policy-document '{
+aws iam create-role --role-name rds-proxy \
+                    --assume-role-policy-document '{
                             "Version": "2012-10-17",
                             "Statement": [
                                 {
-                                    "Sid": "getsm",
-                                    "Effect": "Allow",
-                                    "Action": "secretsmanager:GetSecretValue",
-                                    "Resource": "*"
+                                "Sid": "",
+                                "Effect": "Allow",
+                                "Principal": {
+                                    "Service": "rds.amazonaws.com"
                                 },
-                                {
-                                    "Sid": "kmsdecrypt",
-                                    "Effect": "Allow",
-                                    "Action": "kms:Decrypt",
-                                    "Resource": "*",
-                                    "Condition": {
-                                        "StringEquals": {
-                                            "kms:ViaService": "secretsmanager.us-east-1.amazonaws.com"
-                                        }
-                                    }
+                                "Action": "sts:AssumeRole"
                                 }
                             ]
-                        }'
-  
+                            }'
+```
+
+ ```shell
+aws iam put-role-policy --role-name rds-proxy \
+                        --policy-name rds-proxy-policy \  
+                        --policy-document '{
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                "Sid": "getsm",
+                                "Effect": "Allow",
+                                "Action": "secretsmanager:GetSecretValue",
+                                "Resource": "*"
+                                },
+                                {
+                                "Sid": "kmsdecrypt",
+                                "Effect": "Allow",
+                                "Action": "kms:Decrypt",
+                                "Resource": "*",
+                                "Condition": {
+                                    "StringEquals": {
+                                    "kms:ViaService": "secretsmanager.us-east-1.amazonaws.com"
+                                    }
+                                }
+                                }
+                            ]
+                            }'
 ```
   ### Provide value to the claim before applying.
      
-     1. Open the claim and substitute aurora-monitoring role arn with monitoringRoleArn and rds-proxy role arn with proxyRoleArn respectively.
-     2. Make sure check the CIDR block for application and provide in the claim. This will used as the security group 
-        ingress rule for proxy from application ( we can also provide the security group id instead of CIDR).    
+ 1. Open the claim and substitute aurora-monitoring role arn with monitoringRoleArn and rds-proxy role arn with proxyRoleArn respectively.
+ 2. Make sure check the CIDR block for application and provide in the claim. This will used as the security group 
+    ingress rule for proxy from application ( we can also provide the security group id instead of CIDR).    
     
  ### Verify your XRDS and composition
 
   Verify the XRDs
 
 ```shell
-    kubectl get xrds
+kubectl get xrds | grep xauroras.db.awsblueprint.io
 ```
 
- Expected output
+Expected output:
 
-    NAME                          ESTABLISHED   OFFERED   AGE
-    xauroras.db.awsblueprint.io   True          True      5m
-    
+NAME                          ESTABLISHED   OFFERED   AGE
+xauroras.db.awsblueprint.io   True          True      5m
 
-    Verify the Compositions
+
+Verify the Compositions
     
  ```shell
-    
-     kubectl get compositions
+kubectl get compositions | grep xauroras.db.awsblueprint.io 
 ```
 
-    Expected output. 
-    Note: the output might contain more compositions but these are the ones uses by the claim in the next step
-       
-    NAME                          XR-KIND   XR-APIVERSION                 AGE
-    xauroras.db.awsblueprint.io   XAurora   db.awsblueprint.io/v1alpha1   5m
+Expected output:
+
+NAME                          XR-KIND   XR-APIVERSION                 AGE
+xauroras.db.awsblueprint.io   XAurora   db.awsblueprint.io/v1alpha1   5m
 
 
-   if we have about same kind of output as above we can apply th claim: ( We are using a namespace as team-a in this example, if you want to change , please go ahead and create and update the same in the claim)
+if we have about same kind of output as above we can apply th claim: ( We are using a namespace as team-a in this example, if you want to change , please go ahead and create and update the same in the claim)
 
  ```shell
-     cd ../composite-resources/database-examples/aurora
-     k apply -f aurora-postgresql.yaml
-
+    cd ../composite-resources/database-examples/aurora
+    k apply -f aurora-postgresql.yaml
 ```
 
-    We can check the execution of claim by following command:
+We can check the execution of claim by following command:
 
- 
- ```shell
-     
-     k get Aurora -n team-a
-     k describe Aurora -n team-a
-
+```shell
+k get Aurora -n team-a
+k describe Aurora -n team-a
 ```
-    (It should take about 15-20 min to provision the Aurora RDS cluster.)
-    
-    Below is the default behaviour of the resource which will be provisioned through the claim, just to mention all this default behaviour can be overridden through patching .
+(It should take about 15-20 min to provision the Aurora RDS cluster.)
+Below is the default behaviour of the resource which will be provisioned through the claim, just to mention all this default behaviour can be overridden through patching .
 
-    1. It will create a 3 node cluster with 1 writer and 2 reader endpoint spread across 3 Azs by default.
-    2. It will also create a proxy to connect to the aurora cluster.
-    3. The management of database credential is done through the secret manager.
-    4. The security group has 2 rules , one to allow the app to connect to the proxy and one within the security group
-        where the proxy can connect to the database (Make sure you have provided the correct the CIDR at the claim which is the allow CIDR on the security group from app.)
-    5. The Aurora DB has been configured with logging and monitoring.
+ 1. It will create a 3 node cluster with 1 writer and 2 reader endpoint spread across 3 Azs by default.
+ 2. It will also create a proxy to connect to the aurora cluster.
+ 3. The management of database credential is done through the secret manager.
+ 4. The security group has 2 rules , one to allow the app to connect to the proxy and one within the security group
+     where the proxy can connect to the database (Make sure you have provided the correct the CIDR at the claim which is the allow CIDR on the security group from app.)
+ 5. The Aurora DB has been configured with logging and monitoring.
 
- ### Steps to check the connectivity from a pod 
-
+### Steps to check the connectivity from a pod 
 Create an  policy to allow the pod to connect to the Aurora Database
   
 ```shell
-    aws iam create-role --role-name aurora-monitoring \
-                        --assume-role-policy-document '{    
-        "Version": "2012-10-17",
-        "Statement": [
-        {
-            "Sid": "",
-            "Effect": "Allow",
-                Action": [
-                    "rds-db:connect"
-                ],
-                "Resource": [
-                    "arn:aws:rds-db:${REGION_NAME}>:${ACCOUNT_NUMBER}:dbuser:*/*"
-                ]
-            }
-        ]
-    }'
+aws iam create-role --role-name aurora-monitoring \
+                    --assume-role-policy-document '{
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                "Sid": "",
+                                "Effect": "Allow",
+                                "Action": [
+                                    "rds-db:connect"
+                                ],
+                                "Resource": [
+                                    "arn:aws:rds-db:${REGION_NAME}:${ACCOUNT_NUMBER}:dbuser:*/*"
+                                ]
+                                }
+                            ]
+                        }'
 ```
-    
-    Create a service account passing the above policy arn
+Create a service account passing the above policy arn
 
- ```shell
-        eksctl create iamserviceaccount \
-        --name rds-access \
-        --namespace team-a \
-        --cluster ${CLUSTER_NAME} \
-        --attach-policy-arn ${POLICY_ARN} \
-        --approve \
-        -override-existing-serviceaccounts
+```shell
+eksctl create iamserviceaccount \
+--name rds-access \
+--namespace team-a \
+--cluster ${CLUSTER_NAME} \
+--attach-policy-arn ${POLICY_ARN} \
+--approve \
+-override-existing-serviceaccounts
 ``` 
-    Generate a DB token which can be used for password when asked
-    
-```shell
-    
-    PROXY_TERGET-ENDPOINT=k get secrets aurora-cluster-secrets  -n team-a -o json | jq -r .data.proxyEndpoint | base64 --decode
-    CLUSTER_USER_NAME=k get secrets aurora-cluster-secrets  -n team-a -o json | jq -r .data.clusterUsername | base64 --decode
-    
-    aws rds generate-db-auth-token \
-    --hostname ${PROXY_TERGET-ENDPOINT}  \
-    --port 5432 \
-    --region us-east-1 \
-    --username ${CLUSTER_USER_NAME}
-    
-```
-   create the pod with pgsql client:
+Generate a DB token which can be used for password when asked
 
 ```shell
+PROXY_TERGET-ENDPOINT=k get secrets aurora-cluster-secrets  -n team-a -o json | jq -r .data.proxyEndpoint | base64 --decode
+CLUSTER_USER_NAME=k get secrets aurora-cluster-secrets  -n team-a -o json | jq -r .data.clusterUsername | base64 --decode
 
-    apiVersion: v1
-    kind: Pod
-    metadata:
-    name: postgres-client
-    namespace: team-a
-    spec:
-    serviceAccountName: rds-access
-    containers:
-    - name: postgreclient
-        image: postgres:latest
-        command: ["sleep"]
-        args: ["3600"]  # Sleep for 1 hour (3600 seconds)
-        envFrom:
-        - secretRef:
-            name: aurora-cluster-secrets
-    volumes:
-        - name: secret-volume
-        secret:
-            secretName: aurora-cluster-secrets # This secret name can be changed in the claim
+aws rds generate-db-auth-token \
+--hostname ${PROXY_TERGET-ENDPOINT}  \
+--port 5432 \
+--region us-east-1 \
+--username ${CLUSTER_USER_NAME}
 ```
-
-   Exec into the pod
+create the pod with psql client:
 
 ```shell
-
-    k exec -it postgres-client -n team-a  -- sh
-   
+k apply -f psql-client-pod.yaml
 ```
 
-   create a DB connection and provide the token which you generate earlier for password.
+Exec into the pod
 
 ```shell
-   
-   psql -h ${PROXY_TERGET-ENDPOINT}  -U ${CLUSTER_USER_NAME} -d aurorapgsqldb -W
+k exec -it postgres-client -n team-a  -- sh
 ```
-    Note : we are providing the name of the database in the claim as:  aurorapgsqldb
-   
-    Now we should be able to connect to the DB with psql client.
+
+create a DB connection and provide the token which you generate earlier for password.
+
+```shell
+psql -h ${PROXY_TERGET-ENDPOINT}  -U ${CLUSTER_USER_NAME} -d aurorapgsqldb -W
+```
+You should be able to connect to the db now then, lets check the list of default table 
+
+```shell
+\dt
+```
+Now we can do all the required database operation.
+Note : we are providing the name of the database in the claim as:  aurorapgsqldb
+
+### Deleting the resources:
+
+First delete the psql client 
+```shell
+k delete -f psql-client-pod.yaml
+```
+Delete the PostgreSQL Database by deleting the claim
+```shell
+k delete -f aurora-postgresql.yaml
+```
+Note: It will take around ~15-20 min delete the whole cluster
+
+Delete the composition and XRDs
+```shell
+cd ../composition/upbound-aws-provider/aurora
+k delete -f aurora.yaml
+k delete -f defination.yaml
+```
+Note : The role aurora-monitoring & rds-proxy will eventually be part of composition , till then it will required be create these roles external to the composition.
