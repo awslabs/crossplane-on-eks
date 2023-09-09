@@ -1,0 +1,18 @@
+apiVersion: awsblueprints.io/v1alpha1
+kind: DynamoIRSA
+metadata:
+  name: dynamo-irsa-test
+spec:
+  writeConnectionSecretToRef:
+    name: dynamo-irsa-test
+  resourceConfig:
+    region: us-east-1
+    tags:
+      namespace: team-x
+      cluster: crossplane
+  dynamoConfig:
+    billingMode: PAY_PER_REQUEST
+    attribute:
+      - name: UserID
+        type: S
+    hashKey: UserID
