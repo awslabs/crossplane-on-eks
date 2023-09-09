@@ -47,6 +47,8 @@ spec:
                         type: string
                       description: Key-value map of resource tags.
                       type: object
+                  required:
+                  - region
                   type: object
                 dynamoConfig:
                   properties:
@@ -143,7 +145,6 @@ spec:
                   required:
                   - attribute
                   - hashKey
-                  - region
                   type: object
               required:
               - resourceConfig 
