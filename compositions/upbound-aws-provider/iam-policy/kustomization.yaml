@@ -4,6 +4,7 @@ resources:
 - cloudwatch-metrics-write.yaml
 - firehose-write.yaml
 - definition.yaml
+- dynamodb-write.yaml
 - kms-read.yaml
 - lambda-invoke.yaml
 - s3-read.yaml
