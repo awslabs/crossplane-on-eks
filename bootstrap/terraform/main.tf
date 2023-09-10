@@ -203,7 +203,8 @@ module "crossplane" {
 resource "kubectl_manifest" "environmentconfig" {
   yaml_body = templatefile("${path.module}/environmentconfig.yaml", {
     awsAccountID = data.aws_caller_identity.current.account_id
-    eksOIDC      = module.eks.oidc_provider_arn
+    eksOIDC      = module.eks.oidc_provider
+    vpcID        = module.vpc.vpc_id
   })
 
   depends_on = [module.crossplane]
