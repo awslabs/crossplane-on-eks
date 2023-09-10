@@ -3,6 +3,6 @@ kind: EnvironmentConfig
 metadata:
   name: cluster
 data:
-  awsAccountID: ${awsAccountID}
+  awsAccountID: "${awsAccountID}"
   eksOIDC: ${eksOIDC}
   vpcID: ${vpcID}
