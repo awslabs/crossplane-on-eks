@@ -5,7 +5,8 @@ Below are the steps to create a cluster and connect from a pod with an psql clie
 ## Pre-requisites
  - [Upbound AWS Provider Crossplane Blueprint Examples](../../README.md)
 
-> [!NOTE] : aurora-monitoring and rds-proxy iam roles need to be created manually at this time but will be added to the composition, track progress in [this issue](https://github.com/awslabs/crossplane-on-eks/issues/144).
+> [!NOTE]  
+> aurora-monitoring and rds-proxy iam roles need to be created manually at this time but will be added to the composition, track progress in [this issue](https://github.com/awslabs/crossplane-on-eks/issues/144).
 ### Create 2 roles, one for RDS Monitoring and one for RDS Proxy
 
 Create an IAM role and attach policy to the role (This role is required for aurora to perform monitoring)
