@@ -11,9 +11,7 @@ spec:
       namespace: team-x
       cluster: crossplane
   dynamoConfig:
-    billingMode: PROVISIONED
-    readCapacity: 5
-    writeCapacity: 5
+    billingMode: PAY_PER_REQUEST
     attribute:
       - name: UserID
         type: S
