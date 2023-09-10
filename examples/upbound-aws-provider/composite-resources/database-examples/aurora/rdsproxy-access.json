@@ -8,7 +8,7 @@
           "rds-db:connect"
         ],
         "Resource": [
-          "arn:aws:rds-db:us-east-1:277030185641:dbuser:*/*"
+          "arn:aws:rds-db:REGION-NAME:ACCOUNT-NUM:dbuser:*/*"
         ]
       }
     ]

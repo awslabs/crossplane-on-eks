@@ -5,9 +5,7 @@ Below are the steps to create a cluster and connect from a pod with an psql clie
 ## Pre-requisites
  - [Upbound AWS Provider Crossplane Blueprint Examples](../../README.md)
 
-Note : aurora-monitoring & rds-proxy role will eventually be part of composition , till then we need to create that 2 role external to the composition.
-Reference of the issue created for tracking: 
-- [Add Aurora monitoring and rds proxy role as part of the aurora composition](https://github.com/awslabs/crossplane-on-eks/issues/144)
+[!NOTE]\ : aurora-monitoring and rds-proxy iam roles need to be created manually at this time but will be added to the composition, track progress in [this issue](https://github.com/awslabs/crossplane-on-eks/issues/144).
 ### Create 2 roles, one for RDS Monitoring and one for RDS Proxy
 
 Create an IAM role and attach policy to the role (This role is required for aurora to perform monitoring)
@@ -37,10 +35,12 @@ aws iam create-role \
  ```shell
 CURRENT_REGION=<REGION_NAME> # replace <REGION_NAME> with current region name e.g us-east-1.
 CLUSTER_NAME=<EKS_CLUSTER_NAME> # replace <EKS_CLUSTER_NAME> with eks cluster name.
+ACCOUNT_NUM=$(aws sts get-caller-identity --query Account --output text)
 ```
 
 ```shell
 sed -i -e "s/REGION-NAME/$CURRENT_REGION/g" rds-proxy-policy.json
+
 aws iam put-role-policy \
 --role-name rds-proxy \
 --policy-name rds-proxy-policy \
@@ -107,6 +107,9 @@ Below is the default behaviour of the resource which will be provisioned through
 Create a  policy to allow the pod to connect to the Aurora Database
   
 ```shell
+# provide the account number and region name to the policy document.
+sed -i -e "s/REGION-NAME:ACCOUNT-NUM/$CURRENT_REGION:$ACCOUNT_NUM/g" rdsproxy-access.json
+
 aws iam create-policy \
 --policy-name rdsproxy-access \
 --policy-document file://rdsproxy-access.json
