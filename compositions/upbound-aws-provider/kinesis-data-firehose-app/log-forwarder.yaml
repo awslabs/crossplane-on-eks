@@ -36,7 +36,7 @@ spec:
           toFieldPath: spec.forProvider.tags
           policy:
             mergeOptions:
-              appendSlice: true
+              keepMapValues: true
         - fromFieldPath: "metadata.name"
           toFieldPath: "metadata.name"
   environment:

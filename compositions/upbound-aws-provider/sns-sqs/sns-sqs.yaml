@@ -40,7 +40,7 @@ spec:
           toFieldPath: spec.forProvider.tags
           policy:
             mergeOptions:
-              appendSlice: true
+              keepMapValues: true
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.name
           toFieldPath: metadata.annotations[crossplane.io/external-name]
