@@ -249,6 +249,16 @@ locals {
     cluster_role          = "cluster-admin"
   }
 
+  helm_provider = {
+    enable                = true
+    version               = "v0.15.0"
+    service_account       = "helm-provider"
+    name                  = "helm-provider"
+    controller_config     = "helm-controller-config"
+    provider_config_name  = "default"
+    cluster_role          = "cluster-admin"
+  }
+
 }
 
 #---------------------------------------------------------------
@@ -367,7 +377,7 @@ resource "kubectl_manifest" "kubernetes_provider" {
   depends_on = [kubectl_manifest.kubernetes_controller_config]
 }
 
-# Wait for the AWS Provider CRDs to be fully created before initiating aws_provider_config deployment
+# Wait for the AWS Provider CRDs to be fully created before initiating provider_config deployment
 resource "time_sleep" "wait_60_seconds_kubernetes" {
   create_duration = "60s"
 
@@ -386,6 +396,67 @@ resource "kubectl_manifest" "kubernetes_provider_config" {
 #---------------------------------------------------------------
 # Crossplane Helm Provider
 #---------------------------------------------------------------
+resource "kubernetes_service_account_v1" "helm_controller" {
+  count = local.helm_provider.enable == true ? 1 : 0
+  metadata {
+    name      = local.helm_provider.service_account
+    namespace = local.crossplane_namespace
+  }
+
+  depends_on = [module.crossplane]
+}
+
+resource "kubectl_manifest" "helm_controller_clusterolebinding" {
+  count = local.helm_provider.enable == true ? 1 : 0
+  yaml_body = templatefile("${path.module}/providers/helm/clusterrolebinding.yaml", {
+    namespace      = local.crossplane_namespace
+    cluster-role   = local.helm_provider.cluster_role
+    sa-name        = kubernetes_service_account_v1.helm_controller[0].metadata[0].name
+  })
+  wait = true
+
+  depends_on = [module.crossplane]
+}
+
+resource "kubectl_manifest" "helm_controller_config" {
+  count = local.helm_provider.enable == true ? 1 : 0
+  yaml_body = templatefile("${path.module}/providers/helm/controller-config.yaml", {
+    sa-name           = kubernetes_service_account_v1.helm_controller[0].metadata[0].name
+    controller-config = local.helm_provider.controller_config
+  })
+  wait = true
+
+  depends_on = [module.crossplane]
+}
+
+resource "kubectl_manifest" "helm_provider" {
+  count = local.helm_provider.enable == true ? 1 : 0
+  yaml_body = templatefile("${path.module}/providers/helm/provider.yaml", {
+    version                   = local.helm_provider.version
+    helm-provider-name  = local.helm_provider.name
+    controller-config         = local.helm_provider.controller_config
+  })
+  wait = true
+
+  depends_on = [kubectl_manifest.helm_controller_config]
+}
+
+# Wait for the AWS Provider CRDs to be fully created before initiating provider_config deployment
+resource "time_sleep" "wait_60_seconds_helm" {
+  create_duration = "60s"
+
+  depends_on = [kubectl_manifest.helm_provider]
+}
+
+resource "kubectl_manifest" "helm_provider_config" {
+  count = local.helm_provider.enable == true ? 1 : 0
+  yaml_body = templatefile("${path.module}/providers/helm/provider-config.yaml", {
+    provider-config-name = local.helm_provider.provider_config_name
+  })
+
+  depends_on = [kubectl_manifest.helm_provider, time_sleep.wait_60_seconds_helm]
+}
+
 
 #---------------------------------------------------------------
 # Supporting Resources

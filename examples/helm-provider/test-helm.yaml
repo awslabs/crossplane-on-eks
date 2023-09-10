@@ -1,0 +1,11 @@
+apiVersion: helm.crossplane.io/v1beta1
+kind: Release
+metadata:
+  name: hello-example
+spec:
+  forProvider:
+    chart:
+      name: hello
+      repository: https://cloudecho.github.io/charts
+      version: 0.1.2
+    namespace: default
