@@ -55,10 +55,6 @@ locals {
 
   argocd_namespace = "argocd"
 
-  # !NOTE!: only enable one AWS provider at a time
-  crossplane_aws_provider_enable         = true
-  crossplane_upbound_aws_provider_enable = true
-
   tags = {
     Blueprint  = local.name
     GithubRepo = "github.com/awslabs/crossplane-on-eks"
@@ -145,8 +141,8 @@ module "eks_blueprints_addons" {
     chart_version   = "5.34.6" # ArgoCD v2.7.3
     values          = [
       templatefile("${path.module}/argocd-values.yaml", {
-        crossplane_aws_provider_enable = local.crossplane_aws_provider_enable
-        crossplane_upbound_aws_provider_enable = local.crossplane_upbound_aws_provider_enable
+        crossplane_aws_provider_enable = local.aws_provider.enable
+        crossplane_upbound_aws_provider_enable = local.upbound_aws_provider.enable
       })]
   }
   enable_karpenter                 = true
@@ -199,19 +195,52 @@ module "crossplane" {
       }
     })]
   }
+
+  depends_on = [module.eks.eks_managed_node_groups]
 }
 
+#---------------------------------------------------------------
+# Crossplane Providers Settings
+#---------------------------------------------------------------
 locals {
   crossplane_namespace = "crossplane-system"
-  crossplane_sa_prefix = "provider-aws-*"
+  crossplane_sa_prefix = "provider-aws-"
+  kubernetes_provider = {
+    enable = true
+  }
+  upbound_aws_provider = {
+    enable = true
+    controller_config = "upbound-aws-controller-config"
+    provider_config_name = "aws-provider-config"
+    version = "v0.40.0"
+    sa_prefix = "upbound-aws-provider-"
+    families = [
+      "dynamodb",
+      "elasticache",
+      "iam",
+      "kms",
+      "lambda",
+      "rds",
+      "s3",
+      "sns",
+      "sqs",
+      "vpc"
+    ]
+  }
+  aws_provider = {
+    enable = false
+  }
 }
 
-module "crossplane_irsa_aws" {
-#todo count
+#---------------------------------------------------------------
+# Crossplane Upbound AWS Provider
+#---------------------------------------------------------------
+module "upbound_irsa_aws" {
+  count = local.upbound_aws_provider.enable == true ? 1 : 0
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version = "~> 5.30"
 
-  role_name_prefix = "crossplane-${local.crossplane_sa_prefix}"
+  role_name_prefix = local.upbound_aws_provider.sa_prefix
 
   role_policy_arns = {
     policy = "arn:aws:iam::aws:policy/AdministratorAccess"
@@ -220,91 +249,63 @@ module "crossplane_irsa_aws" {
   oidc_providers = {
     main = {
       provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["${local.crossplane_namespace}:${local.crossplane_sa_prefix}"]
+      namespace_service_accounts = ["${local.crossplane_namespace}:${local.upbound_aws_provider.sa_prefix}"]
     }
   }
 
   tags = local.tags
 }
-#module "eks_blueprints_crossplane_addons" {
-#  source = "github.com/aws-ia/terraform-aws-eks-blueprints//modules/kubernetes-addons?ref=v4.32.1"
-#
-#  eks_cluster_id = module.eks.cluster_name
-#  # Deploy Crossplane
-#  # Default helm chart and providers values set at https://github.com/aws-ia/terraform-aws-eks-blueprints/blob/main/modules/kubernetes-addons/crossplane/locals.tf
-#  enable_crossplane = true
-#  crossplane_helm_config = {
-#    version = "1.12.1"
-#    values = [yamlencode({
-#      args    = ["--enable-environment-configs"]
-#      metrics = {
-#        enabled = true
-#      }
-#      resourcesCrossplane = {
-#        limits = {
-#          cpu = "1"
-#          memory = "2Gi"
-#        }
-#        requests = {
-#          cpu = "100m"
-#          memory = "1Gi"
-#        }
-#      }
-#      resourcesRBACManager = {
-#        limits = {
-#          cpu = "500m"
-#          memory = "1Gi"
-#        }
-#        requests = {
-#          cpu = "100m"
-#          memory = "512Mi"
-#        }
-#      }
-#    })]
-#  }
-#  #---------------------------------------------------------
-#  # Crossplane community AWS Provider deployment
-#  #---------------------------------------------------------
-#  crossplane_aws_provider = {
-#    # !NOTE!: only enable one AWS provider at a time
-#    enable          = local.crossplane_aws_provider_enable
-#    provider_config = "aws-provider-config"
-#    provider_aws_version = "v0.40.0"
-#    # to override the default irsa policy:
-#    # additional_irsa_policies = ["arn:aws:iam::aws:policy/AmazonS3FullAccess"]
-#  }
-#
-#  #---------------------------------------------------------
-#  # Crossplane Upbound AWS Provider deployment
-#  #---------------------------------------------------------
-#  crossplane_upbound_aws_provider = {
-#    # !NOTE!: only enable one AWS provider at a time
-#    enable          = local.crossplane_upbound_aws_provider_enable
-#    provider_config = "aws-provider-config"
-#    provider_aws_version = "v0.35.0"
-#    # to override the default irsa policy:
-#    # additional_irsa_policies = ["arn:aws:iam::aws:policy/AmazonS3FullAccess"]
-#  }
-#
-#  #---------------------------------------------------------
-#  # Crossplane Kubernetes Provider deployment
-#  #---------------------------------------------------------
-#  crossplane_kubernetes_provider = {
-#    enable = true
-#    provider_kubernetes_version = "v0.9.0"
-#  }
-#
-#  #---------------------------------------------------------
-#  # Crossplane Helm Provider deployment
-#  #---------------------------------------------------------
-#  crossplane_helm_provider = {
-#    enable = true
-#    provider_helm_version = "v0.15.0"
-#  }
-#
-#  depends_on = [module.eks.managed_node_groups, module.eks_blueprints_addons]
-#}
 
+resource "kubectl_manifest" "upbound_aws_controller_config" {
+  count = local.upbound_aws_provider.enable == true ? 1 : 0
+  yaml_body = templatefile("${path.module}/providers/aws-upbound/controller-config.yaml", {
+    iam-role-arn          = module.upbound_irsa_aws[0].iam_role_arn
+    controller-config = local.upbound_aws_provider.controller_config
+  })
+
+  depends_on = [module.crossplane]
+}
+
+resource "kubectl_manifest" "upbound_aws_provider" {
+  for_each = local.upbound_aws_provider.enable ? toset(local.upbound_aws_provider.families) : toset([])
+  yaml_body = templatefile("${path.module}/providers/aws-upbound/provider.yaml", {
+    family            = each.key
+    version           = local.upbound_aws_provider.version
+    controller-config = local.upbound_aws_provider.controller_config
+  })
+  wait = true
+
+  depends_on = [kubectl_manifest.upbound_aws_controller_config]
+}
+
+# Wait for the Upbound AWS Provider CRDs to be fully created before initiating upbound_aws_provider_config
+resource "time_sleep" "upbound_wait_60_seconds" {
+  count           = local.upbound_aws_provider.enable == true ? 1 : 0
+  create_duration = "60s"
+
+  depends_on = [kubectl_manifest.upbound_aws_provider]
+}
+
+resource "kubectl_manifest" "upbound_aws_provider_config" {
+  count = local.upbound_aws_provider.enable == true ? 1 : 0
+  yaml_body = templatefile("${path.module}/providers/aws-upbound/provider-config.yaml", {
+    provider-config-name = local.upbound_aws_provider.provider_config_name
+  })
+
+  depends_on = [kubectl_manifest.upbound_aws_provider, time_sleep.upbound_wait_60_seconds]
+}
+
+#---------------------------------------------------------------
+# Crossplane AWS Provider
+#---------------------------------------------------------------
+
+#---------------------------------------------------------------
+# Crossplane Kubernetes Provider
+#---------------------------------------------------------------
+
+#---------------------------------------------------------------
+# Crossplane Helm Provider
+#---------------------------------------------------------------
 
 #---------------------------------------------------------------
 # Supporting Resources

@@ -1,0 +1,9 @@
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: kubernetes-provider
+spec:
+  revisionHistoryLimit: 0
+  package: xpkg.upbound.io/crossplane-contrib/provider-kubernetes:v0.9.0
+  controllerConfigRef:
+    name: kubernetes-controller-config
