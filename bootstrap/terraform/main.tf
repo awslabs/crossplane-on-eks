@@ -205,9 +205,7 @@ module "crossplane" {
 locals {
   crossplane_namespace = "crossplane-system"
   crossplane_sa_prefix = "provider-aws-"
-  kubernetes_provider = {
-    enable = true
-  }
+  
   upbound_aws_provider = {
     enable = true
     controller_config = "upbound-aws-controller-config"
@@ -227,9 +225,21 @@ locals {
       "vpc"
     ]
   }
+
   aws_provider = {
     enable = false
   }
+
+  kubernetes_provider = {
+    enable                = true
+    version               = "v0.9.0"
+    service_account       = "kubernetes-provider"
+    name                  = "kubernetes-provider"
+    controller_config     = "kubernetes-controller-config"
+    provider_config_name  = "default"
+    cluster_role          = "cluster-admin"
+  }
+
 }
 
 #---------------------------------------------------------------
@@ -249,7 +259,7 @@ module "upbound_irsa_aws" {
   oidc_providers = {
     main = {
       provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["${local.crossplane_namespace}:${local.upbound_aws_provider.sa_prefix}"]
+      namespace_service_accounts = ["${local.crossplane_namespace}:${local.upbound_aws_provider.sa_prefix}*"]
     }
   }
 
@@ -302,6 +312,66 @@ resource "kubectl_manifest" "upbound_aws_provider_config" {
 #---------------------------------------------------------------
 # Crossplane Kubernetes Provider
 #---------------------------------------------------------------
+resource "kubernetes_service_account_v1" "kubernetes_controller" {
+  count = local.kubernetes_provider.enable == true ? 1 : 0
+  metadata {
+    name      = local.kubernetes_provider.service_account
+    namespace = local.crossplane_namespace
+  }
+
+  depends_on = [module.crossplane]
+}
+
+resource "kubectl_manifest" "kubernetes_controller_clusterolebinding" {
+  count = local.kubernetes_provider.enable == true ? 1 : 0
+  yaml_body = templatefile("${path.module}/providers/kubernetes/clusterrolebinding.yaml", {
+    namespace      = local.crossplane_namespace
+    cluster-role   = local.kubernetes_provider.cluster_role
+    sa-name        = kubernetes_service_account_v1.kubernetes_controller[0].metadata[0].name
+  })
+  wait = true
+
+  depends_on = [module.crossplane]
+}
+
+resource "kubectl_manifest" "kubernetes_controller_config" {
+  count = local.kubernetes_provider.enable == true ? 1 : 0
+  yaml_body = templatefile("${path.module}/providers/kubernetes/controller-config.yaml", {
+    sa-name           = kubernetes_service_account_v1.kubernetes_controller[0].metadata[0].name
+    controller-config = local.kubernetes_provider.controller_config
+  })
+  wait = true
+
+  depends_on = [module.crossplane]
+}
+
+resource "kubectl_manifest" "kubernetes_provider" {
+  count = local.kubernetes_provider.enable == true ? 1 : 0
+  yaml_body = templatefile("${path.module}/providers/kubernetes/provider.yaml", {
+    version                   = local.kubernetes_provider.version
+    kubernetes-provider-name  = local.kubernetes_provider.name
+    controller-config         = local.kubernetes_provider.controller_config
+  })
+  wait = true
+
+  depends_on = [kubectl_manifest.kubernetes_controller_config]
+}
+
+# Wait for the AWS Provider CRDs to be fully created before initiating aws_provider_config deployment
+resource "time_sleep" "wait_60_seconds_kubernetes" {
+  create_duration = "60s"
+
+  depends_on = [kubectl_manifest.kubernetes_provider]
+}
+
+resource "kubectl_manifest" "kubernetes_provider_config" {
+  count = local.kubernetes_provider.enable == true ? 1 : 0
+  yaml_body = templatefile("${path.module}/providers/kubernetes/provider-config.yaml", {
+    provider-config-name = local.kubernetes_provider.provider_config_name
+  })
+
+  depends_on = [kubectl_manifest.kubernetes_provider, time_sleep.wait_60_seconds_kubernetes]
+}
 
 #---------------------------------------------------------------
 # Crossplane Helm Provider

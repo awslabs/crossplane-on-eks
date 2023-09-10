@@ -1,12 +1,12 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: provider-kubernetes
+  name: ${sa-name}
 subjects:
   - kind: ServiceAccount
-    name: provider-kubernetes
-    namespace: crossplane-system
+    name: ${sa-name}
+    namespace: ${namespace}
 roleRef:
   kind: ClusterRole
-  name: cluster-admin
+  name: ${cluster-role}
   apiGroup: rbac.authorization.k8s.io

@@ -2,7 +2,7 @@
 apiVersion: kubernetes.crossplane.io/v1alpha1
 kind: ProviderConfig
 metadata:
-  name: ${kubernetes-provider-config}
+  name: ${provider-config-name}
 spec:
   credentials:
     source: InjectedIdentity
