@@ -12,6 +12,8 @@ spec:
       cluster: crossplane
   dynamoConfig:
     billingMode: PROVISIONED
+    readCapacity: 5
+    writeCapacity: 5
     attribute:
       - name: UserID
         type: S
