@@ -27,6 +27,10 @@ spec:
             spec:
               type: object
               properties:
+                policyArns:
+                  items:
+                    type: string
+                  type: array
                 resourceConfig:
                   properties:
                     deletionPolicy:
@@ -127,10 +131,6 @@ spec:
                           - rangeKey
                           - projectionType
                           - nonKeyAttributes
-                      type: array
-                    policyArns:
-                      items:
-                        type: string
                       type: array
                     providerConfigName:
                       type: string
