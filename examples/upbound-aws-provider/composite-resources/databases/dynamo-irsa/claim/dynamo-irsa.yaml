@@ -11,7 +11,7 @@ spec:
       namespace: team-x
       cluster: crossplane
   dynamoConfig:
-    billingMode: PAY_PER_REQUEST
+    billingMode: PROVISIONED
     attribute:
       - name: UserID
         type: S
