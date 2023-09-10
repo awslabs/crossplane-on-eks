@@ -82,14 +82,6 @@ configs:
           end
 
           for i, condition in ipairs(obj.status.conditions) do
-            if condition.type == "Ready" then
-              if condition.status == "True" then
-                health_status.status = "Healthy"
-                health_status.message = "Resource is up-to-date."
-                return health_status
-              end
-            end
-
             if condition.type == "LastAsyncOperation" then
               if condition.status == "False" then
                 health_status.status = "Degraded"
@@ -102,6 +94,14 @@ configs:
               if condition.status == "False" then
                 health_status.status = "Degraded"
                 health_status.message = condition.message
+                return health_status
+              end
+            end
+
+            if condition.type == "Ready" then
+              if condition.status == "True" then
+                health_status.status = "Healthy"
+                health_status.message = "Resource is up-to-date."
                 return health_status
               end
             end
@@ -121,14 +121,6 @@ configs:
           end
 
           for i, condition in ipairs(obj.status.conditions) do
-            if condition.type == "Ready" then
-              if condition.status == "True" then
-                health_status.status = "Healthy"
-                health_status.message = "Resource is up-to-date."
-                return health_status
-              end
-            end
-
             if condition.type == "LastAsyncOperation" then
               if condition.status == "False" then
                 health_status.status = "Degraded"
@@ -141,6 +133,14 @@ configs:
               if condition.status == "False" then
                 health_status.status = "Degraded"
                 health_status.message = condition.message
+                return health_status
+              end
+            end
+
+            if condition.type == "Ready" then
+              if condition.status == "True" then
+                health_status.status = "Healthy"
+                health_status.message = "Resource is up-to-date."
                 return health_status
               end
             end
@@ -161,14 +161,6 @@ configs:
           end
 
           for i, condition in ipairs(obj.status.conditions) do
-            if condition.type == "Ready" then
-              if condition.status == "True" then
-                health_status.status = "Healthy"
-                health_status.message = "Resource is up-to-date."
-                return health_status
-              end
-            end
-
             if condition.type == "LastAsyncOperation" then
               if condition.status == "False" then
                 health_status.status = "Degraded"
@@ -181,6 +173,54 @@ configs:
               if condition.status == "False" then
                 health_status.status = "Degraded"
                 health_status.message = condition.message
+                return health_status
+              end
+            end
+
+            if condition.type == "Ready" then
+              if condition.status == "True" then
+                health_status.status = "Healthy"
+                health_status.message = "Resource is up-to-date."
+                return health_status
+              end
+            end
+          end
+
+          return health_status
+      %{endif}
+      %{ if crossplane_kubernetes_provider_enable }
+      "kubernetes.crossplane.io/*":
+        health.lua: |
+          health_status = {
+            status = "Progressing",
+            message = "Provisioning ..."
+          }
+
+          if obj.status == nil or obj.status.conditions == nil then
+            return health_status
+          end
+
+          for i, condition in ipairs(obj.status.conditions) do
+            if condition.type == "LastAsyncOperation" then
+              if condition.status == "False" then
+                health_status.status = "Degraded"
+                health_status.message = condition.message
+                return health_status
+              end
+            end
+
+            if condition.type == "Synced" then
+              if condition.status == "False" then
+                health_status.status = "Degraded"
+                health_status.message = condition.message
+                return health_status
+              end
+            end
+
+            if condition.type == "Ready" then
+              if condition.status == "True" then
+                health_status.status = "Healthy"
+                health_status.message = "Resource is up-to-date."
                 return health_status
               end
             end

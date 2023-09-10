@@ -143,6 +143,7 @@ module "eks_blueprints_addons" {
       templatefile("${path.module}/argocd-values.yaml", {
         crossplane_aws_provider_enable = local.aws_provider.enable
         crossplane_upbound_aws_provider_enable = local.upbound_aws_provider.enable
+        crossplane_kubernetes_provider_enable = local.kubernetes_provider.enable
       })]
   }
   enable_karpenter                 = true
@@ -204,14 +205,12 @@ module "crossplane" {
 #---------------------------------------------------------------
 locals {
   crossplane_namespace = "crossplane-system"
-  crossplane_sa_prefix = "provider-aws-"
   
   upbound_aws_provider = {
     enable = true
     controller_config = "upbound-aws-controller-config"
-    provider_config_name = "aws-provider-config"
+    provider_config_name = "aws-provider-config" #this is the providerConfigName used in all the examples in this repo
     version = "v0.40.0"
-    sa_prefix = "upbound-aws-provider-"
     families = [
       "dynamodb",
       "elasticache",
@@ -250,7 +249,8 @@ module "upbound_irsa_aws" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version = "~> 5.30"
 
-  role_name_prefix = local.upbound_aws_provider.sa_prefix
+  role_name = "${local.name}-upbound-aws-provider"
+  assume_role_condition_test = "StringLike"
 
   role_policy_arns = {
     policy = "arn:aws:iam::aws:policy/AdministratorAccess"
@@ -259,7 +259,7 @@ module "upbound_irsa_aws" {
   oidc_providers = {
     main = {
       provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["${local.crossplane_namespace}:${local.upbound_aws_provider.sa_prefix}*"]
+      namespace_service_accounts = ["${local.crossplane_namespace}:upbound-aws-provider-*"]
     }
   }
 
