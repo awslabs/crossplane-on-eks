@@ -200,6 +200,15 @@ module "crossplane" {
   depends_on = [module.eks.eks_managed_node_groups]
 }
 
+resource "kubectl_manifest" "environmentconfig" {
+  yaml_body = templatefile("${path.module}/environmentconfig.yaml", {
+    awsAccountID = data.aws_caller_identity.current.account_id
+    eksOIDC      = module.eks.oidc_provider_arn
+  })
+
+  depends_on = [module.crossplane]
+}
+
 #---------------------------------------------------------------
 # Crossplane Providers Settings
 #---------------------------------------------------------------
