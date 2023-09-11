@@ -41,17 +41,10 @@ spec:
                     providerConfigName:
                       type: string
                     tags:
-                      items:
-                        properties:
-                          key:
-                            type: string
-                          value:
-                            type: string
-                        required:
-                        - key
-                        - value
-                        type: object
-                      type: array
+                      additionalProperties:
+                        type: string
+                      description: Key-value map of resource tags.
+                      type: object
                   required:
                   - providerConfigName
                   type: object

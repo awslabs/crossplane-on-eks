@@ -1,17 +1,18 @@
 apiVersion: awsblueprints.io/v1alpha1
-kind: DynamoDBTable
+kind: DynamoIRSA
 metadata:
-  name: test-dynamodb-table-2
+  name: dynamo-irsa-test
 spec:
   writeConnectionSecretToRef:
-    name: dynamo3
+    name: dynamo-irsa-test
   resourceConfig:
     region: us-east-1
     tags:
       namespace: team-x
       cluster: crossplane
   dynamoConfig:
+    billingMode: PAY_PER_REQUEST
     attribute:
-      - name: UserId
+      - name: ID
         type: S
-    hashKey: UserId
+    hashKey: ID

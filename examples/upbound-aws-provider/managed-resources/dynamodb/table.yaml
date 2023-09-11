@@ -1,0 +1,19 @@
+apiVersion: dynamodb.aws.upbound.io/v1beta1
+kind: Table
+metadata:
+  generateName: crossplane-test-table-
+  labels:
+    testing.upbound.io/example-name: dynamodb
+spec:
+  forProvider:
+    attribute:
+      - name: UserId
+        type: S
+    hashKey: UserId
+    billingMode: PAY_PER_REQUEST
+    region: us-east-1
+    tags:
+      namespace: team-x
+      cluster: crossplane
+  providerConfigRef:
+    name: aws-provider-config

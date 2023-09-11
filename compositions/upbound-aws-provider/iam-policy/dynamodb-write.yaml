@@ -4,13 +4,12 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: write-cloudwatch-metrics.iampolicy.awsblueprints.io
+  name: write-dynamodb.iampolicy.awsblueprints.io
   labels:
     awsblueprints.io/provider: aws
     awsblueprints.io/environment: dev
     iam.awsblueprints.io/policy-type: write
-    iam.awsblueprints.io/service: cloudwatch
-    iam.awsblueprints.io/service-type: metrics
+    iam.awsblueprints.io/service: dynamodb
 spec:
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
@@ -38,7 +37,7 @@ spec:
           transforms:
             - type: string
               string:
-                fmt: "policy-cw-metrics-write-%s"
+                fmt: "policy-dynamodb-write-%s"
   resources:
     - name: write-policy
       base:
@@ -50,26 +49,53 @@ spec:
       patches:
         - type: PatchSet
           patchSetName: common-fields
-        - fromFieldPath: spec.resourceArn
+        - type: CombineFromComposite
           toFieldPath: spec.forProvider.policy
-          transforms:
-            - type: string
-              string:
-                fmt: |
-                  {
+          combine:
+            variables:
+            - fromFieldPath: spec.resourceArn
+            - fromFieldPath: spec.resourceArn
+            strategy: string
+            string:
+              fmt: |
+                {
                     "Version": "2012-10-17",
                     "Statement": [
-                      {
-                          "Action": [
-                              "cloudwatch:PutMetricData"
-                          ],
-                          "Resource": [
+                        {
+                            "Sid": "ListAndDescribe",
+                            "Effect": "Allow",
+                            "Action": [
+                                "dynamodb:List*",
+                                "dynamodb:DescribeReservedCapacity*",
+                                "dynamodb:DescribeLimits",
+                                "dynamodb:DescribeTimeToLive"
+                            ],
+                            "Resource": [
+                              "%s/*"
+                            ]
+                        },
+                        {
+                            "Sid": "SpecificTable",
+                            "Effect": "Allow",
+                            "Action": [
+                                "dynamodb:BatchGet*",
+                                "dynamodb:DescribeStream",
+                                "dynamodb:DescribeTable",
+                                "dynamodb:Get*",
+                                "dynamodb:Query",
+                                "dynamodb:Scan",
+                                "dynamodb:BatchWrite*",
+                                "dynamodb:CreateTable",
+                                "dynamodb:Delete*",
+                                "dynamodb:Update*",
+                                "dynamodb:PutItem"
+                            ],
+                            "Resource": [
                               "%s"
-                          ],
-                          "Effect": "Allow"
-                      }
+                            ]
+                        }
                     ]
-                  }
+                }
     - name: policy-attachment
       base:
         apiVersion: iam.aws.upbound.io/v1beta1

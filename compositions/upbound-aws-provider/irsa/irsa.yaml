@@ -13,7 +13,7 @@ spec:
     environmentConfigs:
       - type: Reference
         ref:
-          name: irsa
+          name: cluster
   patchSets:
     - name: common-fields
       patches:

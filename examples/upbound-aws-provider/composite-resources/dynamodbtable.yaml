@@ -1,10 +1,11 @@
 apiVersion: awsblueprints.io/v1alpha1
 kind: DynamoDBTable
 metadata:
-  name: test-dynamodb-table-2
+  name: test-dynamodb-table
+  namespace: default
 spec:
   writeConnectionSecretToRef:
-    name: dynamo3
+    name: dynamo
   resourceConfig:
     region: us-east-1
     tags:

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dynamo-irsa
+spec:
+  serviceAccountName: dynamo-irsa-test
+  containers:
+    - name: aws-cli
+      image: amazon/aws-cli:latest
+      command: ["sleep"]
+      args: ["3600"]  # Sleep for 1 hour (3600 seconds)
+      envFrom:
+        - secretRef:
+            name: dynamo-irsa-test
+  volumes:
+    - name: secret-volume
+      secret:
+        secretName: dynamo-irsa-test
