@@ -82,11 +82,11 @@ kubectl exec -it dynamo-irsa -- sh
 ```
 Add an item to the table
 ```
-aws dynamodb put-item --table-name $tableName --item '{"UserID":{"S":"1"},"Artist":{"S":"ABBA"},"SongTitle":{"S":"Take A Chance On Me"}}'
+aws dynamodb put-item --table-name $tableName --item '{"ID":{"S":"1"},"Artist":{"S":"ABBA"},"SongTitle":{"S":"Take A Chance On Me"}}'
 ```
 Get the item
 ```
-aws dynamodb get-item --table-name $tableName --key '{"UserID": {"S": "1"}}'
+aws dynamodb get-item --table-name $tableName --key '{"ID": {"S": "1"}}'
 ```
 Get all items
 ```

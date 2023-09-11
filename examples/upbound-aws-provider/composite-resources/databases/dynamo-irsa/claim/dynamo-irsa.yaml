@@ -13,6 +13,6 @@ spec:
   dynamoConfig:
     billingMode: PAY_PER_REQUEST
     attribute:
-      - name: UserID
+      - name: ID
         type: S
-    hashKey: UserID
+    hashKey: ID
