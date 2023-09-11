@@ -217,10 +217,10 @@ locals {
   crossplane_namespace = "crossplane-system"
   
   upbound_aws_provider = {
-    enable = true
-    controller_config = "upbound-aws-controller-config"
+    enable               = true #NOTE: if you only use one aws provider, only enable one
+    version              = "v0.40.0"
+    controller_config    = "upbound-aws-controller-config"
     provider_config_name = "aws-provider-config" #this is the providerConfigName used in all the examples in this repo
-    version = "v0.40.0"
     families = [
       "dynamodb",
       "elasticache",
@@ -236,7 +236,11 @@ locals {
   }
 
   aws_provider = {
-    enable = false
+    enable               = false #NOTE: if you only use one aws provider, only enable one
+    version              = "v0.43.1"
+    name                 = "aws-provider"
+    controller_config    = "aws-controller-config"
+    provider_config_name = "aws-provider-config" #this is the providerConfigName used in all the examples in this repo
   }
 
   kubernetes_provider = {
@@ -269,7 +273,7 @@ module "upbound_irsa_aws" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version = "~> 5.30"
 
-  role_name = "${local.name}-upbound-aws-provider"
+  role_name_prefix = "${local.name}-upbound-aws-"
   assume_role_condition_test = "StringLike"
 
   role_policy_arns = {
@@ -328,6 +332,67 @@ resource "kubectl_manifest" "upbound_aws_provider_config" {
 #---------------------------------------------------------------
 # Crossplane AWS Provider
 #---------------------------------------------------------------
+module "irsa_aws_provider" {
+  count = local.aws_provider.enable == true ? 1 : 0
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "~> 5.30"
+
+  role_name_prefix = "${local.name}-aws-provider-"
+  assume_role_condition_test = "StringLike"
+
+  role_policy_arns = {
+    policy = "arn:aws:iam::aws:policy/AdministratorAccess"
+  }
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["${local.crossplane_namespace}:aws-provider-*"]
+    }
+  }
+
+  tags = local.tags
+}
+
+resource "kubectl_manifest" "aws_controller_config" {
+  count = local.aws_provider.enable == true ? 1 : 0
+  yaml_body = templatefile("${path.module}/providers/aws/controller-config.yaml", {
+    iam-role-arn          = module.irsa_aws_provider[0].iam_role_arn
+    controller-config = local.aws_provider.controller_config
+  })
+
+  depends_on = [module.crossplane]
+}
+
+resource "kubectl_manifest" "aws_provider" {
+  count = local.aws_provider.enable == true ? 1 : 0
+  yaml_body = templatefile("${path.module}/providers/aws/provider.yaml", {
+    aws-provider-name = local.aws_provider.name
+    version           = local.aws_provider.version
+    controller-config = local.aws_provider.controller_config
+  })
+  wait = true
+
+  depends_on = [kubectl_manifest.aws_controller_config]
+}
+
+# Wait for the Upbound AWS Provider CRDs to be fully created before initiating aws_provider_config
+resource "time_sleep" "aws_wait_60_seconds" {
+  count           = local.aws_provider.enable == true ? 1 : 0
+  create_duration = "60s"
+
+  depends_on = [kubectl_manifest.aws_provider]
+}
+
+resource "kubectl_manifest" "aws_provider_config" {
+  count = local.aws_provider.enable == true ? 1 : 0
+  yaml_body = templatefile("${path.module}/providers/aws/provider-config.yaml", {
+    provider-config-name = local.aws_provider.provider_config_name
+  })
+
+  depends_on = [kubectl_manifest.aws_provider, time_sleep.aws_wait_60_seconds]
+}
+
 
 #---------------------------------------------------------------
 # Crossplane Kubernetes Provider
