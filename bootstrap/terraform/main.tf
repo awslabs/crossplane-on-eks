@@ -53,8 +53,6 @@ locals {
   vpc_cidr = "10.0.0.0/16"
   azs      = slice(data.aws_availability_zones.available.names, 0, 3)
 
-  argocd_namespace = "argocd"
-
   tags = {
     Blueprint  = local.name
     GithubRepo = "github.com/awslabs/crossplane-on-eks"
@@ -137,8 +135,8 @@ module "eks_blueprints_addons" {
   oidc_provider_arn     = module.eks.oidc_provider_arn
   enable_argocd         = true
   argocd = {
-    namespace       = local.argocd_namespace
-    chart_version   = "5.34.6" # ArgoCD v2.7.3
+    namespace       = "argocd"
+    chart_version   = "5.46.1" # ArgoCD v2.8.3
     values          = [
       templatefile("${path.module}/argocd-values.yaml", {
         crossplane_aws_provider_enable = local.aws_provider.enable
