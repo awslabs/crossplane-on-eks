@@ -47,15 +47,20 @@ aws iam put-role-policy \
 --policy-name rds-proxy-policy \
 --policy-document file://rds-proxy-policy.json
 ```
-  ### Provide value to the claim before applying.
+### Provide value to the claim before applying.
      
  1. Open the claim and substitute aurora-monitoring role arn with monitoringRoleArn and rds-proxy role arn with proxyRoleArn respectively.
  2. Make sure check the CIDR block for application and provide in the claim. This will used as the security group 
     ingress rule for proxy from application ( we can also provide the security group id instead of CIDR).    
     
- ### Verify your XRDS and composition
+### Deploy and verify XRD and composition
 
-  Verify the XRDs
+Deploy the xrd and composition for aurora
+```shell
+# Assuming root directory.
+cd ./compositions/upbound-aws-provider/aurora
+kubectl apply -k .
+```
 
 ```shell
 kubectl get xrds | grep xauroras.db.awsblueprint.io
@@ -81,10 +86,12 @@ NAME                          XR-KIND   XR-APIVERSION                 AGE
 xauroras.db.awsblueprint.io   XAurora   db.awsblueprint.io/v1alpha1   5m
 ```
 
+### Apply the Aurora claim
+
 If we have about same kind of output as above we can apply th claim: ( We are using a namespace as team-a in this example, if you want to change , please go ahead and create and update the same in the claim)
 
  ```shell
-cd ../composite-resources/database-examples/aurora
+cd ../../../examples/upbound-aws-provider/composite-resources/database-examples/aurora
 kubectl apply -f aurora-postgresql.yaml
 ```
 
@@ -104,7 +111,7 @@ Below is the default behaviour of the resource which will be provisioned through
      where the proxy can connect to the database (Make sure you have provided the correct the CIDR at the claim which is the allow CIDR on the security group from app.)
  5. The Aurora DB has been configured with logging and monitoring.
 
-### Steps to check the connectivity from a pod 
+### Test - Steps to check the database connectivity from a pod
 Create a  policy to allow the pod to connect to the Aurora Database
   
 ```shell
@@ -167,7 +174,7 @@ Note : we are providing the name of the database in the claim as:  aurorapgsqldb
 We should be able to do the required database operation.
 
 
-### Deleting the resources:
+### Clean up:
 
 First delete the psql client pod
 ```shell
