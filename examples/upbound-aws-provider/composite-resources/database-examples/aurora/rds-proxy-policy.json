@@ -14,9 +14,10 @@
         "Resource": "*",
         "Condition": {
           "StringEquals": {
-            "kms:ViaService": "secretsmanager.REGION-NAME.amazonaws.com"
+            "kms:ViaService": "secretsmanager.${REGION_NAME}.amazonaws.com"
           }
         }
       }
     ]
   }
+  

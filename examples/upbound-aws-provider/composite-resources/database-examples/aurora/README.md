@@ -1,5 +1,5 @@
 # Steps to to deploy aurora rds cluster
-This example deploys an Aurora PostgreSQL database cluster.
+This example deploys an Aurora PostgreSQL database cluster with Amazon RDS Proxy for Aurora.
 Below are the steps to create a cluster and connect from a pod with an psql client.
 
 ## Pre-requisites
@@ -10,6 +10,11 @@ Below are the steps to create a cluster and connect from a pod with an psql clie
 ### Create 2 roles, one for RDS Monitoring and one for RDS Proxy
 
 Create an IAM role and attach policy to the role (This role is required for aurora to perform monitoring)
+
+```shell
+# Assuming root directory.
+cd cd ./examples/upbound-aws-provider/composite-resources/database-examples/aurora
+```
 
     
 ```shell
@@ -40,7 +45,7 @@ ACCOUNT_NUM=$(aws sts get-caller-identity --query Account --output text)
 ```
 
 ```shell
-sed -i -e "s/REGION-NAME/$CURRENT_REGION/g" rds-proxy-policy.json
+envsubst <rds-proxy-policy.json -o rds-proxy-policy.json
 
 aws iam put-role-policy \
 --role-name rds-proxy \
@@ -58,7 +63,7 @@ aws iam put-role-policy \
 Deploy the xrd and composition for aurora
 ```shell
 # Assuming root directory.
-cd ./compositions/upbound-aws-provider/aurora
+cd ../../../../../compositions/upbound-aws-provider/aurora
 kubectl apply -k .
 ```
 
@@ -88,7 +93,7 @@ xauroras.db.awsblueprint.io   XAurora   db.awsblueprint.io/v1alpha1   5m
 
 ### Apply the Aurora claim
 
-If we have about same kind of output as above we can apply th claim: ( We are using a namespace as team-a in this example, if you want to change , please go ahead and create and update the same in the claim)
+If the xrd and composition are  in ready state, you are ready to apply the claim. We are using the `team-a` namespace in this example. If you'd like to use your own namespace, be sure to update the namespace field.
 
  ```shell
 cd ../../../examples/upbound-aws-provider/composite-resources/database-examples/aurora
@@ -101,11 +106,18 @@ We can check the execution of claim by following command:
 kubectl get Aurora -n team-a
 kubectl describe Aurora -n team-a
 ```
-(It should take about 15-20 min to provision the Aurora RDS cluster.)
+It should take about 15-20 min to provision the Aurora RDS cluster.
+
+```shell
+# Commands we can use to check the status of the cluster.
+# you can use describe to get detail information.
+kubectl get clusters.rds.aws.upbound.io
+kubectl get clusterinstances.rds.aws.upbound.io
+```
 Below is the default behaviour of the resource which will be provisioned through the claim, just to mention all this default behaviour can be overridden through patching .
 
  1. It will create a 3 node cluster with 1 writer and 2 reader endpoint spread across 3 Azs by default.
- 2. It will also create a proxy to connect to the aurora cluster.
+ 2. It will also create a [RDS proxy](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/rds-proxy.html) to connect to the aurora cluster.
  3. The management of database credential is done through the secret manager.
  4. The security group has 2 rules , one to allow the app to connect to the proxy and one within the security group
      where the proxy can connect to the database (Make sure you have provided the correct the CIDR at the claim which is the allow CIDR on the security group from app.)
@@ -116,7 +128,7 @@ Create a  policy to allow the pod to connect to the Aurora Database
   
 ```shell
 # provide the account number and region name to the policy document.
-sed -i -e "s/REGION-NAME:ACCOUNT-NUM/$CURRENT_REGION:$ACCOUNT_NUM/g" rdsproxy-access.json
+envsubst <rdsproxy-access.json -o rdsproxy-access.json
 
 aws iam create-policy \
 --policy-name rdsproxy-access \
@@ -138,12 +150,12 @@ eksctl create iamserviceaccount \
 Generate a DB token which can be used for password when asked
 
 ```shell
-PROXY_TERGET-ENDPOINT=kubectl get secrets aurora-cluster-secrets  -n team-a -o json | jq -r .data.proxyEndpoint | base64 --decode
-CLUSTER_USER_NAME=kubectl get secrets aurora-cluster-secrets  -n team-a -o json | jq -r .data.clusterUsername | base64 --decode
+PROXY_TARGET_ENDPOINT=kubectl get secrets aurora-cluster-secrets  -n team-a -o json | jq -r '.data.proxyEndpoint' | base64 --decode
+CLUSTER_USER_NAME=kubectl get secrets aurora-cluster-secrets  -n team-a -o json | jq -r '.data.clusterUsername' | base64 --decode
 
 
 aws rds generate-db-auth-token \
---hostname ${PROXY_TERGET-ENDPOINT}  \
+--hostname ${PROXY_TARGET_ENDPOINT}  \
 --port 5432 \
 --region ${CURRENT_REGION} \
 --username ${CLUSTER_USER_NAME}
@@ -214,5 +226,5 @@ Delete the composition and XRDs
 ```shell
 cd ../composition/upbound-aws-provider/aurora
 kubectl delete -f aurora.yaml
-kubectl delete -f defination.yaml
+kubectl delete -f definition.yaml
 ```
