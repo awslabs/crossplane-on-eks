@@ -13,7 +13,7 @@ Create an IAM role and attach policy to the role (This role is required for auro
 
 ```shell
 # Assuming root directory.
-cd cd ./examples/upbound-aws-provider/composite-resources/database-examples/aurora
+cd ./examples/upbound-aws-provider/composite-resources/database-examples/aurora
 ```
 
     
