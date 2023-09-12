@@ -1,0 +1,11 @@
+apiVersion: helm.crossplane.io/v1beta1
+kind: Release
+metadata:
+  name: hello-example
+spec:
+  forProvider:
+    chart:
+      name: mysql
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.12.1
+    namespace: default

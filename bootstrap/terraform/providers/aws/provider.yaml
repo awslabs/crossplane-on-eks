@@ -1,0 +1,8 @@
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: ${aws-provider-name}
+spec:
+  package: xpkg.upbound.io/crossplane-contrib/provider-aws:${version}
+  controllerConfigRef:
+    name: ${controller-config}

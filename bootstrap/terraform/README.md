@@ -5,8 +5,10 @@ This example deploys the following components
 - Creates Internet gateway for Public Subnets and NAT Gateway for Private Subnets
 - Creates EKS Cluster Control plane with one managed node group
 - Crossplane Add-on to EKS Cluster
+- Upbound AWS Provider for Crossplane
 - AWS Provider for Crossplane
 - Kubernetes Provider for Crossplane
+- Helm Provider for Crossplane
 
 ## Crossplane Deployment Design
 
@@ -45,7 +47,7 @@ Ensure that you have installed the following tools in your Mac or Windows Laptop
 ### Troubleshooting
 1. If `terraform apply` errors out after creating the cluster when trying to apply the helm charts, try running the command:
 ```shell
-aws eks --region <enter-your-region> update-kubeconfig --name <cluster-name>
+aws eks --region <enter-your-region> update-kubeconfig --name <cluster-name> --alias <cluster-name>
 ```
 and executing terraform apply again.
 
@@ -59,7 +61,8 @@ git clone https://github.com/aws-samples/crossplane-aws-blueprints.git
 ```
 
 > [!IMPORTANT]  
-> The examples in this repository make use of one of the Crossplane AWS providers. For example, if you are using the `crossplane_upbound_aws_provider_enable` provider, make sure to set the [`crossplane_aws_provider_enable`](https://github.com/awslabs/crossplane-on-eks/blob/main/bootstrap/terraform/main.tf#L59) to `false` in order install only the necessary CRDs to the Kubernetes cluster.
+> The examples in this repository make use of one of the Crossplane AWS providers. 
+For that reason `upbound_aws_provider.enable` is set to `true` and `aws_provider.enable` is set to `false`. If you use the examples for `aws_provider`, adjust the terraform [main.tf](https://github.com/awslabs/crossplane-on-eks/blob/main/bootstrap/terraform/main.tf) in order install only the necessary CRDs to the Kubernetes cluster.
 
 #### Step2: Run Terraform INIT
 Initialize a working directory with configuration files
@@ -146,6 +149,10 @@ echo "$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.
 
 ## Clean up
 1. Delete resources created by Crossplane such as first Claims, then XRDs and Compositions.
+
+1. Remove crossplane providers by setting `enable = false` in main.tf for each provider and running `terraform apply`
+
+1. Run `kubectl get providers` to validate all providers were removed. If any left, remove using `kubectl delete providers <provider>`
 
 1. Delete the EKS cluster and it's resources with the following command
 ```bash
