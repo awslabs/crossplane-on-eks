@@ -5,7 +5,7 @@ metadata:
 spec:
   forProvider:
     chart:
-      name: hello
-      repository: https://cloudecho.github.io/charts
-      version: 0.1.2
+      name: mysql
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.12.1
     namespace: default
