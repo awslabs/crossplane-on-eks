@@ -11,7 +11,20 @@ spec:
       awsblueprints.io/provider: aws
       awsblueprints.io/environment: dev
       cluster.awsblueprints.io/configuration: standard
+      cluster.awsblueprints.io/type: postgresql
+  resourceConfig:
+    # Required Fields
+    providerConfigName: aws-provider-config
+    region: us-east-1
+    deletionPolicy: Delete
+    # Optional Field
+    tags:
+      cluster: aurora-cluster
+      namespace: team-a
+      environment: dev
+      application: my-app
   networkConfig:
+    # Required Fields for network config
     # the below ids needs to be updated before use. 
     vpcId: vpc-123455
     subnetIds:
@@ -22,14 +35,11 @@ spec:
     allowedCidrBlocks:
       - 10.0.0.0/8
     # allowedSecurityGroupId: sg-0dd0ff1bsgd345
-  resourceConfig:
-    # Required Fields for Cluster
-    providerConfigName: aws-provider-config
-    region: us-east-1
+  clusterConfig:
+    # Required Fields for Cluster config
     monitoringRoleArn: arn:aws:iam::12345678901:role/name-of-the-rds-role
     # Below parameters have default set up in definition
     # This can be patched to a different value based on req.
-    deletionPolicy: Delete
     databaseName: aurorapgsqldb
     parameterGroupFamily: aurora-postgresql15
     engine: aurora-postgresql
@@ -50,11 +60,6 @@ spec:
     #Optional Field
     enabledCloudwatchLogsExports:
     - "postgresql"
-    tags:
-      cluster: aurora-cluster
-      namespace: team-a
-      environment: dev
-      application: my-app
   proxyConfig:
     # Required Fields for proxy
     # Role for aurora proxy to get the secrets from secret manager

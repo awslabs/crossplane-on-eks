@@ -66,6 +66,18 @@ spec:
                       - Orphan
                       type: string
                       default: Delete
+                    tags:
+                      additionalProperties:
+                        type: string
+                      description: Key-value map of resource tags.
+                      type: object
+                  required:
+                  - providerConfigName
+                  - region
+                clusterConfig:
+                  description: parameter for Aurora cluster resource.
+                  type: object
+                  properties:
                     parameterGroupFamily:
                       description: Parameter group family name.
                       type: string
@@ -133,14 +145,7 @@ spec:
                       type: string
                     finalSnapshotIdentifier:
                       type: string
-                    tags:
-                      additionalProperties:
-                        type: string
-                      description: Key-value map of resource tags.
-                      type: object 
                   required:
-                  - providerConfigName
-                  - region
                   - monitoringRoleArn
                 proxyConfig:
                   description: parameter for Aurora Proxy configuration

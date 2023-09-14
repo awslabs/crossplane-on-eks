@@ -1,11 +1,12 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: xauroras.db.awsblueprint.io
+  name: xaurora-postgresql.db.awsblueprint.io
   labels:
     awsblueprints.io/provider: aws
     awsblueprints.io/environment: dev
     cluster.awsblueprints.io/configuration: standard
+    cluster.awsblueprints.io/type: postgresql
 spec:
   writeConnectionSecretsToNamespace: crossplane-system
   compositeTypeRef:
@@ -181,7 +182,7 @@ spec:
         - type: PatchSet
           patchSetName: common-fields
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.parameterGroupFamily
+          fromFieldPath: spec.clusterConfig.parameterGroupFamily
           toFieldPath: spec.forProvider.family
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.arn
@@ -229,49 +230,49 @@ spec:
         - type: PatchSet
           patchSetName: common-fields
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.databaseName
+          fromFieldPath: spec.clusterConfig.databaseName
           toFieldPath: spec.forProvider.databaseName
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.engine
+          fromFieldPath: spec.clusterConfig.engine
           toFieldPath: spec.forProvider.engine
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.engineVersion
+          fromFieldPath: spec.clusterConfig.engineVersion
           toFieldPath: spec.forProvider.engineVersion
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.masterUsername
+          fromFieldPath: spec.clusterConfig.masterUsername
           toFieldPath: spec.forProvider.masterUsername
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.skipFinalSnapshot
+          fromFieldPath: spec.clusterConfig.skipFinalSnapshot
           toFieldPath: spec.forProvider.skipFinalSnapshot
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.storageType
+          fromFieldPath: spec.clusterConfig.storageType
           toFieldPath: spec.forProvider.storageType
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.allocatedStorage
+          fromFieldPath: spec.clusterConfig.allocatedStorage
           toFieldPath: spec.forProvider.allocatedStorage
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.availabilityZones
+          fromFieldPath: spec.clusterConfig.availabilityZones
           toFieldPath: spec.forProvider.availabilityZones
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.backupRetentionPeriod
+          fromFieldPath: spec.clusterConfig.backupRetentionPeriod
           toFieldPath: spec.forProvider.backupRetentionPeriod
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.enabledCloudwatchLogsExports
+          fromFieldPath: spec.clusterConfig.enabledCloudwatchLogsExports
           toFieldPath: spec.forProvider.enabledCloudwatchLogsExports
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.preferredBackupWindow
+          fromFieldPath: spec.clusterConfig.preferredBackupWindow
           toFieldPath: spec.forProvider.preferredBackupWindow
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.preferredMaintenanceWindow
+          fromFieldPath: spec.clusterConfig.preferredMaintenanceWindow
           toFieldPath: spec.forProvider.preferredMaintenanceWindow
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.applyImmediately
+          fromFieldPath: spec.clusterConfig.applyImmediately
           toFieldPath: spec.forProvider.applyImmediately
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.snapshotIdentifier
+          fromFieldPath: spec.clusterConfig.snapshotIdentifier
           toFieldPath: spec.forProvider.snapshotIdentifier
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.finalSnapshotIdentifier
+          fromFieldPath: spec.clusterConfig.finalSnapshotIdentifier
           toFieldPath: spec.forProvider.finalSnapshotIdentifier
         - type: FromCompositeFieldPath
           fromFieldPath: status.clusterParameterGroupName
@@ -319,28 +320,28 @@ spec:
         - type: PatchSet
           patchSetName: common-fields
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.engine
+          fromFieldPath: spec.clusterConfig.engine
           toFieldPath: spec.forProvider.engine
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.engineVersion
+          fromFieldPath: spec.clusterConfig.engineVersion
           toFieldPath: spec.forProvider.engineVersion
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.clusterInstanceClass
+          fromFieldPath: spec.clusterConfig.clusterInstanceClass
           toFieldPath: spec.forProvider.instanceClass
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.performanceInsightsEnabled
+          fromFieldPath: spec.clusterConfig.performanceInsightsEnabled
           toFieldPath: spec.forProvider.performanceInsightsEnabled
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.monitoringRoleArn
+          fromFieldPath: spec.clusterConfig.monitoringRoleArn
           toFieldPath: spec.forProvider.monitoringRoleArn  
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.monitoringInterval
+          fromFieldPath: spec.clusterConfig.monitoringInterval
           toFieldPath: spec.forProvider.monitoringInterval
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.applyImmediately
+          fromFieldPath: spec.clusterConfig.applyImmediately
           toFieldPath: spec.forProvider.applyImmediately
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.performanceInsightsRetentionPeriod
+          fromFieldPath: spec.clusterConfig.performanceInsightsRetentionPeriod
           toFieldPath: spec.forProvider.performanceInsightsRetentionPeriod
         - type: FromCompositeFieldPath
           fromFieldPath: status.clusterIdentifier
@@ -367,28 +368,28 @@ spec:
         - type: PatchSet
           patchSetName: common-fields
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.engine
+          fromFieldPath: spec.clusterConfig.engine
           toFieldPath: spec.forProvider.engine
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.engineVersion
+          fromFieldPath: spec.clusterConfig.engineVersion
           toFieldPath: spec.forProvider.engineVersion
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.clusterInstanceClass
+          fromFieldPath: spec.clusterConfig.clusterInstanceClass
           toFieldPath: spec.forProvider.instanceClass
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.performanceInsightsEnabled
+          fromFieldPath: spec.clusterConfig.performanceInsightsEnabled
           toFieldPath: spec.forProvider.performanceInsightsEnabled
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.monitoringRoleArn
+          fromFieldPath: spec.clusterConfig.monitoringRoleArn
           toFieldPath: spec.forProvider.monitoringRoleArn  
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.monitoringInterval
+          fromFieldPath: spec.clusterConfig.monitoringInterval
           toFieldPath: spec.forProvider.monitoringInterval
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.applyImmediately
+          fromFieldPath: spec.clusterConfig.applyImmediately
           toFieldPath: spec.forProvider.applyImmediately
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.performanceInsightsRetentionPeriod
+          fromFieldPath: spec.clusterConfig.performanceInsightsRetentionPeriod
           toFieldPath: spec.forProvider.performanceInsightsRetentionPeriod
         - type: FromCompositeFieldPath
           fromFieldPath: status.clusterIdentifier
@@ -415,28 +416,28 @@ spec:
         - type: PatchSet
           patchSetName: common-fields
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.engine
+          fromFieldPath: spec.clusterConfig.engine
           toFieldPath: spec.forProvider.engine
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.engineVersion
+          fromFieldPath: spec.clusterConfig.engineVersion
           toFieldPath: spec.forProvider.engineVersion
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.clusterInstanceClass
+          fromFieldPath: spec.clusterConfig.clusterInstanceClass
           toFieldPath: spec.forProvider.instanceClass
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.performanceInsightsEnabled
+          fromFieldPath: spec.clusterConfig.performanceInsightsEnabled
           toFieldPath: spec.forProvider.performanceInsightsEnabled
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.monitoringRoleArn
+          fromFieldPath: spec.clusterConfig.monitoringRoleArn
           toFieldPath: spec.forProvider.monitoringRoleArn  
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.monitoringInterval
+          fromFieldPath: spec.clusterConfig.monitoringInterval
           toFieldPath: spec.forProvider.monitoringInterval
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.applyImmediately
+          fromFieldPath: spec.clusterConfig.applyImmediately
           toFieldPath: spec.forProvider.applyImmediately
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.performanceInsightsRetentionPeriod
+          fromFieldPath: spec.clusterConfig.performanceInsightsRetentionPeriod
           toFieldPath: spec.forProvider.performanceInsightsRetentionPeriod
         - type: FromCompositeFieldPath
           fromFieldPath: status.clusterIdentifier
