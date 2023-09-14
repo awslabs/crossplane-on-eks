@@ -1,7 +1,7 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: xaurora-postgresql.db.awsblueprint.io
+  name: xauroras-postgresql.db.awsblueprint.io
   labels:
     awsblueprints.io/provider: aws
     awsblueprints.io/environment: dev
