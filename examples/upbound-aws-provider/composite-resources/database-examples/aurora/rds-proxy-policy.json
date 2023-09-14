@@ -1,0 +1,23 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "getsm",
+        "Effect": "Allow",
+        "Action": "secretsmanager:GetSecretValue",
+        "Resource": "*"
+      },
+      {
+        "Sid": "kmsdecrypt",
+        "Effect": "Allow",
+        "Action": "kms:Decrypt",
+        "Resource": "*",
+        "Condition": {
+          "StringEquals": {
+            "kms:ViaService": "secretsmanager.${REGION_NAME}.amazonaws.com"
+          }
+        }
+      }
+    ]
+  }
+  

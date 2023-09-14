@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: postgres-client
+  namespace: team-a
+spec:
+  serviceAccountName: rds-access
+  containers:
+  - name: postgreclient
+    image: postgres:latest
+    command: ["sleep"]
+    args: ["3600"]  # Sleep for 1 hour (3600 seconds)
+    envFrom:
+    - secretRef:
+        name: aurora-cluster-secrets
+  volumes:
+  - name: secret-volume
+    secret:
+        secretName: aurora-cluster-secrets # This secret name can be changed in the claim

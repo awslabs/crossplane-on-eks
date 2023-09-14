@@ -1,0 +1,235 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xauroras.db.awsblueprint.io
+spec:
+  group: db.awsblueprint.io
+  names:
+    kind: XAurora
+    plural: xauroras
+  claimNames:
+    kind: Aurora
+    plural: auroras
+  connectionSecretKeys:
+    - clusterUsername
+    - proxyEndpoint
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          description: RelationalDatabase is the Schema for the Aurora database
+            API. Provides a Aurora Cluster.
+          properties:
+            spec:
+              type: object
+              description: "Aurora Cluster with Proxy Specification"
+              properties:
+                networkConfig:
+                  description: parameter for Aurora network configuration
+                  type: object
+                  properties:
+                    subnetIds:
+                      type: array
+                      items:
+                        type: string
+                      minItems: 1
+                    vpcId: 
+                      type: string
+                    allowedPort:
+                      type: number
+                      default: 5432
+                    allowedCidrBlocks:
+                      type: array
+                      items:
+                        type: string
+                      minItems: 1
+                    allowedSecurityGroupId:
+                      type: string
+                  required:
+                  - subnetIds
+                  - vpcId
+                resourceConfig:
+                  description: parameter for Aurora general configuration
+                    resource.
+                  type: object
+                  properties:
+                    providerConfigName:
+                      type: string
+                    region:
+                      type: string
+                    deletionPolicy:
+                      description: Defaults to Delete
+                      enum:
+                      - Delete
+                      - Orphan
+                      type: string
+                      default: Delete
+                    tags:
+                      additionalProperties:
+                        type: string
+                      description: Key-value map of resource tags.
+                      type: object
+                  required:
+                  - providerConfigName
+                  - region
+                clusterConfig:
+                  description: parameter for Aurora cluster resource.
+                  type: object
+                  properties:
+                    parameterGroupFamily:
+                      description: Parameter group family name.
+                      type: string
+                      default: aurora-postgresql15
+                    databaseName:
+                      description: name of the aurora database
+                      type: string
+                    engine:
+                      description: engine type
+                      type: string
+                      default: aurora-postgresql
+                    engineVersion:
+                      description: engine version
+                      type: string
+                      default: "15.2"
+                    masterUsername:
+                      description: cluster user name
+                      type: string
+                      default: adminuser
+                    skipFinalSnapshot:
+                      description: Whether a final DB snapshot is created before the DB cluster is deleted
+                      type: boolean
+                      default: true
+                    storageType:
+                      type: string
+                      default: aurora-iopt1
+                    availabilityZones:
+                      type: array
+                      items:
+                        type: string
+                    finalDBSnapshotIdentifier:
+                      type: string
+                    backupRetentionPeriod:
+                      type: integer
+                      default: 7
+                    preferredBackupWindow: 
+                      type: string
+                      default: "02:00-03:00"
+                    preferredMaintenanceWindow:
+                      type: string
+                      default: "sun:04:00-sun:05:00"
+                    clusterInstanceClass:
+                      type: string
+                      default: db.r6g.large
+                    performanceInsightsEnabled:
+                      description: Specifies whether Performance Insights is enabled or not.
+                      type: boolean
+                      default: true
+                    monitoringRoleArn:
+                      type: string
+                    monitoringInterval:
+                      type: integer
+                      default: 60
+                    performanceInsightsRetentionPeriod:
+                      type: integer
+                      default: 7
+                    enabledCloudwatchLogsExports:
+                      type: array
+                      items:
+                        type: string
+                    applyImmediately:
+                      type: boolean
+                      default: true
+                    snapshotIdentifier:
+                      type: string
+                    finalSnapshotIdentifier:
+                      type: string
+                  required:
+                  - monitoringRoleArn
+                proxyConfig:
+                  description: parameter for Aurora Proxy configuration
+                  type: object    
+                  properties:  
+                    iamAuth:
+                      enum:
+                      - REQUIRED
+                      - DISABLED
+                      type: string
+                      default: REQUIRED
+                      description: Whether to require or disallow IAM authentication for connections.
+                    debugLogging:
+                      description: Parameter to set whether the proxy includes detailed 
+                        information about SQL statements in its logs.
+                      type: boolean
+                      default: true
+                    idleClientTimeout:  
+                      description: Parameter to set the number of seconds that a connection 
+                        to the proxy can be inactive before the proxy disconnects it.
+                      type: number
+                      default: 3600
+                    proxyRoleArn:
+                      description: Role Arn for the database proxy.
+                      type: string
+                    # secretArn:
+                    #   description: Arn of the db credential secret.
+                    #   type: string
+                    connectionBorrowTimeout:
+                      description: The number of seconds for a proxy to wait for a connection
+                        to become available in the connection pool.
+                      type: number
+                      default: 120
+                    maxIdleConnectionsPercent:
+                      description: Controls how actively the proxy closes idle database 
+                        connections in the connection pool.
+                      type: number
+                      default: 50
+                    maxConnectionsPercent:
+                      description: The maximum size of the connection pool for each target 
+                        in a target group.
+                      type: number
+                      default: 50
+                    initQuery:
+                      description: One or more SQL statements for the proxy to run when 
+                        opening each new database connection.
+                      type: string
+                  required:
+                  - proxyRoleArn
+            status:
+              properties:
+                subnetGroupArn:
+                  type: string
+                subnetGroupName:
+                  type: string
+                securityGroupId:
+                  type: string
+                securityGroupArn:
+                  type: string
+                securityGroupName:
+                  type: string 
+                clusterParameterGroupName:
+                  type: string 
+                clusterParameterGroupArn:
+                  type: string
+                clusterIdentifier:
+                  type: string
+                clusterArn:
+                  type: string
+                clusterReaderEndpoint:
+                  type: string
+                clusterEndpoint:
+                  type: string  
+                clusterMasterSecretArn:
+                  type: string  
+                clusterUsername:
+                  type: string
+                proxyArn:
+                  type: string
+                proxyEndpoint:
+                  type: string
+                defaultProxyTgName:
+                  type: string
+                targetGroupName:
+                  type: string  
+              type: object
+          type: object

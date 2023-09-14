@@ -1,0 +1,74 @@
+apiVersion: db.awsblueprint.io/v1alpha1
+kind: Aurora
+metadata:
+  name: test-aurora-postgresql-cluster
+  namespace: team-a
+spec:
+  writeConnectionSecretToRef:
+    name: aurora-cluster-secrets
+  compositionSelector:
+    matchLabels:
+      awsblueprints.io/provider: aws
+      awsblueprints.io/environment: dev
+      cluster.awsblueprints.io/configuration: standard
+      cluster.awsblueprints.io/type: postgresql
+  resourceConfig:
+    # Required Fields
+    providerConfigName: aws-provider-config
+    region: us-east-1
+    deletionPolicy: Delete
+    # Optional Field
+    tags:
+      cluster: aurora-cluster
+      namespace: team-a
+      environment: dev
+      application: my-app
+  networkConfig:
+    # Required Fields for network config
+    # the below ids needs to be updated before use. 
+    vpcId: vpc-123455
+    subnetIds:
+      - "subnet-123455"
+      - "subnet-123455"
+      - "subnet-123455"
+    # either the app CIDR or the SG id has to be provided for ingress traffic rule
+    allowedCidrBlocks:
+      - 10.0.0.0/8
+    # allowedSecurityGroupId: sg-0dd0ff1bsgd345
+  clusterConfig:
+    # Required Fields for Cluster config
+    monitoringRoleArn: arn:aws:iam::12345678901:role/name-of-the-rds-role
+    # Below parameters have default set up in definition
+    # This can be patched to a different value based on req.
+    databaseName: aurorapgsqldb
+    parameterGroupFamily: aurora-postgresql15
+    engine: aurora-postgresql
+    masterUsername: adminuser
+    engineVersion: "15.2"
+    storageType: aurora-iopt1
+    backupRetentionPeriod: 7
+    preferredBackupWindow: "02:00-03:00"
+    preferredMaintenanceWindow: "sun:04:00-sun:05:00"
+    clusterInstanceClass: db.r6g.large
+    applyImmediately: true
+    skipFinalSnapshot: false
+    # provide finalSnapshotIdentifier if skipFinalSnapshot is false
+    finalSnapshotIdentifier: "aurora-cluster-final-snapshot"
+    performanceInsightsEnabled: true
+    performanceInsightsRetentionPeriod: 7
+    monitoringInterval: 60
+    #Optional Field
+    enabledCloudwatchLogsExports:
+    - "postgresql"
+  proxyConfig:
+    # Required Fields for proxy
+    # Role for aurora proxy to get the secrets from secret manager
+    proxyRoleArn: arn:aws:iam::12345678901:role/name-of-the-proxy-role
+    # Below parameters have default set up in definition
+    iamAuth: REQUIRED
+    debugLogging: true
+    # Recommendation ::this needs to be updated based on the instance size
+    idleClientTimeout: 3600
+    connectionBorrowTimeout: 120
+    maxConnectionsPercent: 50
+    maxIdleConnectionsPercent: 50
