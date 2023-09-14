@@ -109,10 +109,24 @@ kubectl describe Aurora -n team-a
 It should take about 15-20 min to provision the Aurora RDS cluster.
 
 ```shell
-# Commands we can use to check the status of the cluster.
-# you can use describe to get detail information.
+# To check the status of the cluster.
 kubectl get clusters.rds.aws.upbound.io
 kubectl get clusterinstances.rds.aws.upbound.io
+
+# to check the status of proxy
+kubectl get proxies.rds.aws.upbound.io
+
+# To check the status of security group
+kubectl get securitygroup.ec2.aws.upbound.io
+kubectl get securitygrouprules.ec2.aws.upbound.io
+
+# To check the status of subnet group
+kubectl get subnetgroups.rds.aws.upbound.io
+
+# To check the status of subnet group
+k get Aurora -n team-a
+
+# you can use describe to get detail information of the particular resource.
 ```
 Below is the default behaviour of the resource which will be provisioned through the claim, just to mention all this default behaviour can be overridden through patching .
 
