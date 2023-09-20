@@ -40,43 +40,21 @@ write-s3.iampolicy.awsblueprints.io                   IAMPolicy            awsbl
 xs3irsa.awsblueprints.io                              XS3IRSA              awsblueprints.io/v1alpha1   5m
 ```
 
-### Update and apply the `EnvironmentConfig` template
+### Validate `EnvironmentConfig`
 
-Set environment variables
+Crossplane `environmentconfig` named `cluster` is created by the bootstrap terraform code. Validate it exists and contains proper values
 ```
-export CLUSTER=$(kubectl config current-context)
-export EKS_OIDC=$(aws eks describe-cluster --name $CLUSTER --query "cluster.identity.oidc.issuer" --output text | cut -c 9-)
-export AWS_ACCOUNT=$(aws sts get-caller-identity --query "Account" --output text)
-```
-Validate environment variables populated
-```
-echo "$CLUSTER\n$EKS_OIDC\n$AWS_ACCOUNT"
+kubectl get environmentconfig cluster -o yaml
 ```
 Expected output
 ```
-crossplane-blueprints
-oidc.eks.us-east-1.amazonaws.com/id/EXAMPLED539D4633E53DE1B71EXAMPLE
-111122223333
-```
-
-Substitute values in the claim from environment variables
-```shell
-envsubst < "environmentconfig-tmpl.yaml" > "environmentconfig.yaml"
-```
-
-Check that the claim populated with values
-```
-cat environmentconfig.yaml
-```
-
-Apply the environmentconfig
-```shell
-kubectl apply -f environmentconfig.yaml
-```
-
-Validate the environmentconfig was applied
-```
-kubectl get environmentconfigs
+apiVersion: apiextensions.crossplane.io/v1alpha1
+kind: EnvironmentConfig
+metadata:
+  name: cluster
+data:
+  awsAccountID: <account_id>
+  eksOIDC: <oidc>
 ```
 
 ### Apply ArgoCD application
