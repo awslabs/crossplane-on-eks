@@ -9,8 +9,8 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: s3-irsa-app
-    repoURL: https://github.com/awslabs/crossplane-on-eks/examples/upbound-aws-provider/composite-resources/s3-irsa/helm-charts.git
+    path: examples/upbound-aws-provider/composite-resources/s3-irsa/helm-chart/
+    repoURL: https://github.com/awslabs/crossplane-on-eks.git
     targetRevision: HEAD
     helm:
       values: |- 
