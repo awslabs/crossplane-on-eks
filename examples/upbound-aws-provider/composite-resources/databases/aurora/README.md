@@ -13,7 +13,7 @@ Create an IAM role and attach policy to the role (This role is required for auro
 
 ```shell
 # Assuming root directory.
-cd ./examples/upbound-aws-provider/composite-resources/database-examples/aurora
+cd ./examples/upbound-aws-provider/composite-resources/databases/aurora
 ```
 
     
@@ -96,7 +96,7 @@ xauroras.db.awsblueprint.io   XAurora   db.awsblueprint.io/v1alpha1   5m
 If the xrd and composition are  in ready state, you are ready to apply the claim. We are using the `team-a` namespace in this example. If you'd like to use your own namespace, be sure to update the namespace field.
 
  ```shell
-cd ../../../examples/upbound-aws-provider/composite-resources/database-examples/aurora
+cd ../../../examples/upbound-aws-provider/composite-resources/databases/aurora
 kubectl apply -f aurora-postgresql.yaml
 ```
 
