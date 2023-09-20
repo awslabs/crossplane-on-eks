@@ -1,7 +1,0 @@
-apiVersion: apiextensions.crossplane.io/v1alpha1
-kind: EnvironmentConfig
-metadata:
-  name: irsa
-data:
-  awsAccountID: $AWS_ACCOUNT
-  eksOIDC: $EKS_OIDC

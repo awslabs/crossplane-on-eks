@@ -10,7 +10,7 @@ spec:
   project: default
   source:
     path: s3-irsa-app
-    repoURL: https://github.com/awslabs/crossplane-on-eks/examples/upbound-aws-provider/composite-resources/s3-irsa-example/helm-charts.git
+    repoURL: https://github.com/awslabs/crossplane-on-eks/examples/upbound-aws-provider/composite-resources/s3-irsa/helm-charts.git
     targetRevision: HEAD
     helm:
       values: |- 
