@@ -110,7 +110,7 @@ module "eks" {
   eks_managed_node_groups = {
     initial = {
       instance_types  = ["m6i.large", "m5.large", "m5n.large", "m5zn.large"]
-      capacity_type   = "SPOT"
+      capacity_type   = var.capacity_type # defaults to SPOT
       min_size        = 1
       max_size        = 5
       desired_size    = 3
@@ -127,7 +127,7 @@ module "eks" {
 
 module "eks_blueprints_addons" {
   source  = "aws-ia/eks-blueprints-addons/aws"
-  version = "0.2.0"
+  version = "1.8.0"
 
   cluster_name          = module.eks.cluster_name
   cluster_endpoint      = module.eks.cluster_endpoint
@@ -144,7 +144,7 @@ module "eks_blueprints_addons" {
         crossplane_kubernetes_provider_enable = local.kubernetes_provider.enable
       })]
   }
-  enable_karpenter                 = true
+  enable_gatekeeper                = true
   enable_metrics_server            = true
   enable_kube_prometheus_stack     = true
   kube_prometheus_stack = {
@@ -164,7 +164,7 @@ module "eks_blueprints_addons" {
 # Crossplane
 #---------------------------------------------------------------
 module "crossplane" {
-  source = "./addon/"
+  source = "github.com/awslabs/crossplane-on-eks/bootstrap/terraform/addon/"
   enable_crossplane = true
   crossplane = {
     values = [yamlencode({
@@ -215,7 +215,7 @@ locals {
   crossplane_namespace = "crossplane-system"
   
   upbound_aws_provider = {
-    enable               = true #NOTE: if you only use one aws provider, only enable one
+    enable               = var.enable_upbound_aws_provider # defaults to true
     version              = "v0.40.0"
     controller_config    = "upbound-aws-controller-config"
     provider_config_name = "aws-provider-config" #this is the providerConfigName used in all the examples in this repo
@@ -234,7 +234,7 @@ locals {
   }
 
   aws_provider = {
-    enable               = false #NOTE: if you only use one aws provider, only enable one
+    enable               = var.enable_aws_provider # defaults to false
     version              = "v0.43.1"
     name                 = "aws-provider"
     controller_config    = "aws-controller-config"
@@ -242,7 +242,7 @@ locals {
   }
 
   kubernetes_provider = {
-    enable                = true
+    enable                = var.enable_kubernetes_provider # defaults to true
     version               = "v0.9.0"
     service_account       = "kubernetes-provider"
     name                  = "kubernetes-provider"
@@ -252,7 +252,7 @@ locals {
   }
 
   helm_provider = {
-    enable                = true
+    enable                = var.enable_helm_provider # defaults to true
     version               = "v0.15.0"
     service_account       = "helm-provider"
     name                  = "helm-provider"

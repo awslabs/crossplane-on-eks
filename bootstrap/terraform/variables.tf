@@ -18,3 +18,33 @@ variable "cluster_version" {
   description = "Kubernetes Version"
   default     = "1.27"
 }
+
+variable "capacity_type" {
+  type        = string
+  description = "Capacity SPOT or ON_DEMAND"
+  default     = "SPOT"
+}
+
+variable "enable_upbound_aws_provider" {
+  type        = bool
+  description = "Installs the upbound aws provider"
+  default     = true
+}
+
+variable "enable_aws_provider" {
+  type        = bool
+  description = "Installs the contrib aws provider"
+  default     = false
+}
+
+variable "enable_kubernetes_provider" {
+  type        = bool
+  description = "Installs the kubernetes provider"
+  default     = true
+}
+
+variable "enable_helm_provider" {
+  type        = bool
+  description = "Installs the helm provider"
+  default     = true
+}
