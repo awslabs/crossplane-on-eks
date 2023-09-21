@@ -6,3 +6,4 @@ spec:
   serviceAccountName: ${sa-name}
   args:
     - --debug
+    - --enable-management-policies
