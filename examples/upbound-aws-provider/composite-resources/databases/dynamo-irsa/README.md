@@ -63,7 +63,7 @@ kubectl apply -f claim/dynamo-irsa.yaml
 ```
 Wait for the resources to come up and the claim to be ready
 ```
-kubect get dynamoirsa
+kubectl get dynamoirsa
 ```
 Expected output
 ```
