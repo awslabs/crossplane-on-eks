@@ -4,3 +4,4 @@ bases:
 - ../../../../compositions/upbound-aws-provider/iam-policy/
 - ../../../../compositions/upbound-aws-provider/irsa/
 - ../../../../compositions/upbound-aws-provider/s3/
+- ../../../../compositions/upbound-aws-provider/s3-irsa/
