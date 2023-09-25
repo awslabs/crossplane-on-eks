@@ -150,7 +150,10 @@ echo "$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.
 ## Clean up
 1. Delete resources created by Crossplane such as first Claims, then XRDs and Compositions.
 
-1. Remove crossplane providers by setting `enable = false` in main.tf for each provider and running `terraform apply`
+1. Remove crossplane providers by running
+```bash
+terraform apply --var enable_upbound_aws_provider=false --var enable_aws_provider=false --var enable_kubernetes_provider=false --var enable_helm_provider=false
+```
 
 1. Run `kubectl get providers` to validate all providers were removed. If any left, remove using `kubectl delete providers <provider>`
 
