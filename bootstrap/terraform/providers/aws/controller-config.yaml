@@ -9,3 +9,4 @@ spec:
     fsGroup: 2000
   args:
     - --debug
+    - --enable-management-policies
