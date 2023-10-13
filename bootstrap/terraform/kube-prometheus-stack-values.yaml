@@ -46,5 +46,5 @@ grafana:
     default:
       crossplane:
         gnetId: 19747
-        revision: 4
+        revision: 5
         datasource: prometheusdatasource
