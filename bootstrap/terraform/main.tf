@@ -148,13 +148,7 @@ module "eks_blueprints_addons" {
   enable_metrics_server            = true
   enable_kube_prometheus_stack     = true
   kube_prometheus_stack = {
-    values = [yamlencode({
-      prometheus = {
-        service = {
-          type = "LoadBalancer"
-        }
-      }
-    })]
+    values = [file("${path.module}/kube-prometheus-stack-values.yaml")]
   }
 
   depends_on = [module.eks.eks_managed_node_groups]
