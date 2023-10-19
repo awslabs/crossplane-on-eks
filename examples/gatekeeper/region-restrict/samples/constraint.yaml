@@ -1,0 +1,11 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: AwsRegionRestrict
+metadata:
+  name: awsregionrestrict
+spec:
+  match:
+    kinds:
+      - apiGroups: ["*"]
+        kinds: ["*"]
+  parameters:
+    regions: ["eu-west-1", "eu-west-2"]

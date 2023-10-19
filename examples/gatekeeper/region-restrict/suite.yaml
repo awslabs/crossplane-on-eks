@@ -1,0 +1,17 @@
+kind: Suite
+apiVersion: test.gatekeeper.sh/v1alpha1
+metadata:
+  name: awsregionrestrict-suite
+tests:
+- name: awsregionrestrict-suite
+  template: template.yaml
+  constraint: samples/constraint.yaml
+  cases:
+  - name: unauthorised region
+    object: samples/sample-table-us-east-1-fail.yaml
+    assertions:
+    - violations: yes
+  - name: authorised region
+    object: samples/sample-table-eu-west-2-pass.yaml
+    assertions:
+    - violations: no
