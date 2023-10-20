@@ -1,0 +1,23 @@
+apiVersion: dynamodb.aws.crossplane.io/v1alpha1
+kind: Table
+metadata:
+  name: sample-table
+spec:
+  deletionPolicy: Delete
+  forProvider:
+    region: eu-west-2
+    attributeDefinitions:
+      - attributeName: id
+        attributeType: S
+    keySchema:
+      - attributeName: id
+        keyType: HASH
+    billingMode: PROVISIONED
+    provisionedThroughput:
+      readCapacityUnits: 1
+      writeCapacityUnits: 1
+    tags:
+      - key: "owner"
+        value: "finance"
+  providerConfigRef:
+    name: aws-provider-config
