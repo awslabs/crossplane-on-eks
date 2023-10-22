@@ -1,0 +1,30 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: awsregionrestrict
+spec:
+  crd:
+    spec:
+      names:
+        kind: AwsRegionRestrict
+      validation:
+        # Schema for the `parameters` field
+        openAPIV3Schema:
+          type: object
+          properties:
+            regions:
+              type: array
+              items:
+                type: string
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package awsregionrestrict
+        
+        import future.keywords
+        
+        violation[{"msg": msg}] {
+            region := input.review.object.spec.forProvider.region
+            not region in input.parameters.regions
+            msg := sprintf("Attempting to provision the resource in '%s', which is not an authorised region. Authorised regions are: '%v'", [region, input.parameters.regions])
+        }

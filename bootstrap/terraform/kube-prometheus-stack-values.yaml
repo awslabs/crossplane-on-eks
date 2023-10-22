@@ -1,0 +1,50 @@
+prometheus:
+  service:
+    type: "LoadBalancer"
+  additionalPodMonitors:
+    - name: "crossplane"
+      namespaceSelector:
+        matchNames:
+          - "crossplane-system"
+      podMetricsEndpoints:
+        - port: "metrics"
+      selector: {}
+grafana:
+  service:
+    type: "LoadBalancer"
+  resources: 
+    requests:
+      cpu : "100m"
+      memory : "1Gi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+  datasources: 
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://kube-prometheus-stack-prometheus.kube-prometheus-stack:9090/
+        isDefault: true
+        uid: prometheusdatasource
+      deleteDatasources:
+      - name: Prometheus
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+      - name: 'default'
+        orgId: 1
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/default
+  dashboards:
+    default:
+      crossplane:
+        gnetId: 19747
+        revision: 5
+        datasource: prometheusdatasource

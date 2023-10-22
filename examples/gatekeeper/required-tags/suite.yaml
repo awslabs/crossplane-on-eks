@@ -1,0 +1,21 @@
+kind: Suite
+apiVersion: test.gatekeeper.sh/v1alpha1
+metadata:
+  name: awsrequiredtags-suite
+tests:
+- name: awsrequiredtags-suite
+  template: template.yaml
+  constraint: samples/constraint.yaml
+  cases:
+  - name: table with no tags
+    object: samples/dummy-table-no-tags-fail.yaml
+    assertions:
+    - violations: yes
+  - name: table with missing tags
+    object: samples/dummy-table-missing-tag-fail.yaml
+    assertions:
+    - violations: yes
+  - name: table with required tags
+    object: samples/finance-table-pass.yaml
+    assertions:
+    - violations: no
