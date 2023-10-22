@@ -147,6 +147,7 @@ module "eks_blueprints_addons" {
   enable_gatekeeper                = true
   enable_metrics_server            = true
   enable_kube_prometheus_stack     = true
+  enable_aws_load_balancer_controller = true
   kube_prometheus_stack = {
     values = [file("${path.module}/kube-prometheus-stack-values.yaml")]
   }
