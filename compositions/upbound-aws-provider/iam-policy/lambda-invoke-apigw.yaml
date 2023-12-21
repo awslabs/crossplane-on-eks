@@ -1,0 +1,64 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: lambda-invoke-apigw.iampolicy.awsblueprints.io
+  labels:
+    awsblueprints.io/provider: aws
+    awsblueprints.io/environment: dev
+    iam.awsblueprints.io/policy-type: invoke
+    iam.awsblueprints.io/service: lambda
+    iam.awsblueprints.io/from-service: apigw
+spec:
+  compositeTypeRef:
+    apiVersion: awsblueprints.io/v1alpha1
+    kind: IAMPolicy
+  patchSets:
+    - name: common-fields
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.deletionPolicy
+          toFieldPath: spec.deletionPolicy
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            mergeOptions:
+              keepMapValues: true
+        - fromFieldPath: metadata.name
+          toFieldPath: metadata.name
+  resources:
+    - name: invoke-logic-permission
+      base:
+        apiVersion: lambda.aws.upbound.io/v1beta1
+        kind: Permission
+        spec:
+          forProvider: 
+            action: lambda:InvokeFunction
+            principal: apigateway.amazonaws.com
+            statementId: AllowAPIGWToInvokeLambda
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceName
+          toFieldPath: spec.forProvider.functionName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.sourceArn
+          toFieldPath: spec.forProvider.sourceArn
+          policy:
+            fromFieldPath: Required
+          transforms:
+            - type: string
+              string:
+                fmt: "%s/*/*/*"
+
+

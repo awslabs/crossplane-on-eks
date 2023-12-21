@@ -211,7 +211,7 @@ locals {
   
   upbound_aws_provider = {
     enable               = var.enable_upbound_aws_provider # defaults to true
-    version              = "v0.40.0"
+    version              = "v0.43.0"
     controller_config    = "upbound-aws-controller-config"
     provider_config_name = "aws-provider-config" #this is the providerConfigName used in all the examples in this repo
     families = [
@@ -224,7 +224,10 @@ locals {
       "s3",
       "sns",
       "sqs",
-      "vpc"
+      "vpc",
+      "apigateway",
+      "cloudwatch",
+      "cloudwatchlogs"
     ]
   }
 

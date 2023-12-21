@@ -25,6 +25,10 @@ spec:
                   type: string
                 roleName:
                   type: string
+                resourceName:
+                  type: string
+                sourceArn:
+                  type: string
                 resourceConfig:
                   description: ResourceConfig defines general properties of this AWS
                     resource.
@@ -39,6 +43,8 @@ spec:
                       description: Set the name of this resource in AWS to the value provided by this field.
                       type: string
                     providerConfigName:
+                      type: string
+                    region:
                       type: string
                     tags:
                       additionalProperties:
