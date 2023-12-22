@@ -15,6 +15,7 @@ API uses API Gateway REST API endpoint type with OpenAPI definition that include
 
 API Gateway uses Lambda Authorizer for authentication/authorization. However, sample implementation at `./src/authorizer/lambda_function.py` allows all actions on all resources in the API. Make sure to update authorizer Lambda code according to your authentication/authorization needs. Take a look at Lambda Authorizer code at [serverless-rest-api](https://github.com/aws-samples/serverless-samples/tree/main/serverless-rest-api) for JWT based authorization examples if needed.
 
+
 ### Business logic
 Api Gateway passes all the incoming requests to the Lambda function and returns response back to the API client. Sample implementation code is available at `./src/logic/lambda_function.py`. It expects database table name to be specified in the environment variable `TABLE_NAME`. 
 
@@ -96,16 +97,23 @@ write-sqs.iampolicy.awsblueprints.io                  IAMPolicy         awsbluep
 This example uses ZIP packaging of the Lambda functions. 
  - Navigate to `./src/logic/` directory
  - Create ZIP file `microservice-business-logic.zip` with the `lambda_function.py` in it:
-```shell
-zip microservice-business-logic.zip lambda_function.py
-```
+    ```shell
+    zip microservice-business-logic.zip lambda_function.py
+    ```
  - Navigate to `./src/authorizer/` directory
  - Create ZIP file `microservice-authorizer.zip` with the `lambda_function.py` in it:
-```shell
-zip microservice-authorizer.zip lambda_function.py
-```
- - Create Amazon S3 bucket
- - Upload both ZIP files to the S3 bucket you just created
+    ```shell
+    zip microservice-authorizer.zip lambda_function.py
+    ```
+ - Create Amazon S3 bucket that will be used to store Lambda ZIP packages (make sure to use unique bucket name):
+   ```shell
+   aws s3api create-bucket --bucket <my-zip-packaging-bucket-name> --region <replace-with-aws-region> # example `us-east-1`
+   ```
+ - Upload both ZIP files to the S3 bucket you just created:
+   ```shell
+   aws s3 cp microservice-business-logic.zip s3://<my-zip-packaging-bucket-name>/ 
+   aws s3 cp microservice-authorizer.zip s3://<my-zip-packaging-bucket-name>/ 
+   ```
 
 ### Update and apply the claim
 
@@ -150,58 +158,54 @@ Expected result (it might take sometime before READY=True)
 NAME                 SYNCED   READY   CONNECTION-SECRET   AGE
 test-rest-api        True     True                        1m
 ```
-The claim will create the following resources:
 
-```mermaid
-stateDiagram-v2
-    direction LR
-    Claim\nmicroservices--> XR\nxmicroservice
-    XR\nxmicroservice --> Composition\nmicroservices
-    Composition\nmicroservices --> XR\nxapigateway
-    
-    XR\nxapigateway --> Composition\nrestapi
-    Composition\nrestapi --> ManagedResource\nrestapi
-    Composition\nrestapi --> ManagedResource\napirole
-    Composition\nrestapi --> ManagedResource\ndeployment
-    Composition\nrestapi --> ManagedResource\nstage
-    Composition\nrestapi --> ManagedResource\ngroup
-    Composition\nrestapi --> ManagedResource\naccount
-    Composition\nrestapi --> ManagedResource\nmethodsettings
-
-    Composition\nmicroservices --> XR\nxlambdafunction
-    XR\nxlambdafunction --> Composition\nlogiclambda
-    Composition\nlogiclambda --> ManagedResource\nlogicfunction
-    Composition\nlogiclambda --> ManagedResource\nlogicfunctionrole
-    Composition\nlogiclambda --> ManagedResource\nlogicfunctionrolepolicyattachement
-    XR\nxlambdafunction --> Composition\nauthorizerlambda
-    Composition\nauthorizerlambda --> ManagedResource\nauthorizerfunction
-    Composition\nauthorizerlambda --> ManagedResource\nauthorizerfunctionrole
-    Composition\nauthorizerlambda --> ManagedResource\nauthorizerfunctionrolepolicyattachement
-
-    Composition\nmicroservices --> XR\nxiampolicy
-    XR\nxiampolicy --> Composition\nwritedynamodb    
-    Composition\nwritedynamodb --> ManagedResource\npolicy
-    Composition\nwritedynamodb --> ManagedResource\nrolepolicyattachment
-    XR\nxiampolicy --> Composition\nlambdainvokeapigw
-    Composition\nlambdainvokeapigw --> ManagedResource\npermission
-    XR\nxiampolicy --> Composition\nlambdaauthorizerinvoke
-    Composition\nlambdaauthorizerinvoke --> ManagedResource\npermission
-
-    Composition\nmicroservices --> XR\nxdynamodbtable
-    XR\nxdynamodbtable --> Composition\ntable
-    Composition\ntable --> ManagedResource\ntable
-
-    Composition\nmicroservices --> XR\nxnotification
-    XR\nxnotification --> Composition\nxnotification
-    Composition\nxnotification --> ManagedResource\ntopic
-    Composition\nxnotification --> ManagedResource\npolicy
-    Composition\nxnotification --> ManagedResource\nrolepolicyattachment
-
-    Composition\nmicroservices --> ManagedResource\nmetricalarm
-    Composition\nmicroservices --> ManagedResource\ndashboard
+You can see resources created and their hierarchy by using [Crossplane CLI](https://docs.crossplane.io/latest/cli/):
+```shell
+crossplane beta trace Microservice test-rest-api
+```
+Expected output:
+```
+NAME                                                                      SYNCED   READY   STATUS      
+Microservice/test-rest-api (default)                                      True     True    Available   
+└─ XMicroservice/test-rest-api-jxwdb                                      True     True    Available   
+   ├─ XApiGateway/test-rest-api-jxwdb-restapi                             True     True    Available   
+   │  ├─ RestAPI/test-rest-api-jxwdb-restapi-restapi                      True     True    Available   
+   │  ├─ Role/test-rest-api-jxwdb-restapi-apigw-role                      True     True    Available   
+   │  ├─ Deployment/test-rest-api-jxwdb-restapi-api-deployment            True     True    Available   
+   │  ├─ Stage/test-rest-api-jxwdb-restapi-api-stage                      True     True    Available   
+   │  ├─ Group/test-rest-api-jxwdb-restapi-api-access-logs                True     True    Available   
+   │  ├─ Account/test-rest-api-jxwdb-restapi-api-logging-account          True     True    Available   
+   │  └─ MethodSettings/test-rest-api-jxwdb-restapi-api-method-settings   True     True    Available   
+   ├─ XLambdaFunction/test-rest-api-jxwdb-logic                           True     True    Available   
+   │  ├─ Role/test-rest-api-jxwdb-logic-role                              True     True    Available   
+   │  ├─ RolePolicyAttachment/test-rest-api-jxwdb-logic                   True     True    Available   
+   │  └─ Function/test-rest-api-jxwdb-logic                               True     True    Available   
+   ├─ Permission/test-rest-api-jxwdb-logic-invoke                         True     True    Available   
+   ├─ XDynamoDBTable/test-rest-api-jxwdb-data                             True     True    Available   
+   │  └─ Table/test-rest-api-jxwdb-9nkdf                                  True     True    Available   
+   ├─ IAMPolicy/test-rest-api-jxwdb                                       True     True    Available   
+   │  ├─ Policy/policy-dynamodb-write-test-rest-api-jxwdb                 True     True    Available   
+   │  └─ RolePolicyAttachment/policy-dynamodb-write-test-rest-api-jxwdb   True     True    Available   
+   ├─ XLambdaFunction/test-rest-api-jxwdb-authorizer                      True     True    Available   
+   │  ├─ Role/test-rest-api-jxwdb-authorizer-role                         True     True    Available   
+   │  ├─ RolePolicyAttachment/test-rest-api-jxwdb-authorizer              True     True    Available   
+   │  └─ Function/test-rest-api-jxwdb-authorizer                          True     True    Available   
+   ├─ Permission/test-rest-api-jxwdb-authorizer-invoke                    True     True    Available   
+   ├─ XNotification/test-rest-api-jxwdb                                   True     True    Available   
+   │  ├─ Role/sns-feedback-test-rest-api-jxwdb                            True     True    Available   
+   │  ├─ RolePolicyAttachment/function-test-rest-api-jxwdb                True     True    Available   
+   │  └─ Topic/function-test-rest-api-jxwdb                               True     True    Available   
+   ├─ MetricAlarm/test-rest-api-jxwdb-api-5xx-alarm                       True     True    Available   
+   ├─ MetricAlarm/test-rest-api-jxwdb-database-throttling-alarm           True     True    Available   
+   ├─ MetricAlarm/test-rest-api-jxwdb-logic-throttling-alarm              True     True    Available   
+   ├─ MetricAlarm/test-rest-api-jxwdb-logic-error-alarm                   True     True    Available   
+   ├─ MetricAlarm/test-rest-api-jxwdb-authorizer-throttling-alarm         True     True    Available   
+   ├─ MetricAlarm/test-rest-api-jxwdb-authorizer-error-alarm              True     True    Available   
+   └─ Dashboard/test-rest-api-jxwdb-cloudwatch-dashboard                  True     True    Available   
 ```
 
-Each XR in the diagram contains the underlying resource refs:
+
+Each XR contains the underlying resource refs:
 ```
 kubectl describe xmicroservice | grep "Resource Refs" -A 45
 ```

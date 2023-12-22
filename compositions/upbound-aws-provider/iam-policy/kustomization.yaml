@@ -7,8 +7,6 @@ resources:
 - dynamodb-write.yaml
 - kms-read.yaml
 - lambda-invoke.yaml
-- lambda-invoke-apigw.yaml
-- lambda-authorizer-invoke.yaml
 - s3-read.yaml
 - s3-write.yaml
 - s3-write-firehose.yaml

@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: MIT-0
 
 # IMPORTANT: 
-#     This is mock implementation of a Lambda Authorizer
-#     It allows ALL actions on your API to be performed by ANYONE
-#     Make sure to update code below to limit access to the resources neccessary only
+#     This is sample implementation of a Lambda Authorizer
+#     It generates IAM policy that allows ALL actions on your API to be performed by ANYONE
+#     Make sure to update code below to limit access to the resources based on your use case
 
 import json
 import re

@@ -1,5 +1,5 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-# SPDX-License-Identifier: MIT-0
+# SPDX-License-Identifier: Apache-2.0
 
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
@@ -43,8 +43,6 @@ spec:
                       description: Set the name of this resource in AWS to the value provided by this field.
                       type: string
                     providerConfigName:
-                      type: string
-                    region:
                       type: string
                     tags:
                       additionalProperties:

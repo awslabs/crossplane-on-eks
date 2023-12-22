@@ -1,5 +1,5 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-# SPDX-License-Identifier: MIT-0
+# SPDX-License-Identifier: Apache-2.0
 
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
@@ -240,19 +240,13 @@ spec:
 
     - name: invoke-logic-permission
       base:
-        apiVersion: awsblueprints.io/v1alpha1
-        kind: IAMPolicy
+        apiVersion: lambda.aws.upbound.io/v1beta1
+        kind: Permission
         spec:
-          deletionPolicy: Delete
-          resourceArn: na
-          roleName: na
-          compositionSelector:
-            matchLabels:
-              awsblueprints.io/provider: aws
-              awsblueprints.io/environment: dev
-              iam.awsblueprints.io/policy-type: invoke
-              iam.awsblueprints.io/service: lambda
-              iam.awsblueprints.io/from-service: apigw
+          forProvider: 
+            action: lambda:InvokeFunction
+            principal: apigateway.amazonaws.com
+            statementId: AllowAPIGWToInvokeLambda
       patches:
         - type: PatchSet
           patchSetName: common-fields
@@ -265,14 +259,16 @@ spec:
                 fmt: "%s-logic-invoke"
         - type: FromCompositeFieldPath
           fromFieldPath: status.businessLogicLambdaName
-          toFieldPath: spec.resourceName
-          policy:
-            fromFieldPath: Required
+          toFieldPath: spec.forProvider.functionName
         - type: FromCompositeFieldPath
           fromFieldPath: status.apiExecutionArn
-          toFieldPath: spec.sourceArn
+          toFieldPath: spec.forProvider.sourceArn
           policy:
             fromFieldPath: Required
+          transforms:
+            - type: string
+              string:
+                fmt: "%s/*/*/*"
 
     - name: logic-database
       base:
@@ -385,19 +381,13 @@ spec:
 
     - name: invoke-authorizer-permission
       base:
-        apiVersion: awsblueprints.io/v1alpha1
-        kind: IAMPolicy
+        apiVersion: lambda.aws.upbound.io/v1beta1
+        kind: Permission
         spec:
-          deletionPolicy: Delete
-          resourceArn: na
-          roleName: na
-          compositionSelector:
-            matchLabels:
-              awsblueprints.io/provider: aws
-              awsblueprints.io/environment: dev
-              iam.awsblueprints.io/policy-type: invoke-authorizer
-              iam.awsblueprints.io/service: lambda
-              iam.awsblueprints.io/from-service: apigw
+          forProvider: 
+            action: lambda:InvokeFunction
+            principal: apigateway.amazonaws.com
+            statementId: AllowAPIGWToInvokeLambda
       patches:
         - type: PatchSet
           patchSetName: common-fields
@@ -410,14 +400,16 @@ spec:
                 fmt: "%s-authorizer-invoke"
         - type: FromCompositeFieldPath
           fromFieldPath: status.authorizerLambdaName
-          toFieldPath: spec.resourceName
-          policy:
-            fromFieldPath: Required
+          toFieldPath: spec.forProvider.functionName
         - type: FromCompositeFieldPath
           fromFieldPath: status.apiExecutionArn
-          toFieldPath: spec.sourceArn
+          toFieldPath: spec.forProvider.sourceArn
           policy:
             fromFieldPath: Required
+          transforms:
+            - type: string
+              string:
+                fmt: "%s/authorizers/*"
 
     - name: alarms-topic
       base:
