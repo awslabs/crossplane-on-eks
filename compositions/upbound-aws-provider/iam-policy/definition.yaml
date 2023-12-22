@@ -1,5 +1,5 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: MIT-0
 
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
@@ -24,10 +24,6 @@ spec:
                 resourceArn:
                   type: string
                 roleName:
-                  type: string
-                resourceName:
-                  type: string
-                sourceArn:
                   type: string
                 resourceConfig:
                   description: ResourceConfig defines general properties of this AWS
