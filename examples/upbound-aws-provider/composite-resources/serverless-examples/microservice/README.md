@@ -13,7 +13,8 @@ Example is (loosely) based on a AWS Serverless Samples repository [serverless-re
 API uses API Gateway REST API endpoint type with OpenAPI definition that includes proxy resource. All requests are passed to the integration target (AWS Lambda) for routing and interpretation/response generation. API Gateway does not implement any validation, transformation, path based routing, API management functions. You would have to update openAPI in the body property in the composition to implement those features.
 
 
-API Gateway uses Lambda Authorizer for authentication/authorization. However, sample implementation at `./src/authorizer/lambda_function.py` allows all actions on all resources in the API. Make sure to update authorizer Lambda code according to your authentication/authorization needs. Take a look at Lambda Authorizer code at [serverless-rest-api](https://github.com/aws-samples/serverless-samples/tree/main/serverless-rest-api) for JWT based authorization examples if needed.
+API Gateway uses Lambda Authorizer for authentication/authorization. However, sample implementation at `./src/authorizer/lambda_function.py` allows all actions on all resources in the API. Make sure to update authorizer Lambda code according to your authentication/authorization needs. For more details on how to implement Lambda Authorizer, check out [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-use-lambda-authorizer.html). or [blueprints](https://github.com/awslabs/aws-apigateway-lambda-authorizer-blueprints). 
+Take a look at Lambda Authorizer code at [serverless-rest-api](https://github.com/aws-samples/serverless-samples/tree/main/serverless-rest-api) for JWT based authorization examples if needed.
 
 
 ### Business logic
