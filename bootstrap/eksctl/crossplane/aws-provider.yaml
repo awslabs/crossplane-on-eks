@@ -23,4 +23,3 @@ spec:
   args:
       - --debug
       - --enable-management-policies
-      

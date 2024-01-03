@@ -37,6 +37,8 @@ ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
 OIDC_PROVIDER=$(aws eks describe-cluster --name crossplane-blueprints --query "cluster.identity.oidc.issuer" --output text | sed -e "s/^https:\/\///")
 
+VPC_ID=$(aws eks describe-cluster --name crossplane-blueprints --query "cluster.resourcesVpcConfig.vpcId" --output text)
+
 PERMISSION_BOUNDARY_ARN="arn:aws:iam::${ACCOUNT_ID}:policy/crossplaneBoundary"
 
 read -r -d '' TRUST_RELATIONSHIP <<EOF
