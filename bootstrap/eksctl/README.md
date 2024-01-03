@@ -37,8 +37,6 @@ ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
 OIDC_PROVIDER=$(aws eks describe-cluster --name crossplane-blueprints --query "cluster.identity.oidc.issuer" --output text | sed -e "s/^https:\/\///")
 
-VPC_ID=$(aws eks describe-cluster --name crossplane-blueprints --query "cluster.resourcesVpcConfig.vpcId" --output text)
-
 PERMISSION_BOUNDARY_ARN="arn:aws:iam::${ACCOUNT_ID}:policy/crossplaneBoundary"
 
 read -r -d '' TRUST_RELATIONSHIP <<EOF
@@ -147,6 +145,10 @@ kubectl wait --for condition=established --timeout=300s crd/providers.pkg.crossp
 kubectl apply -f crossplane/aws-provider.yaml
 kubectl apply -f crossplane/upbound-aws-provider.yaml
 kubectl apply -f crossplane/kubernetes-provider.yaml
+kubectl create serviceaccount helm-provider -n crossplane-system
+kubectl apply -f crossplane/helm/clusterrolebinding.yaml
+kubectl apply -f crossplane/helm/controller-config.yaml
+kubectl apply -f crossplane/helm/provider.yaml
 ```
 
 ```bash
@@ -167,12 +169,7 @@ kubectl wait --for condition=established --timeout=300s crd/providerconfigs.kube
 kubectl apply -f crossplane/kubernetes-provider-config.yaml
 ```
 
-### Install Crossplane Helm Provider (required for examples that deploy Helm charts)
 ```bash
-kubectl create serviceaccount helm-provider -n crossplane-system
-kubectl apply -f crossplane/helm/clusterrolebinding.yaml
-kubectl apply -f crossplane/helm/controller-config.yaml
-kubectl apply -f crossplane/helm/provider.yaml
 # wait for the Helm provider CRD to be ready
 kubectl wait --for condition=established --timeout=300s crd/providerconfigs.helm.crossplane.io
 kubectl apply -f crossplane/helm/provider-config.yaml
@@ -188,6 +185,8 @@ kubectl apply -f crossplane/argocd/argocd.yaml
 ### Apply `EnvironmentConfig`
 Insert required values in manifest
 ```bash
+VPC_ID=$(aws eks describe-cluster --name crossplane-blueprints --query "cluster.resourcesVpcConfig.vpcId" --output text)
+
 sed -i.bak "s/ACCOUNT_ID/${ACCOUNT_ID}/g" crossplane/environmentconfig.yaml
 sed -i "s/OIDC_PROVIDER/$(echo $OIDC_PROVIDER |sed -r 's/([\$\.\*\/\[\\^])/\\\1/g'|sed 's/[]]/\[]]/g')/g" crossplane/environmentconfig.yaml
 sed -i "s/VPC_ID/${VPC_ID}/g" crossplane/environmentconfig.yaml

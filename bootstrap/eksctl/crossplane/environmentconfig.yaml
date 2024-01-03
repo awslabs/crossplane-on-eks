@@ -6,3 +6,4 @@ data:
   awsAccountID: "ACCOUNT_ID"
   eksOIDC: OIDC_PROVIDER
   vpcID: VPC_ID
+  
