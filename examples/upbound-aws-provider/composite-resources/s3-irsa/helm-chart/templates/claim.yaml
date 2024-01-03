@@ -13,5 +13,5 @@ spec:
     name: {{ include "s3-irsa-app.name" . }}
   resourceConfig:
     providerConfigName: aws-provider-config
-    region: us-west-2
+    region: us-east-1
 {{- end }}
