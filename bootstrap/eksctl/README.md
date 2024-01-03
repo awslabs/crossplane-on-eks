@@ -37,6 +37,8 @@ ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
 OIDC_PROVIDER=$(aws eks describe-cluster --name crossplane-blueprints --query "cluster.identity.oidc.issuer" --output text | sed -e "s/^https:\/\///")
 
+VPC_ID=$(aws eks describe-cluster --name crossplane-blueprints --query "cluster.resourcesVpcConfig.vpcId" --output text)
+
 PERMISSION_BOUNDARY_ARN="arn:aws:iam::${ACCOUNT_ID}:policy/crossplaneBoundary"
 
 read -r -d '' TRUST_RELATIONSHIP <<EOF
@@ -117,7 +119,9 @@ helm repo update
 helm install crossplane crossplane-stable/crossplane \
 --namespace crossplane-system \
 --create-namespace \
---version 1.10.2 # Get the latest version from https://github.com/crossplane/crossplane/releases
+--set args='{"--enable-environment-configs"}' \
+--version 1.13.2 # Get the latest version from https://github.com/crossplane/crossplane/releases
+
 ```
 
 #### (Option 2) Install Crossplane using [Upbound Universal Crossplane (UXP) helm chart](https://github.com/upbound/universal-crossplane/tree/main/cluster/charts/universal-crossplane)
@@ -163,6 +167,35 @@ kubectl wait --for condition=established --timeout=300s crd/providerconfigs.kube
 kubectl apply -f crossplane/kubernetes-provider-config.yaml
 ```
 
+### Install Crossplane Helm Provider (required for examples that deploy Helm charts)
+```bash
+kubectl create serviceaccount helm-provider -n crossplane-system
+kubectl apply -f crossplane/helm/clusterrolebinding.yaml
+kubectl apply -f crossplane/helm/controller-config.yaml
+kubectl apply -f crossplane/helm/provider.yaml
+# wait for the Helm provider CRD to be ready
+kubectl wait --for condition=established --timeout=300s crd/providerconfigs.helm.crossplane.io
+kubectl apply -f crossplane/helm/provider-config.yaml
+```
+### Deploy ArgoCD in cluster with Crossplane Helm Provider (required for examples that use ArgoCD)
+> Note: The default ArgoCD configuration needs 3 nodes in separate AZs to deploy correctly. By default, eksctl deploys with 2 nodes and no autoscalers.
+
+```bash
+kubectl create namespace argocd
+kubectl apply -f crossplane/argocd/argocd-values-configmap.yaml
+kubectl apply -f crossplane/argocd/argocd.yaml
+```
+### Apply `EnvironmentConfig`
+Insert required values in manifest
+```bash
+sed -i.bak "s/ACCOUNT_ID/${ACCOUNT_ID}/g" crossplane/environmentconfig.yaml
+sed -i "s/OIDC_PROVIDER/$(echo $OIDC_PROVIDER |sed -r 's/([\$\.\*\/\[\\^])/\\\1/g'|sed 's/[]]/\[]]/g')/g" crossplane/environmentconfig.yaml
+sed -i "s/VPC_ID/${VPC_ID}/g" crossplane/environmentconfig.yaml
+```
+Apply manifest
+```bash
+kubectl apply -f crossplane/environmentconfig.yaml 
+```
 ### Kustomize
 Note that Kustomize still relies on Crossplane helm chart because Crossplane doesn't have a published Kustomize base.
 
