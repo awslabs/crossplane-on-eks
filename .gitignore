@@ -15,5 +15,3 @@ kubeconfig_*
 *.tfplan
 
 cluster-keys.json
-examples/upbound-aws-provider/composite-resources/serverless-examples/microservice/claim/microservice-claim.yaml
-.gitignore
