@@ -32,39 +32,6 @@
         }
       },
       {
-        "Sid": "DenyAccessIfRequiredPermBoundaryIsNotBeingApplied",
-        "Effect": "Deny",
-        "Action": [
-          "iam:PutUserPermissionsBoundary",
-          "iam:PutRolePermissionsBoundary"
-        ],
-        "Resource": [
-          "arn:aws:iam::ACCOUNT_ID:user/*",
-          "arn:aws:iam::ACCOUNT_ID:role/*"
-        ],
-        "Condition": {
-          "StringNotEquals": {
-            "iam:PermissionsBoundary": "arn:aws:iam::ACCOUNT_ID:policy/crossplaneBoundary"
-          }
-        }
-      },
-      {
-        "Sid": "DenyRoleCreationWithOutPermBoundary",
-        "Effect": "Deny",
-        "Action": [
-          "iam:CreateRole"
-        ],
-        "Resource": [
-          "arn:aws:iam::ACCOUNT_ID:user/*",
-          "arn:aws:iam::ACCOUNT_ID:role/*"
-        ],
-        "Condition": {
-          "StringNotEquals": {
-            "iam:PermissionsBoundary": "arn:aws:iam::ACCOUNT_ID:policy/crossplaneBoundary"
-          }
-        }
-      },
-      {
         "Effect": "Deny",
         "Action": [
           "iam:CreateUser",
