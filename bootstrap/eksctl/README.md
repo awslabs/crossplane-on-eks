@@ -174,13 +174,17 @@ kubectl apply -f crossplane/kubernetes-provider-config.yaml
 kubectl wait --for condition=established --timeout=300s crd/providerconfigs.helm.crossplane.io
 kubectl apply -f crossplane/helm/provider-config.yaml
 ```
-### Deploy ArgoCD in cluster with Crossplane Helm Provider (required for examples that use ArgoCD)
+### Deploy ArgoCD in cluster (required for examples that use ArgoCD)
 > Note: The default ArgoCD configuration needs 3 nodes in separate AZs to deploy correctly. By default, eksctl deploys with 2 nodes and no autoscalers.
 
 ```bash
-kubectl create namespace argocd
-kubectl apply -f crossplane/argocd/argocd-values-configmap.yaml
-kubectl apply -f crossplane/argocd/argocd.yaml
+helm repo add argo-helm https://argoproj.github.io/argo-helm
+helm repo update
+
+helm install -f crossplane/argocd/argocd-values.yaml argo-cd argo-helm/argo-cd \
+--namespace argocd \
+--create-namespace \
+--version 5.46.1 # ArgoCD v2.8.3
 ```
 ### Apply `EnvironmentConfig`
 Insert required values in manifest
