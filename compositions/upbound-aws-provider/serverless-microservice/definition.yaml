@@ -45,6 +45,9 @@ spec:
                   description: Set the Lambda function and handler name for API Gateway Lambda Authorizer
                   type: string
                   default: lambda_function.lambda_handler
+                authorizerPassword:
+                  description: Set the API password to be used by the API Gateway Lambda Authorizer
+                  type: string
                 lambdaRunTime: 
                   description: Set the Lambda function runtime.
                   type: string

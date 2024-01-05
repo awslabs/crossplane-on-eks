@@ -359,7 +359,12 @@ spec:
               string:
                 fmt: "%s-authorizer"
         - type: FromCompositeFieldPath
-          fromFieldPath: status.tableName
+          fromFieldPath: spec.authorizerPassword
+          toFieldPath: spec.envVariables[AUTHORIZER_PASSWORD]
+          policy:
+            fromFieldPath: Required
+            mergeOptions:
+              keepMapValues: true
         - type: FromCompositeFieldPath
           fromFieldPath: spec.codeBucketName
           toFieldPath: spec.bucketName

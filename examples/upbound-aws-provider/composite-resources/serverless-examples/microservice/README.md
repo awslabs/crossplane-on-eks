@@ -13,7 +13,7 @@ Example is (loosely) based on a AWS Serverless Samples repository [serverless-re
 API uses API Gateway REST API endpoint type with OpenAPI definition that includes proxy resource. All requests are passed to the integration target (AWS Lambda) for routing and interpretation/response generation. API Gateway does not implement any validation, transformation, path based routing, API management functions. You would have to update openAPI in the body property in the composition to implement those features.
 
 
-API Gateway uses Lambda Authorizer for authentication/authorization. However, sample implementation at `./src/authorizer/lambda_function.py` allows all actions on all resources in the API. Make sure to update authorizer Lambda code according to your authentication/authorization needs. For more details on how to implement Lambda Authorizer, check out [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-use-lambda-authorizer.html). or [blueprints](https://github.com/awslabs/aws-apigateway-lambda-authorizer-blueprints). 
+API Gateway uses Lambda Authorizer for authentication/authorization. However, sample implementation at `./src/authorizer/lambda_function.py` allows all actions on all resources in the API if the  `Authorization` header value in the request matches the one in the Lambda Authorizer environmental variable `AUTHORIZER_PASSWORD`. Make sure to update authorizer Lambda code according to your authentication/authorization needs. For more details on how to implement Lambda Authorizer, check out [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-use-lambda-authorizer.html). or [blueprints](https://github.com/awslabs/aws-apigateway-lambda-authorizer-blueprints). 
 Take a look at Lambda Authorizer code at [serverless-rest-api](https://github.com/aws-samples/serverless-samples/tree/main/serverless-rest-api) for JWT based authorization examples if needed.
 
 
@@ -127,6 +127,7 @@ Set the AWS region in the claim with the ones used in the previous step “Build
 ```shell
 export AWS_REGION=<replace-with-aws-region> # example `us-east-1`
 export S3_BUCKET=<replace-with-s3-bucket-name> # example `my-crossplane-microservice-lambdas`
+export AUTHORIZER_PASSWORD=$(openssl rand -hex 32) 
 ```
 
 Change the default value for `CLAIM_NAME` with any name you choose.
@@ -280,32 +281,32 @@ Expected output:
     Expected output - `{"message":"Unauthorized"}`
  - Test endpoint with authorization:
     ```shell
-    curl $API_BASE_URL/items -H "Authorization: Bearer 1234567890"
+    curl $API_BASE_URL/items -H "Authorization: $AUTHORIZER_PASSWORD"
     ```
     Expected output - `[]`
  - Test endpoint by creating record in the database:
     ```shell
-    curl -X PUT $API_BASE_URL/items -H "Authorization: Bearer 1234567890" -d '{"my_data":"Here goes my payload data"}'
+    curl -X PUT $API_BASE_URL/items -H "Authorization: $AUTHORIZER_PASSWORD" -d '{"my_data":"Here goes my payload data"}'
     ```
     Expected output - `{"my_data": "Here goes my payload data", "timestamp": "2023-12-21T17:11:51.662839", "id": "087b4aca-a024-11ee-a28c-bbcde0052444"}`
 - Get list of items in the database again:
     ```shell
-    curl $API_BASE_URL/items -H "Authorization: Bearer 1234567890"
+    curl $API_BASE_URL/items -H "Authorization: $AUTHORIZER_PASSWORD"
     ```
     Expected output - `[{"my_data": "Here goes my payload data", "id": "087b4aca-a024-11ee-a28c-bbcde0052444", "timestamp": "2023-12-21T17:11:51.662839"}]`
 - Note ID of the item and get individual record from the database:
     ```shell
-    curl $API_BASE_URL/items/<id of the item> -H "Authorization: Bearer 1234567890"
+    curl $API_BASE_URL/items/<id of the item> -H "Authorization: $AUTHORIZER_PASSWORD"
     ```
     Expected output - `{"my_data": "Here goes my payload data", "id": "087b4aca-a024-11ee-a28c-bbcde0052444", "timestamp": "2023-12-21T17:11:51.662839"}`
 - Note ID of the item and delete individual record in the database:
     ```shell
-    curl -X DELETE $API_BASE_URL/items/<id of the item> -H "Authorization: Bearer 1234567890"
+    curl -X DELETE $API_BASE_URL/items/<id of the item> -H "Authorization: $AUTHORIZER_PASSWORD"
     ```
     Expected output - `{}`
 - Get list of items in the database again and verify that record had been deleted:
     ```shell
-    curl $API_BASE_URL/items -H "Authorization: Bearer 1234567890"
+    curl $API_BASE_URL/items -H "Authorization: $AUTHORIZER_PASSWORD"
     ```
     Expected output - `[]`
 
