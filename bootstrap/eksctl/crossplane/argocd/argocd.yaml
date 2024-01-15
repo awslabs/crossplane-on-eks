@@ -1,0 +1,17 @@
+apiVersion: helm.crossplane.io/v1beta1
+kind: Release
+metadata:
+  name: argo-cd
+spec:
+  forProvider:
+    chart:
+      name: argo-cd
+      repository: https://argoproj.github.io/argo-helm
+      version: 5.46.1 # ArgoCD v2.8.3
+    namespace: argocd
+    valuesFrom:
+    - configMapKeyRef:
+        key: argo-values.yaml
+        name: argocd-values
+        namespace: argocd
+        optional: false

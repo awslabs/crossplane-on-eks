@@ -117,7 +117,9 @@ helm repo update
 helm install crossplane crossplane-stable/crossplane \
 --namespace crossplane-system \
 --create-namespace \
---version 1.10.2 # Get the latest version from https://github.com/crossplane/crossplane/releases
+--set args='{"--enable-environment-configs"}' \
+--version 1.13.2 # Get the latest version from https://github.com/crossplane/crossplane/releases
+
 ```
 
 #### (Option 2) Install Crossplane using [Upbound Universal Crossplane (UXP) helm chart](https://github.com/upbound/universal-crossplane/tree/main/cluster/charts/universal-crossplane)
@@ -143,6 +145,10 @@ kubectl wait --for condition=established --timeout=300s crd/providers.pkg.crossp
 kubectl apply -f crossplane/aws-provider.yaml
 kubectl apply -f crossplane/upbound-aws-provider.yaml
 kubectl apply -f crossplane/kubernetes-provider.yaml
+kubectl create serviceaccount helm-provider -n crossplane-system
+kubectl apply -f crossplane/helm/clusterrolebinding.yaml
+kubectl apply -f crossplane/helm/controller-config.yaml
+kubectl apply -f crossplane/helm/provider.yaml
 ```
 
 ```bash
@@ -163,6 +169,36 @@ kubectl wait --for condition=established --timeout=300s crd/providerconfigs.kube
 kubectl apply -f crossplane/kubernetes-provider-config.yaml
 ```
 
+```bash
+# wait for the Helm provider CRD to be ready
+kubectl wait --for condition=established --timeout=300s crd/providerconfigs.helm.crossplane.io
+kubectl apply -f crossplane/helm/provider-config.yaml
+```
+### Deploy ArgoCD in cluster (required for examples that use ArgoCD)
+> Note: The default ArgoCD configuration needs 3 nodes in separate AZs to deploy correctly. By default, eksctl deploys with 2 nodes and no autoscalers.
+
+```bash
+helm repo add argo-helm https://argoproj.github.io/argo-helm
+helm repo update
+
+helm install -f crossplane/argocd/argocd-values.yaml argo-cd argo-helm/argo-cd \
+--namespace argocd \
+--create-namespace \
+--version 5.46.1 # ArgoCD v2.8.3
+```
+### Apply `EnvironmentConfig`
+Insert required values in manifest
+```bash
+VPC_ID=$(aws eks describe-cluster --name crossplane-blueprints --query "cluster.resourcesVpcConfig.vpcId" --output text)
+
+sed -i.bak "s/ACCOUNT_ID/${ACCOUNT_ID}/g" crossplane/environmentconfig.yaml
+sed -i "s/OIDC_PROVIDER/$(echo $OIDC_PROVIDER |sed -r 's/([\$\.\*\/\[\\^])/\\\1/g'|sed 's/[]]/\[]]/g')/g" crossplane/environmentconfig.yaml
+sed -i "s/VPC_ID/${VPC_ID}/g" crossplane/environmentconfig.yaml
+```
+Apply manifest
+```bash
+kubectl apply -f crossplane/environmentconfig.yaml 
+```
 ### Kustomize
 Note that Kustomize still relies on Crossplane helm chart because Crossplane doesn't have a published Kustomize base.
 
