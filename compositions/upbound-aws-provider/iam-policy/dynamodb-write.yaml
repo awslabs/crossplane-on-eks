@@ -55,6 +55,7 @@ spec:
             variables:
             - fromFieldPath: spec.resourceArn
             - fromFieldPath: spec.resourceArn
+            - fromFieldPath: spec.resourceArn
             strategy: string
             string:
               fmt: |
@@ -81,16 +82,17 @@ spec:
                                 "dynamodb:BatchGet*",
                                 "dynamodb:DescribeStream",
                                 "dynamodb:DescribeTable",
-                                "dynamodb:Get*",
                                 "dynamodb:Query",
                                 "dynamodb:Scan",
                                 "dynamodb:BatchWrite*",
                                 "dynamodb:CreateTable",
                                 "dynamodb:Delete*",
                                 "dynamodb:Update*",
+                                "dynamodb:GetItem",
                                 "dynamodb:PutItem"
                             ],
                             "Resource": [
+                              "%s/*",
                               "%s"
                             ]
                         }
