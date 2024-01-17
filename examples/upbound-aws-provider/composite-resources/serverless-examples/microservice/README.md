@@ -13,7 +13,9 @@ Example is (loosely) based on a AWS Serverless Samples repository [serverless-re
 API uses API Gateway REST API endpoint type with OpenAPI definition that includes proxy resource. All requests are passed to the integration target (AWS Lambda) for routing and interpretation/response generation. API Gateway does not implement any validation, transformation, path based routing, API management functions. You would have to update openAPI in the body property in the composition to implement those features.
 
 
-API Gateway uses Lambda Authorizer for authentication/authorization. However, sample implementation at `./src/authorizer/lambda_function.py` allows all actions on all resources in the API if the  `Authorization` header value in the request matches the one in the Lambda Authorizer environmental variable `AUTHORIZER_PASSWORD`. Make sure to update authorizer Lambda code according to your authentication/authorization needs. For more details on how to implement Lambda Authorizer, check out [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-use-lambda-authorizer.html). or [blueprints](https://github.com/awslabs/aws-apigateway-lambda-authorizer-blueprints). 
+API Gateway uses Lambda Authorizer for authentication/authorization. However, sample implementation at `./src/authorizer/lambda_function.py` allows all actions on all resources in the API if the  `Authorization` header value in the request matches the one stored in the AWS Secrets Manager and retrieved by the Lambda Authorizer when it initializes. 
+
+Make sure to update authorizer Lambda code according to your authentication/authorization needs. For more details on how to implement Lambda Authorizer, check out [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-use-lambda-authorizer.html). or [blueprints](https://github.com/awslabs/aws-apigateway-lambda-authorizer-blueprints). 
 Take a look at Lambda Authorizer code at [serverless-rest-api](https://github.com/aws-samples/serverless-samples/tree/main/serverless-rest-api) for JWT based authorization examples if needed.
 
 
@@ -127,7 +129,6 @@ Set the AWS region in the claim with the ones used in the previous step “Build
 ```shell
 export AWS_REGION=<replace-with-aws-region> # example `us-east-1`
 export S3_BUCKET=<replace-with-s3-bucket-name> # example `my-crossplane-microservice-lambdas`
-export AUTHORIZER_PASSWORD=$(openssl rand -hex 32) 
 ```
 
 Change the default value for `CLAIM_NAME` with any name you choose.
@@ -135,10 +136,22 @@ Change the default value for `CLAIM_NAME` with any name you choose.
 export CLAIM_NAME=<replace-with-claim-name> # example `test-rest-api`
 ```
 
+Run the below commands to generate random password to be used by a Lambda Authorizer and store it in [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/)
+```shell
+export AUTHORIZER_PASSWORD=$(aws secretsmanager get-random-password --output text)
+export SECRET_ARN=$(aws secretsmanager create-secret --name "$CLAIM_NAME-auth-password" --secret-string "$AUTHORIZER_PASSWORD" --output json | jq .ARN | tr -d '"')
+```
+
 Run the below command to use the template file `microservice-claim-tmpl.yaml` in the `claim` folder to create the claim file with the variables `CLAIM_NAME`, `S3_BUCKET`, and `AWS_REGION` substituted.
 ```shell
 envsubst < "claim/microservice-claim-tmpl.yaml" > "claim/microservice-claim.yaml"
 ```
+
+Note that you can retrieve password from the AWS Secrets Manager using following command:
+```shell
+ aws secretsmanager get-secret-value --secret-id "$CLAIM_NAME-auth-password"     
+```
+
 
 Check that the claim populated with values. Update API name or description values in the claim if desired.
 ```

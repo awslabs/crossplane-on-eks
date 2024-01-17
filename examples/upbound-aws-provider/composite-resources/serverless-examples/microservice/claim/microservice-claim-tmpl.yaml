@@ -9,7 +9,7 @@ spec:
   codeBucketName: $S3_BUCKET
   logicLambdaCodeBucketKey: microservice-business-logic.zip
   authorizerLambdaCodeBucketKey: microservice-authorizer.zip
-  authorizerPassword: $AUTHORIZER_PASSWORD
+  authorizerPasswordParameterARN: $SECRET_ARN
   lambdaRunTime: python3.10
   resourceConfig:
     providerConfigName: aws-provider-config

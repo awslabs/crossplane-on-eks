@@ -45,8 +45,8 @@ spec:
                   description: Set the Lambda function and handler name for API Gateway Lambda Authorizer
                   type: string
                   default: lambda_function.lambda_handler
-                authorizerPassword:
-                  description: Set the API password to be used by the API Gateway Lambda Authorizer
+                authorizerPasswordParameterARN:
+                  description: Set the AWS Secrets Manager parameter ARN for API password storage
                   type: string
                 lambdaRunTime: 
                   description: Set the Lambda function runtime.
@@ -108,6 +108,9 @@ spec:
                   type: string
                 authorizerLambdaName:
                   description: Name of the API Gateway Lambda Authorizer function
+                  type: string
+                authorizerLambdaRoleName:
+                  description: Name of the IAM role for the Lambda Authorizer function
                   type: string
                 snsAlarmsTopicArn:
                   description: ARN of the SNS topic used by the alarms

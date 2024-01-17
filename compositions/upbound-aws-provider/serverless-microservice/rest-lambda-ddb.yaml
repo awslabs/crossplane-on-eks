@@ -359,8 +359,8 @@ spec:
               string:
                 fmt: "%s-authorizer"
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.authorizerPassword
-          toFieldPath: spec.envVariables[AUTHORIZER_PASSWORD]
+          fromFieldPath: spec.authorizerPasswordParameterARN
+          toFieldPath: spec.envVariables[AUTHORIZER_PASSWORD_ARN]
           policy:
             fromFieldPath: Required
             mergeOptions:
@@ -383,6 +383,9 @@ spec:
         - type: ToCompositeFieldPath
           fromFieldPath: status.functionName
           toFieldPath: status.authorizerLambdaName
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.functionRoleName
+          toFieldPath: status.authorizerLambdaRoleName
 
     - name: invoke-authorizer-permission
       base:
@@ -415,6 +418,62 @@ spec:
             - type: string
               string:
                 fmt: "%s/authorizers/*"
+
+    - name: authorizer-secretsmanager-access-policy
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: Policy
+        metadata:
+          labels:
+            type: authorizer-secretsmanager-access-policy
+        spec:
+          deletionPolicy: Delete
+          forProvider: {}
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: CombineFromComposite
+          toFieldPath: spec.forProvider.policy
+          combine:
+            variables:
+            - fromFieldPath: spec.authorizerPasswordParameterARN
+            strategy: string
+            string:
+              fmt: |
+                {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                        "secretsmanager:GetSecretValue"
+                        ],
+                        "Resource": [
+                            "%s"
+                        ]
+                    }
+                  ]
+                }
+
+    - name: authorizer-secretsmanager-policy-attachment
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: RolePolicyAttachment
+        spec:
+          deletionPolicy: Delete
+          forProvider:
+            role: tbd
+            policyArnSelector:
+              matchLabels:
+                type: authorizer-secretsmanager-access-policy
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.authorizerLambdaRoleName
+          toFieldPath: spec.forProvider.role
+          policy:
+            fromFieldPath: Required
 
     - name: alarms-topic
       base:
