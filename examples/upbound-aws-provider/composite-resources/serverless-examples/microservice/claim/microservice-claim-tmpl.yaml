@@ -1,0 +1,16 @@
+apiVersion: awsblueprints.io/v1alpha1
+kind: Microservice
+metadata:
+  name: $CLAIM_NAME
+  namespace: default
+spec:
+  apiName: my-crossplane-microservice
+  apiDescription: Microservice that uses Amazon API Gateway and AWS Lambda
+  codeBucketName: $S3_BUCKET
+  logicLambdaCodeBucketKey: microservice-business-logic.zip
+  authorizerLambdaCodeBucketKey: microservice-authorizer.zip
+  authorizerPasswordParameterARN: $SECRET_ARN
+  lambdaRunTime: python3.10
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    region: $AWS_REGION

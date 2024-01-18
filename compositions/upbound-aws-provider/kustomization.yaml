@@ -13,3 +13,5 @@ resources:
 - sqs/
 - serverless/
 - sns-sqs/
+- apigw/
+- serverless-microservice/
