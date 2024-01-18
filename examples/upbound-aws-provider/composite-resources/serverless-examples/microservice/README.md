@@ -5,7 +5,7 @@ This REST API example demonstrates end-to-end implementation of a simple applica
 
 ![Serverless microservice diagram](./assets/architecture.png)
 
-Example is (loosely) based on a AWS Serverless Samples repository [serverless-rest-api](https://github.com/aws-samples/serverless-samples/tree/main/serverless-rest-api) project. The services used by this application include Amazon API Gateway, AWS Lambda, and Amazon DynamoDB. Observability implementation is based on AWS CloudWatch Dashboards and MetricAlarms. This example skips CI/CD implementation and unit/integration testing.
+Example is (loosely) based on a AWS Serverless Samples repository [serverless-rest-api](https://github.com/aws-samples/serverless-samples/tree/main/serverless-rest-api) project. The services used by this application include Amazon API Gateway, AWS Lambda, and Amazon DynamoDB. Observability implementation is based on Amazon CloudWatch Dashboards and MetricAlarms. This example skips CI/CD implementation and unit/integration testing.
 
 ## Implementation notes
 
@@ -97,26 +97,10 @@ write-sqs.iampolicy.awsblueprints.io                  IAMPolicy         awsbluep
 
 ### Build Lambda function packages
 
-This example uses ZIP packaging of the Lambda functions. 
- - Navigate to `./src/logic/` directory
- - Create ZIP file `microservice-business-logic.zip` with the `lambda_function.py` in it:
-    ```shell
-    zip microservice-business-logic.zip lambda_function.py
-    ```
- - Navigate to `./src/authorizer/` directory
- - Create ZIP file `microservice-authorizer.zip` with the `lambda_function.py` in it:
-    ```shell
-    zip microservice-authorizer.zip lambda_function.py
-    ```
- - Create Amazon S3 bucket that will be used to store Lambda ZIP packages (make sure to use unique bucket name):
-   ```shell
-   aws s3api create-bucket --bucket <my-zip-packaging-bucket-name> --region <replace-with-aws-region> # example `us-east-1`
-   ```
- - Upload both ZIP files to the S3 bucket you just created:
-   ```shell
-   aws s3 cp microservice-business-logic.zip s3://<my-zip-packaging-bucket-name>/ 
-   aws s3 cp microservice-authorizer.zip s3://<my-zip-packaging-bucket-name>/ 
-   ```
+Executing the `build-and-upload-zip.sh` script creates an S3 bucket in a specified region, zips the Lambda functions, and uploads the ZIP file to the S3 bucket. If the bucket already exists and you have access to it, the script will print a message and continue with the upload. 
+```shell
+./build-and-upload-zip.sh --bucket <my-zip-packaging-bucket-name> --region <replace-with-aws-region>
+```
 
 ### Update and apply the claim
 
@@ -125,7 +109,7 @@ Make sure you are in the following directory:
 cd examples/upbound-aws-provider/composite-resources/serverless-examples/microservice/
 ```
 
-Set the AWS region in the claim with the ones used in the previous step “Build Lambda function packages” where the Lambda ZIP packages were uploaded to S3.
+Set the AWS region and S3 bucket name in the claim with the ones used in the previous step “Build Lambda function packages”:
 ```shell
 export AWS_REGION=<replace-with-aws-region> # example `us-east-1`
 export S3_BUCKET=<replace-with-s3-bucket-name> # example `my-crossplane-microservice-lambdas`
@@ -142,15 +126,16 @@ export AUTHORIZER_PASSWORD=$(aws secretsmanager get-random-password --output tex
 export SECRET_ARN=$(aws secretsmanager create-secret --name "$CLAIM_NAME-auth-password" --secret-string "$AUTHORIZER_PASSWORD" --output json | jq .ARN | tr -d '"')
 ```
 
+*Note that password is stored in the AUTHORIZER_PASSWORD environment variable, also used by the testing scripts later in this document. If needed, you can retrieve password from the AWS Secrets Manager using following command:*
+```shell
+ aws secretsmanager get-secret-value --secret-id "$CLAIM_NAME-auth-password"     
+```
+
 Run the below command to use the template file `microservice-claim-tmpl.yaml` in the `claim` folder to create the claim file with the variables `CLAIM_NAME`, `S3_BUCKET`, and `AWS_REGION` substituted.
 ```shell
 envsubst < "claim/microservice-claim-tmpl.yaml" > "claim/microservice-claim.yaml"
 ```
 
-Note that you can retrieve password from the AWS Secrets Manager using following command:
-```shell
- aws secretsmanager get-secret-value --secret-id "$CLAIM_NAME-auth-password"     
-```
 
 
 Check that the claim populated with values. Update API name or description values in the claim if desired.
@@ -171,7 +156,7 @@ kubectl get microservices
 Expected result (it might take sometime before READY=True)
 ```
 NAME                 SYNCED   READY   CONNECTION-SECRET   AGE
-test-rest-api        True     True                        1m
+test-rest-api        True     True                        10m
 ```
 
 You can see resources created and their hierarchy by using [Crossplane CLI](https://docs.crossplane.io/latest/cli/):
