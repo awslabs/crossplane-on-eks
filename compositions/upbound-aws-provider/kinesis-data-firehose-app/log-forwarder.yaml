@@ -203,8 +203,7 @@ spec:
               awsblueprints.io/provider: aws
               awsblueprints.io/environment: dev
               iam.awsblueprints.io/policy-type: write
-              iam.awsblueprints.io/service: s3
-              iam.awsblueprints.io/from-service: firehose
+              iam.awsblueprints.io/service: firehose-s3
       patches:
         - type: PatchSet
           patchSetName: common-fields-composition
