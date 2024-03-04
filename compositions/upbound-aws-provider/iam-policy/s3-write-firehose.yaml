@@ -9,8 +9,7 @@ metadata:
     awsblueprints.io/provider: aws
     awsblueprints.io/environment: dev
     iam.awsblueprints.io/policy-type: write
-    iam.awsblueprints.io/service: s3
-    iam.awsblueprints.io/from-service: firehose
+    iam.awsblueprints.io/service: firehose-s3
 spec:
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
@@ -22,17 +21,8 @@ spec:
           fromFieldPath: spec.resourceConfig.deletionPolicy
           toFieldPath: spec.deletionPolicy
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.region
-          toFieldPath: spec.forProvider.region
-        - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.providerConfigName
           toFieldPath: spec.providerConfigRef.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.tags
-          toFieldPath: spec.forProvider.tags
-          policy:
-            mergeOptions:
-              keepMapValues: true
         - fromFieldPath: "metadata.name"
           toFieldPath: "metadata.name"
           transforms:
@@ -50,6 +40,12 @@ spec:
       patches:
         - type: PatchSet
           patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            mergeOptions:
+              keepMapValues: true
         - type: CombineFromComposite
           toFieldPath: spec.forProvider.policy
           combine:
