@@ -46,8 +46,7 @@ spec:
           toFieldPath: spec.serviceAccountName
         - type: ToCompositeFieldPath
           fromFieldPath: status.roleName
-#          toFieldPath: status.roleName
-          toFieldPath: metadata.labels[crossplane.io/roleName]
+          toFieldPath: status.roleName
     - name: irsa-bucket-policy
       base:
         apiVersion: awsblueprints.io/v1alpha1
@@ -63,8 +62,7 @@ spec:
         - type: PatchSet
           patchSetName: common-fields-composition
         - type: FromCompositeFieldPath
-#          fromFieldPath: status.roleName
-          fromFieldPath: metadata.labels[crossplane.io/roleName]
+          fromFieldPath: status.roleName
           toFieldPath: spec.roleName
         - type: FromCompositeFieldPath
           fromFieldPath: status.bucketArn
