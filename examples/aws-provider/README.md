@@ -46,16 +46,18 @@ kubectl get VPC aws-provider-vpc
 The following shows an example of how to authenticate and retrieve `kubeconfig` from an existing remote EKS Cluster using AWS Provider
 
 ```shell
+# Please make sure to replace `<your-cluster-name>` with your EKS cluster name in the below file before applying.
 kubectl apply -f managed-resources/eks-clusterauth.yaml
 
-# Verify the resource. When authentication is complete, you should see READY: True in the output
+# Verify the resource. When authentication is complete, you should see READY: True in the output.
 kubectl get clusterauths.eks.aws.upbound.io
+
 NAME                               READY   SYNCED   EXTERNAL-NAME                      AGE
 eks-x86-us-east-2-1-28-blueprint   True    True     eks-x86-us-east-2-1-28-blueprint   11d
 
 # Verify if the secret has pulled the `kubeconfig` of a remote cluster to management cluster.
-
 kubectl describe secret eks-x86-us-east-2-1-28-eks-connection -n upbound-system
+
 Name:         eks-x86-us-east-2-1-28-eks-connection
 Namespace:    upbound-system
 Labels:       <none>
