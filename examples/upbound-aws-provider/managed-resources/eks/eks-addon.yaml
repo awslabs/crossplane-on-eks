@@ -1,0 +1,13 @@
+apiVersion: eks.aws.upbound.io/v1beta1
+kind: Addon
+metadata:
+  annotations:
+    meta.upbound.io/example-id: eks/v1beta1/addon
+  name: vpc-cni
+spec:
+  forProvider:
+    addonName: vpc-cni
+    clusterName: <your-cluster-name>
+    region: eu-west-1
+  providerConfigRef:
+    name: default
