@@ -23,9 +23,6 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.deletionPolicy
           toFieldPath: spec.deletionPolicy
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.region
-          toFieldPath: spec.forProvider.region
   resources:
     - name: iam-role
       base:

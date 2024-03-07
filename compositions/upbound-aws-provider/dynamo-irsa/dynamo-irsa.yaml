@@ -21,9 +21,6 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig
           toFieldPath: spec.resourceConfig
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.dynamoConfig
-          toFieldPath: spec.dynamoConfig
   resources:
     - name: dynamodbtable
       connectionDetails:
@@ -36,6 +33,9 @@ spec:
       patches:
         - type: PatchSet
           patchSetName: common-fields-composition
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.dynamoConfig
+          toFieldPath: spec.dynamoConfig
         - type: ToCompositeFieldPath
           fromFieldPath: status.tableName
           toFieldPath: status.tableName

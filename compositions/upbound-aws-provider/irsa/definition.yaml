@@ -50,8 +50,6 @@ spec:
                       type: string
                     providerConfigName:
                       type: string
-                    region:
-                      type: string
                     tags:
                       additionalProperties:
                         type: string
@@ -59,7 +57,6 @@ spec:
                       type: object
                   required:
                   - providerConfigName
-                  - region
                   type: object
                 serviceAccountName:
                   type: string
