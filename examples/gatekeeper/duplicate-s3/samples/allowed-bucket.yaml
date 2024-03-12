@@ -4,7 +4,7 @@ metadata:
   annotations:
     crossplane.io/external-create-pending: "2023-06-15T21:17:04Z"
     crossplane.io/external-create-succeeded: "2023-06-15T21:17:05Z"
-    crossplane.io/external-name: my-bucket-456
+    crossplane.io/external-name: my-bucket-456-$ACCOUNT_ID
   labels:
     crossplane.io/claim-name: standard-object-storage
     crossplane.io/claim-namespace: default
@@ -22,3 +22,5 @@ spec:
       blockPublicPolicy: true
       ignorePublicAcls: true
       restrictPublicBuckets: true
+  providerConfigRef:
+    name: aws-provider-config
