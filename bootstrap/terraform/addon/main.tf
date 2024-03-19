@@ -14,7 +14,7 @@ module "crossplane" {
   namespace        = try(var.crossplane.namespace, "crossplane-system")
   create_namespace = try(var.crossplane.create_namespace, true)
   chart            = try(var.crossplane.chart, "crossplane")
-  chart_version    = try(var.crossplane.chart_version, "1.13.2")
+  chart_version    = try(var.crossplane.chart_version, "1.15.0")
   repository       = try(var.crossplane.repository, "https://charts.crossplane.io/stable/")
   values           = try(var.crossplane.values, [])
 
