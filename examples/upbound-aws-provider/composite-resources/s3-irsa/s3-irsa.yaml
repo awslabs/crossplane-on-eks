@@ -3,6 +3,8 @@ kind: S3IRSA
 metadata:
   name: s3-irsa-test
 spec:
+  writeConnectionSecretToRef:
+    name: s3-irsa-test
   resourceConfig:
     providerConfigName: aws-provider-config
     region: us-east-1
