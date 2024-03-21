@@ -224,7 +224,10 @@ locals {
       "s3",
       "sns",
       "sqs",
-      "vpc"
+      "vpc",
+      "apigateway",
+      "cloudwatch",
+      "cloudwatchlogs"
     ]
   }
 

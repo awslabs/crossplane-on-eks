@@ -1,0 +1,13 @@
+apiVersion: eks.aws.upbound.io/v1beta1
+kind: ClusterAuth
+metadata:
+  name: <your-cluster-name>
+spec:
+  forProvider:
+    region: eu-west-1
+    clusterName: <your-cluster-name>
+  providerConfigRef:
+    name: default
+  writeConnectionSecretToRef:
+    namespace: upbound-system
+    name: <your-cluster-name>-connection
