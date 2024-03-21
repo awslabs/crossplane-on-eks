@@ -12,6 +12,6 @@ spec:
   resourceConfig:
     providerConfigName: aws-provider-config
     region: us-east-1
-    tags: 
-      owner: dev
+    # tags: 
+    #   owner: dev
 {{- end }}
