@@ -47,17 +47,9 @@ spec:
                     region:
                       type: string
                     tags:
-                      items:
-                        properties:
-                          key:
-                            type: string
-                          value:
-                            type: string
-                        required:
-                        - key
-                        - value
-                        type: object
-                      type: array
+                      additionalProperties:
+                        type: string
+                      type: object
                   required:
                   - providerConfigName
                   - region
