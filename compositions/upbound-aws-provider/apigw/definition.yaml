@@ -1,0 +1,119 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xapigateways.awsblueprints.io
+spec:
+  group: awsblueprints.io
+  names:
+    kind: XApiGateway
+    plural: xapigateways
+  claimNames:
+    kind: ApiGateway
+    plural: apigateways
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                apiName:
+                  description: Set the name of the API to the value provided by this field.
+                  type: string
+                apiDescription:
+                  description: Set the description of the API in AWS to the value provided by this field.
+                  type: string
+                endpointType:
+                  description: Set the type of the API endpoint to the value provided by this field.
+                  type: string
+                  enum:
+                  - REGIONAL
+                  - PRIVATE
+                  - EDGE
+                  default: REGIONAL
+                openApiSpecification:
+                  description: Set the OpenAPI specification of the API to the value provided by this field.
+                  type: string
+                logRetentionPeriod:
+                  description: Set the log retention period in days for the API Gateway logs.
+                  type: number
+                  default: 30
+                logLevel:
+                  description: Set the level of the API execution logs
+                  type: string
+                  enum:
+                  - OFF
+                  - ERROR
+                  - INFO
+                  default: INFO
+                resourceConfig:
+                  description: ResourceConfig defines general properties of this AWS
+                    resource.
+                  properties:
+                    deletionPolicy:
+                      description: Defaults to Delete
+                      enum:
+                      - Delete
+                      - Orphan
+                      type: string
+                    name:
+                      description: Set the name of this resource in AWS to the value
+                        provided by this field.
+                      type: string
+                    providerConfigName:
+                      type: string
+                    region:
+                      type: string
+                  required:
+                  - region
+                  type: object
+              required:
+              - resourceConfig
+              type: object
+            status:
+              properties:
+                accountId:
+                  description: ID of the AWS account where API was created
+                  type: string
+                apiName:
+                  description: Name of the API created
+                  type: string
+                apiExecutionArn:
+                  description: Execution ARN of the API created
+                  type: string
+                apiId:
+                  description: ID of the API created
+                  type: string
+                apiBaseUrl:
+                  description: URL to invoke the API 
+                  type: string
+                apigwArn:
+                  description: ARN of the API created
+                  type: string
+                apigwRoleName:
+                  description: Name of API gateway IAM role
+                  type: string
+                apigwRoleArn:
+                  description: ARN of API gateway IAM role
+                  type: string
+                apigwAccessLogsGroupArn:
+                  description: ARN of the API Gateway access logs CloudWatch LogGroup
+                  type: string
+                apigwStageArn:
+                  description: ARN of the API Gateway stage created
+                  type: string
+                apigwStageName:
+                  description: Name of the API Gateway stage created
+                  type: string
+                apigwDeploymentId:
+                  description: Id of the API Gateway deployment created
+                  type: string
+              type: object
+          required:
+          - spec
+          type: object

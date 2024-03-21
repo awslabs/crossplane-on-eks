@@ -1,0 +1,9 @@
+apiVersion: syncset.gatekeeper.sh/v1alpha1
+kind: SyncSet
+metadata:
+  name: s3-syncset
+spec:
+  gvks:
+    - group: "s3.aws.crossplane.io"
+      version: "v1beta1"
+      kind: "Bucket"

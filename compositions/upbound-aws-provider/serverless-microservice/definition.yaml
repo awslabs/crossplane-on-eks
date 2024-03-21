@@ -1,0 +1,124 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xmicroservices.awsblueprints.io
+spec:
+  group: awsblueprints.io
+  names:
+    kind: XMicroservice
+    plural: xmicroservices
+  claimNames:
+    kind: Microservice
+    plural: microservices
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                apiName:
+                  description: Set the name of the API to the value provided by this field.
+                  type: string
+                apiDescription:
+                  description: Set the description of the API in AWS to the value provided by this field.
+                  type: string
+                codeBucketName:
+                  description: Set the name of the S3 bucket where the business logic and AI Gateway Authorizer Lambda code will be uploaded.
+                  type: string
+                logicLambdaCodeBucketKey:
+                  description: Set the key of the S3 object with business logic Lambda function package.
+                  type: string
+                logicLambdaHandler:
+                  description: Set the Lambda function and handler name for business logic Lambda
+                  type: string
+                  default: lambda_function.lambda_handler
+                authorizerLambdaCodeBucketKey: 
+                  description: Set the business logic Lambda function handler.
+                  type: string
+                authorizerLambdaHandler:
+                  description: Set the Lambda function and handler name for API Gateway Lambda Authorizer
+                  type: string
+                  default: lambda_function.lambda_handler
+                authorizerPasswordParameterARN:
+                  description: Set the AWS Secrets Manager parameter ARN for API password storage
+                  type: string
+                lambdaRunTime: 
+                  description: Set the Lambda function runtime.
+                  type: string
+                  default: python3.10
+                resourceConfig:
+                  description: ResourceConfig defines general properties of this AWS resource.
+                  properties:
+                    deletionPolicy:
+                      description: Defaults to Delete
+                      enum:
+                      - Delete
+                      - Orphan
+                      type: string
+                    providerConfigName:
+                      type: string
+                    region:
+                      type: string
+                  required:
+                  - region
+                  type: object
+              required:
+              - resourceConfig
+              type: object
+            status:
+              properties:
+                apiName:
+                  description: Name of the API created
+                  type: string
+                apiExecutionArn:
+                  description: Execution ARN of the API created
+                  type: string
+                accountId:
+                  description: Account in which API was created
+                  type: string
+                apiId:
+                  description: ID of the API created
+                  type: string
+                apiBaseUrl:
+                  description: API Gateway endpoint URL
+                  type: string
+                tableName:
+                  description: Name of the DynamnoDB table used by the API
+                  type: string
+                tableArn:
+                  description: ARN of the DynamnoDB table used by the API
+                  type: string
+                businessLogicLambdaArn:
+                  description: ARN of the business logic Lambda function
+                  type: string
+                businessLogicLambdaName:
+                  description: Name of the business logic Lambda function
+                  type: string
+                businessLogicLambdaRoleName:
+                  description: Name of the IAM role for the business logic Lambda function
+                  type: string
+                authorizerLambdaArn:
+                  description: ARN of the API Gateway Lambda Authorizer function
+                  type: string
+                authorizerLambdaName:
+                  description: Name of the API Gateway Lambda Authorizer function
+                  type: string
+                authorizerLambdaRoleName:
+                  description: Name of the IAM role for the Lambda Authorizer function
+                  type: string
+                snsAlarmsTopicArn:
+                  description: ARN of the SNS topic used by the alarms
+                  type: string
+                dashboardURL:
+                  description: Dashboard URL
+                  type: string
+              type: object
+          required:
+          - spec
+          type: object    

@@ -21,17 +21,8 @@ spec:
           fromFieldPath: spec.resourceConfig.deletionPolicy
           toFieldPath: spec.deletionPolicy
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.region
-          toFieldPath: spec.forProvider.region
-        - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.providerConfigName
           toFieldPath: spec.providerConfigRef.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.tags
-          toFieldPath: spec.forProvider.tags
-          policy:
-            mergeOptions:
-              keepMapValues: true
         - fromFieldPath: "metadata.name"
           toFieldPath: "metadata.name"
           transforms:
@@ -49,6 +40,12 @@ spec:
       patches:
         - type: PatchSet
           patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            mergeOptions:
+              keepMapValues: true
         - fromFieldPath: spec.resourceArn
           toFieldPath: spec.forProvider.policy
           transforms:
