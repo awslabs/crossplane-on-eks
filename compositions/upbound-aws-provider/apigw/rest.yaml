@@ -20,17 +20,8 @@ spec:
           fromFieldPath: spec.resourceConfig.deletionPolicy
           toFieldPath: spec.deletionPolicy
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.region
-          toFieldPath: spec.forProvider.region
-        - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.providerConfigName
           toFieldPath: spec.providerConfigRef.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.tags
-          toFieldPath: spec.forProvider.tags
-          policy:
-            mergeOptions:
-              keepMapValues: true
         - fromFieldPath: "metadata.name"
           toFieldPath: "metadata.name"
   resources:
@@ -48,6 +39,9 @@ spec:
       patches:
         - type: PatchSet
           patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
         - type: FromCompositeFieldPath
           fromFieldPath: metadata.name
           toFieldPath: metadata.name
@@ -88,6 +82,12 @@ spec:
                 type: Regexp
                 regexp:
                   match: \d{12,}          
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            mergeOptions:
+              keepMapValues: true
 
     - name: apigw-role
       base:
@@ -129,6 +129,12 @@ spec:
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.id
           toFieldPath: status.apigwRoleName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            mergeOptions:
+              keepMapValues: true
 
     - name: api-deployment
       base:
@@ -142,6 +148,9 @@ spec:
       patches:
         - type: PatchSet
           patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
         - type: FromCompositeFieldPath
           fromFieldPath: metadata.name
           toFieldPath: metadata.name
@@ -185,6 +194,9 @@ spec:
         - type: PatchSet
           patchSetName: common-fields
         - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
           fromFieldPath: metadata.name
           toFieldPath: metadata.name
           transforms:
@@ -205,6 +217,12 @@ spec:
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.stageName
           toFieldPath: status.apigwStageName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            mergeOptions:
+              keepMapValues: true
 
     - name: api-access-logs-group
       base:
@@ -218,6 +236,9 @@ spec:
         - type: PatchSet
           patchSetName: common-fields
         - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
           fromFieldPath: metadata.name
           toFieldPath: metadata.name
           transforms:
@@ -230,6 +251,12 @@ spec:
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.arn
           toFieldPath: status.apigwAccessLogsGroupArn
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            mergeOptions:
+              keepMapValues: true
 
     - name: apigw-logging-account
       base:
@@ -243,6 +270,9 @@ spec:
       patches:
         - type: PatchSet
           patchSetName: common-fields
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
         - type: FromCompositeFieldPath
           fromFieldPath: metadata.name
           toFieldPath: metadata.name
@@ -271,6 +301,9 @@ spec:
         - type: PatchSet
           patchSetName: common-fields
         - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
           fromFieldPath: metadata.name
           toFieldPath: metadata.name
           transforms:
@@ -279,4 +312,4 @@ spec:
                 fmt: "%s-api-method-settings"
         - type: FromCompositeFieldPath
           fromFieldPath: spec.logLevel
-          toFieldPath: spec.forProvider.loggingLevel
+          toFieldPath: spec.forProvider.settings[0].loggingLevel

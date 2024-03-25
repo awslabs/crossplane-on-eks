@@ -19,15 +19,6 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.deletionPolicy
           toFieldPath: spec.deletionPolicy
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.region
-          toFieldPath: spec.forProvider.region
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.tags
-          toFieldPath: spec.forProvider.tags
-          policy:
-            mergeOptions:
-              keepMapValues: true
         - fromFieldPath: "metadata.name"
           toFieldPath: "metadata.name"
   resources:
@@ -72,6 +63,12 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: spec.permissionsBoundaryArn
           toFieldPath: spec.forProvider.permissionsBoundary
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            mergeOptions:
+              keepMapValues: true
     - name: lambda-basic-policy-attachment
       base:
         apiVersion: iam.aws.upbound.io/v1beta1
@@ -106,9 +103,6 @@ spec:
           fromFieldPath: spec.resourceConfig.providerConfigName
           toFieldPath: spec.providerConfigRef.name
         - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: spec.forProvider.functionName
-        - type: FromCompositeFieldPath
           fromFieldPath: spec.memorySize
           toFieldPath: spec.forProvider.memorySize
         - type: FromCompositeFieldPath
@@ -138,6 +132,9 @@ spec:
           policy:
             fromFieldPath: Required
         - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
           fromFieldPath: spec.envVariables
           toFieldPath: spec.forProvider.environment[0].variables
           policy:
@@ -149,3 +146,9 @@ spec:
         - type: ToCompositeFieldPath
           fromFieldPath: status.atProvider.id
           toFieldPath: status.functionName
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            mergeOptions:
+              keepMapValues: true
