@@ -36,12 +36,6 @@ spec:
           fromFieldPath: spec.resourceConfig.providerConfigName
           toFieldPath: spec.providerConfigRef.name
         - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.tags
-          toFieldPath: spec.forProvider.tags
-          policy:
-            mergeOptions:
-              keepMapValues: true
-        - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.name
           toFieldPath: metadata.annotations[crossplane.io/external-name]
         - fromFieldPath: "metadata.name"
@@ -74,6 +68,12 @@ spec:
         - type: ToCompositeFieldPath
           fromFieldPath: status.queueUrl
           toFieldPath: status.queueUrl
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.resourceConfig.tags
+          policy:
+            mergeOptions:
+              keepMapValues: true
     - name: sns
       base:
         apiVersion: awsblueprints.io/v1alpha1
@@ -96,6 +96,12 @@ spec:
         - type: ToCompositeFieldPath
           fromFieldPath: status.topicArn
           toFieldPath: status.topicArn
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.tags
+          toFieldPath: spec.resourceConfig.tags
+          policy:
+            mergeOptions:
+              keepMapValues: true
     - name: subscription
       base:
         apiVersion: sns.aws.upbound.io/v1beta1
