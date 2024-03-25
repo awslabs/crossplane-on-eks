@@ -11,859 +11,897 @@ spec:
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
     kind: XMicroservice
-  patchSets:
-    - name: common-fields
-      patches:
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig
-          toFieldPath: spec.resourceConfig
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.deletionPolicy
-          toFieldPath: spec.deletionPolicy
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.providerConfigName
-          toFieldPath: spec.providerConfigRef.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.region
-          toFieldPath: spec.forProvider.region
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.tags
-          toFieldPath: spec.forProvider.tags
-          policy:
-            mergeOptions:
-              keepMapValues: true
-  resources:
-    - name: restapi
-      base:
-        apiVersion: awsblueprints.io/v1alpha1
-        kind: XApiGateway
-        spec:
-          deletionPolicy: Delete
-          compositionSelector:
-            matchLabels:
-              awsblueprints.io/provider: aws
-              awsblueprints.io/environment: dev
-              awsblueprints.io/type: rest
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-restapi"
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.apiDescription
-          toFieldPath: spec.apiDescription
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.apiName
-          toFieldPath: spec.apiName
-        - type: CombineFromComposite
-          combine:
-            variables:
-              - fromFieldPath: spec.resourceConfig.region
-              - fromFieldPath: status.businessLogicLambdaArn
-              - fromFieldPath: status.authorizerLambdaArn
-            strategy: string
-            string: 
-              fmt: >-
-                {
-                  "openapi" : "3.0.1",
-                  "paths" : {
-                    "/items/{id}" : {
-                      "x-amazon-apigateway-any-method" : {
-                        "parameters" : [ {
-                          "name" : "proxy",
-                          "in" : "path",
-                          "required" : true,
-                          "schema" : {
-                            "type" : "string"
-                          }
-                        } ],
-                        "security" : [ {
-                          "my-lambda-authorizer" : [ ]
-                        } ],
-                        "x-amazon-apigateway-integration" : {
-                          "httpMethod" : "POST",
-                          "uri" : "arn:aws:apigateway:%[1]s:lambda:path/2015-03-31/functions/%[2]s/invocations",
-                          "responses" : {
-                            "default" : {
-                              "statusCode" : "200"
-                            }
-                          },
-                          "passthroughBehavior" : "when_no_match",
-                          "cacheNamespace" : "aotrqh",
-                          "cacheKeyParameters" : [ "method.request.path.proxy" ],
-                          "contentHandling" : "CONVERT_TO_TEXT",
-                          "type" : "aws_proxy"
-                        }
-                      }
-                    },
-                    "/items" : {
-                      "x-amazon-apigateway-any-method" : {
-                        "responses" : {
-                          "200" : {
-                            "description" : "200 response",
-                            "content" : {
-                              "application/json" : {
-                                "schema" : {
-                                  "$ref" : "#/components/schemas/Empty"
-                                }
+  mode: Pipeline
+  pipeline:
+  - step: patch-and-transform
+    functionRef:
+      name: function-patch-and-transform
+    input:
+      apiVersion: pt.fn.crossplane.io/v1beta1
+      kind: Resources
+      patchSets:
+        # patch set applied to awsblueprints resources 
+        - name: common-fields
+          patches:
+            - type: FromCompositeFieldPath
+              fromFieldPath: spec.resourceConfig
+              toFieldPath: spec.resourceConfig
+        # patch set applied to upbound resources 
+        - name: common-fields-upbound
+          patches:
+            - type: FromCompositeFieldPath
+              fromFieldPath: spec.resourceConfig.deletionPolicy
+              toFieldPath: spec.deletionPolicy
+            - type: FromCompositeFieldPath
+              fromFieldPath: spec.resourceConfig.providerConfigName
+              toFieldPath: spec.providerConfigRef.name
+            - type: FromCompositeFieldPath
+              fromFieldPath: spec.resourceConfig.region
+              toFieldPath: spec.forProvider.region
+        # patch set applied to the global upbound resources that do not have region specified
+        - name: common-fields-upbound-global
+          patches:
+            - type: FromCompositeFieldPath
+              fromFieldPath: spec.resourceConfig.deletionPolicy
+              toFieldPath: spec.deletionPolicy
+            - type: FromCompositeFieldPath
+              fromFieldPath: spec.resourceConfig.providerConfigName
+              toFieldPath: spec.providerConfigRef.name
+
+      resources:
+        - name: restapi
+          base:
+            apiVersion: awsblueprints.io/v1alpha1
+            kind: XApiGateway
+            spec:
+              compositionSelector:
+                matchLabels:
+                  awsblueprints.io/provider: aws
+                  awsblueprints.io/environment: dev
+                  awsblueprints.io/type: rest
+          patches:
+            - type: PatchSet
+              patchSetName: common-fields
+            - type: FromCompositeFieldPath
+              fromFieldPath: metadata.name
+              toFieldPath: metadata.name
+              transforms:
+                - type: string
+                  string:
+                    type: Format
+                    fmt: "%s-restapi"
+            - type: FromCompositeFieldPath
+              fromFieldPath: spec.apiDescription
+              toFieldPath: spec.apiDescription
+            - type: FromCompositeFieldPath
+              fromFieldPath: spec.apiName
+              toFieldPath: spec.apiName
+            - type: CombineFromComposite
+              combine:
+                variables:
+                  - fromFieldPath: spec.resourceConfig.region
+                  - fromFieldPath: status.businessLogicLambdaArn
+                  - fromFieldPath: status.authorizerLambdaArn
+                strategy: string
+                string: 
+                  type: Format
+                  fmt: >-
+                    {
+                      "openapi" : "3.0.1",
+                      "paths" : {
+                        "/items/{id}" : {
+                          "x-amazon-apigateway-any-method" : {
+                            "parameters" : [ {
+                              "name" : "proxy",
+                              "in" : "path",
+                              "required" : true,
+                              "schema" : {
+                                "type" : "string"
                               }
+                            } ],
+                            "security" : [ {
+                              "my-lambda-authorizer" : [ ]
+                            } ],
+                            "x-amazon-apigateway-integration" : {
+                              "httpMethod" : "POST",
+                              "uri" : "arn:aws:apigateway:%[1]s:lambda:path/2015-03-31/functions/%[2]s/invocations",
+                              "responses" : {
+                                "default" : {
+                                  "statusCode" : "200"
+                                }
+                              },
+                              "passthroughBehavior" : "when_no_match",
+                              "cacheNamespace" : "aotrqh",
+                              "cacheKeyParameters" : [ "method.request.path.proxy" ],
+                              "contentHandling" : "CONVERT_TO_TEXT",
+                              "type" : "aws_proxy"
                             }
                           }
                         },
-                        "security" : [ {
-                          "my-lambda-authorizer" : [ ]
-                        } ],
-                        "x-amazon-apigateway-integration" : {
-                          "httpMethod" : "POST",
-                          "uri" : "arn:aws:apigateway:%[1]s:lambda:path/2015-03-31/functions/%[2]s/invocations",
-                          "responses" : {
-                            "default" : {
-                              "statusCode" : "200"
+                        "/items" : {
+                          "x-amazon-apigateway-any-method" : {
+                            "responses" : {
+                              "200" : {
+                                "description" : "200 response",
+                                "content" : {
+                                  "application/json" : {
+                                    "schema" : {
+                                      "$ref" : "#/components/schemas/Empty"
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "security" : [ {
+                              "my-lambda-authorizer" : [ ]
+                            } ],
+                            "x-amazon-apigateway-integration" : {
+                              "httpMethod" : "POST",
+                              "uri" : "arn:aws:apigateway:%[1]s:lambda:path/2015-03-31/functions/%[2]s/invocations",
+                              "responses" : {
+                                "default" : {
+                                  "statusCode" : "200"
+                                }
+                              },
+                              "passthroughBehavior" : "when_no_match",
+                              "contentHandling" : "CONVERT_TO_TEXT",
+                              "type" : "aws_proxy"
                             }
+                          }
+                        }
+                      },
+                      "components" : {
+                        "schemas" : {
+                          "Empty" : {
+                            "title" : "Empty Schema",
+                            "type" : "object"
+                          }
+                        },
+                        "securitySchemes" : {
+                          "my-lambda-authorizer" : {
+                            "type" : "apiKey",
+                            "name" : "Authorization",
+                            "in" : "header",
+                            "x-amazon-apigateway-authtype" : "custom",
+                            "x-amazon-apigateway-authorizer" : {
+                              "authorizerUri" : "arn:aws:apigateway:%[1]s:lambda:path/2015-03-31/functions/%[3]s/invocations",
+                              "authorizerResultTtlInSeconds" : 300,
+                              "type" : "token"
+                            }
+                          }
+                        }
+                      },
+                      "x-amazon-apigateway-gateway-responses" : {
+                        "DEFAULT_5XX" : {
+                          "responseTemplates" : {
+                            "application/json" : "{\"message\":$context.error.messageString}"
+                          }
+                        },
+                        "QUOTA_EXCEEDED" : {
+                          "statusCode" : 429,
+                          "responseParameters" : {
+                            "gatewayresponse.header.my-header" : "'Exceeded'"
                           },
-                          "passthroughBehavior" : "when_no_match",
-                          "contentHandling" : "CONVERT_TO_TEXT",
-                          "type" : "aws_proxy"
+                          "responseTemplates" : {
+                            "application/json" : "{\"message\":$context.error.messageString}"
+                          }
                         }
                       }
                     }
-                  },
-                  "components" : {
-                    "schemas" : {
-                      "Empty" : {
-                        "title" : "Empty Schema",
-                        "type" : "object"
-                      }
-                    },
-                    "securitySchemes" : {
-                      "my-lambda-authorizer" : {
-                        "type" : "apiKey",
-                        "name" : "Authorization",
-                        "in" : "header",
-                        "x-amazon-apigateway-authtype" : "custom",
-                        "x-amazon-apigateway-authorizer" : {
-                          "authorizerUri" : "arn:aws:apigateway:%[1]s:lambda:path/2015-03-31/functions/%[3]s/invocations",
-                          "authorizerResultTtlInSeconds" : 300,
-                          "type" : "token"
-                        }
-                      }
-                    }
-                  },
-                  "x-amazon-apigateway-gateway-responses" : {
-                    "DEFAULT_5XX" : {
-                      "responseTemplates" : {
-                        "application/json" : "{\"message\":$context.error.messageString}"
-                      }
-                    },
-                    "QUOTA_EXCEEDED" : {
-                      "statusCode" : 429,
-                      "responseParameters" : {
-                        "gatewayresponse.header.my-header" : "'Exceeded'"
-                      },
-                      "responseTemplates" : {
-                        "application/json" : "{\"message\":$context.error.messageString}"
-                      }
-                    }
-                  }
-                }
-          toFieldPath: spec.openApiSpecification
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.apiName
-          toFieldPath: status.apiName
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.apiExecutionArn
-          toFieldPath: status.apiExecutionArn
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.accountId
-          toFieldPath: status.accountId
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.apiBaseUrl
-          toFieldPath: status.apiBaseUrl
+              toFieldPath: spec.openApiSpecification
+            - type: ToCompositeFieldPath
+              fromFieldPath: status.apiName
+              toFieldPath: status.apiName
+            - type: ToCompositeFieldPath
+              fromFieldPath: status.apiExecutionArn
+              toFieldPath: status.apiExecutionArn
+            - type: ToCompositeFieldPath
+              fromFieldPath: status.accountId
+              toFieldPath: status.accountId
+            - type: ToCompositeFieldPath
+              fromFieldPath: status.apiBaseUrl
+              toFieldPath: status.apiBaseUrl
 
-    - name: logic-lambda
-      base:
-        apiVersion: awsblueprints.io/v1alpha1
-        kind: XLambdaFunction
-        metadata:
-          labels:
-            type: backend-logic-lambda
-        spec:
-          deletionPolicy: Delete
-          compositionSelector:
-            matchLabels:
-              awsblueprints.io/provider: aws
-              awsblueprints.io/environment: dev
-              awsblueprints.io/type: zip
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-logic"
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.tableName
-          toFieldPath: spec.envVariables[TABLE_NAME]
-          policy:
-            fromFieldPath: Required
-            mergeOptions:
-              keepMapValues: true
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.codeBucketName
-          toFieldPath: spec.bucketName
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.lambdaRunTime
-          toFieldPath: spec.runTime
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.logicLambdaHandler
-          toFieldPath: spec.handler
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.logicLambdaCodeBucketKey
-          toFieldPath: spec.bucketKey
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.functionArn
-          toFieldPath: status.businessLogicLambdaArn
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.functionName
-          toFieldPath: status.businessLogicLambdaName
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.functionRoleName
-          toFieldPath: status.businessLogicLambdaRoleName
+        - name: logic-lambda
+          base:
+            apiVersion: awsblueprints.io/v1alpha1
+            kind: XLambdaFunction
+            metadata:
+              labels:
+                type: backend-logic-lambda
+            spec:
+              compositionSelector:
+                matchLabels:
+                  awsblueprints.io/provider: aws
+                  awsblueprints.io/environment: dev
+                  awsblueprints.io/type: zip
+          patches:
+            - type: PatchSet
+              patchSetName: common-fields
+            - type: FromCompositeFieldPath
+              fromFieldPath: metadata.name
+              toFieldPath: metadata.name
+              transforms:
+                - type: string
+                  string:
+                    type: Format
+                    fmt: "%s-logic"
+            - type: FromCompositeFieldPath
+              fromFieldPath: status.tableName
+              toFieldPath: spec.envVariables[TABLE_NAME]
+              policy:
+                fromFieldPath: Required
+                mergeOptions:
+                  keepMapValues: true
+            - type: FromCompositeFieldPath
+              fromFieldPath: spec.codeBucketName
+              toFieldPath: spec.bucketName
+            - type: FromCompositeFieldPath
+              fromFieldPath: spec.lambdaRunTime
+              toFieldPath: spec.runTime
+            - type: FromCompositeFieldPath
+              fromFieldPath: spec.logicLambdaHandler
+              toFieldPath: spec.handler
+            - type: FromCompositeFieldPath
+              fromFieldPath: spec.logicLambdaCodeBucketKey
+              toFieldPath: spec.bucketKey
+            - type: ToCompositeFieldPath
+              fromFieldPath: status.functionArn
+              toFieldPath: status.businessLogicLambdaArn
+            - type: ToCompositeFieldPath
+              fromFieldPath: status.functionName
+              toFieldPath: status.businessLogicLambdaName
+            - type: ToCompositeFieldPath
+              fromFieldPath: status.functionRoleName
+              toFieldPath: status.businessLogicLambdaRoleName
 
-    - name: invoke-logic-permission
-      base:
-        apiVersion: lambda.aws.upbound.io/v1beta1
-        kind: Permission
-        spec:
-          forProvider: 
-            action: lambda:InvokeFunction
-            principal: apigateway.amazonaws.com
-            statementId: AllowAPIGWToInvokeLambda
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-logic-invoke"
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.businessLogicLambdaName
-          toFieldPath: spec.forProvider.functionName
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.apiExecutionArn
-          toFieldPath: spec.forProvider.sourceArn
-          policy:
-            fromFieldPath: Required
-          transforms:
-            - type: string
-              string:
-                fmt: "%s/*/*/*"
+        - name: invoke-logic-permission
+          base:
+            apiVersion: lambda.aws.upbound.io/v1beta1
+            kind: Permission
+            spec:
+              forProvider: 
+                action: lambda:InvokeFunction
+                principal: apigateway.amazonaws.com
+                statementId: AllowAPIGWToInvokeLambda
+          patches:
+            - type: PatchSet
+              patchSetName: common-fields-upbound
+            - type: FromCompositeFieldPath
+              fromFieldPath: metadata.name
+              toFieldPath: metadata.name
+              transforms:
+                - type: string
+                  string:
+                    type: Format
+                    fmt: "%s-logic-invoke"
+            - type: FromCompositeFieldPath
+              fromFieldPath: status.businessLogicLambdaName
+              toFieldPath: spec.forProvider.functionName
+            - type: FromCompositeFieldPath
+              fromFieldPath: status.apiExecutionArn
+              toFieldPath: spec.forProvider.sourceArn
+              policy:
+                fromFieldPath: Required
+              transforms:
+                - type: string
+                  string:
+                    type: Format
+                    fmt: "%s/*/*/*"
 
-    - name: logic-database
-      base:
-        apiVersion: awsblueprints.io/v1alpha1
-        kind: XDynamoDBTable
-        spec:
-          deletionPolicy: Delete
-          compositionSelector:
-            matchLabels:
-              awsblueprints.io/provider: aws
-              awsblueprints.io/environment: dev
-          dynamoConfig:
-            attribute:
-              - name: id
-                type: S
-            hashKey: id
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-data"
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.tableName
-          toFieldPath: status.tableName
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.tableArn
-          toFieldPath: status.tableArn
+        - name: logic-database
+          base:
+            apiVersion: awsblueprints.io/v1alpha1
+            kind: XDynamoDBTable
+            spec:
+              compositionSelector:
+                matchLabels:
+                  awsblueprints.io/provider: aws
+                  awsblueprints.io/environment: dev
+              dynamoConfig:
+                attribute:
+                  - name: id
+                    type: S
+                hashKey: id
+          patches:
+            - type: PatchSet
+              patchSetName: common-fields
+            - type: FromCompositeFieldPath
+              fromFieldPath: metadata.name
+              toFieldPath: metadata.name
+              transforms:
+                - type: string
+                  string:
+                    type: Format
+                    fmt: "%s-data"
+            - type: ToCompositeFieldPath
+              fromFieldPath: status.tableName
+              toFieldPath: status.tableName
+            - type: ToCompositeFieldPath
+              fromFieldPath: status.tableArn
+              toFieldPath: status.tableArn
 
-    - name: logic-lambda-ddb-access-policy
-      base:
-        apiVersion: awsblueprints.io/v1alpha1
-        kind: IAMPolicy
-        metadata:
-          labels:
-            type: lambda-ddb-access-policy
-        spec:
-          deletionPolicy: Delete
-          compositionSelector:
-            matchLabels:
-              awsblueprints.io/provider: aws
-              awsblueprints.io/environment: dev
-              iam.awsblueprints.io/policy-type: write
-              iam.awsblueprints.io/service: dynamodb
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.businessLogicLambdaRoleName
-          toFieldPath: spec.roleName
-          policy:
-            fromFieldPath: Required
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.tableArn
-          toFieldPath: spec.resourceArn
-          policy:
-            fromFieldPath: Required
+        - name: logic-lambda-ddb-access-policy
+          base:
+            apiVersion: awsblueprints.io/v1alpha1
+            kind: IAMPolicy
+            metadata:
+              labels:
+                type: lambda-ddb-access-policy
+            spec:
+              compositionSelector:
+                matchLabels:
+                  awsblueprints.io/provider: aws
+                  awsblueprints.io/environment: dev
+                  iam.awsblueprints.io/policy-type: write
+                  iam.awsblueprints.io/service: dynamodb
+          patches:
+            - type: FromCompositeFieldPath
+              fromFieldPath: spec.resourceConfig.deletionPolicy
+              toFieldPath: spec.resourceConfig.deletionPolicy
+            - type: FromCompositeFieldPath
+              fromFieldPath: spec.resourceConfig.providerConfigName
+              toFieldPath: spec.resourceConfig.providerConfigName
+            - type: FromCompositeFieldPath
+              fromFieldPath: spec.resourceConfig.tags
+              toFieldPath: spec.resourceConfig.tags
+              policy:
+                mergeOptions:
+                  keepMapValues: true
+            - type: FromCompositeFieldPath
+              fromFieldPath: metadata.name
+              toFieldPath: metadata.name
+            - type: FromCompositeFieldPath
+              fromFieldPath: status.businessLogicLambdaRoleName
+              toFieldPath: spec.roleName
+              policy:
+                fromFieldPath: Required
+            - type: FromCompositeFieldPath
+              fromFieldPath: status.tableArn
+              toFieldPath: spec.resourceArn
+              policy:
+                fromFieldPath: Required
 
-    - name: authorizer-lambda
-      base:
-        apiVersion: awsblueprints.io/v1alpha1
-        kind: XLambdaFunction
-        metadata:
-          labels:
-            type: apigw-authorizer-lambda
-        spec:
-          deletionPolicy: Delete
-          compositionSelector:
-            matchLabels:
-              awsblueprints.io/provider: aws
-              awsblueprints.io/environment: dev
-              awsblueprints.io/type: zip
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-authorizer"
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.authorizerPasswordParameterARN
-          toFieldPath: spec.envVariables[AUTHORIZER_PASSWORD_ARN]
-          policy:
-            fromFieldPath: Required
-            mergeOptions:
-              keepMapValues: true
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.codeBucketName
-          toFieldPath: spec.bucketName
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.lambdaRunTime
-          toFieldPath: spec.runTime
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.authorizerLambdaHandler
-          toFieldPath: spec.handler
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.authorizerLambdaCodeBucketKey
-          toFieldPath: spec.bucketKey
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.functionArn
-          toFieldPath: status.authorizerLambdaArn
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.functionName
-          toFieldPath: status.authorizerLambdaName
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.functionRoleName
-          toFieldPath: status.authorizerLambdaRoleName
+        - name: authorizer-lambda
+          base:
+            apiVersion: awsblueprints.io/v1alpha1
+            kind: XLambdaFunction
+            metadata:
+              labels:
+                type: apigw-authorizer-lambda
+            spec:
+              compositionSelector:
+                matchLabels:
+                  awsblueprints.io/provider: aws
+                  awsblueprints.io/environment: dev
+                  awsblueprints.io/type: zip
+          patches:
+            - type: PatchSet
+              patchSetName: common-fields
+            - type: FromCompositeFieldPath
+              fromFieldPath: metadata.name
+              toFieldPath: metadata.name
+              transforms:
+                - type: string
+                  string:
+                    type: Format
+                    fmt: "%s-authorizer"
+            - type: FromCompositeFieldPath
+              fromFieldPath: spec.authorizerPasswordParameterARN
+              toFieldPath: spec.envVariables[AUTHORIZER_PASSWORD_ARN]
+              policy:
+                fromFieldPath: Required
+                mergeOptions:
+                  keepMapValues: true
+            - type: FromCompositeFieldPath
+              fromFieldPath: spec.codeBucketName
+              toFieldPath: spec.bucketName
+            - type: FromCompositeFieldPath
+              fromFieldPath: spec.lambdaRunTime
+              toFieldPath: spec.runTime
+            - type: FromCompositeFieldPath
+              fromFieldPath: spec.authorizerLambdaHandler
+              toFieldPath: spec.handler
+            - type: FromCompositeFieldPath
+              fromFieldPath: spec.authorizerLambdaCodeBucketKey
+              toFieldPath: spec.bucketKey
+            - type: ToCompositeFieldPath
+              fromFieldPath: status.functionArn
+              toFieldPath: status.authorizerLambdaArn
+            - type: ToCompositeFieldPath
+              fromFieldPath: status.functionName
+              toFieldPath: status.authorizerLambdaName
+            - type: ToCompositeFieldPath
+              fromFieldPath: status.functionRoleName
+              toFieldPath: status.authorizerLambdaRoleName
 
-    - name: invoke-authorizer-permission
-      base:
-        apiVersion: lambda.aws.upbound.io/v1beta1
-        kind: Permission
-        spec:
-          forProvider: 
-            action: lambda:InvokeFunction
-            principal: apigateway.amazonaws.com
-            statementId: AllowAPIGWToInvokeLambda
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-authorizer-invoke"
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.authorizerLambdaName
-          toFieldPath: spec.forProvider.functionName
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.apiExecutionArn
-          toFieldPath: spec.forProvider.sourceArn
-          policy:
-            fromFieldPath: Required
-          transforms:
-            - type: string
-              string:
-                fmt: "%s/authorizers/*"
+        - name: invoke-authorizer-permission
+          base:
+            apiVersion: lambda.aws.upbound.io/v1beta1
+            kind: Permission
+            spec:
+              forProvider: 
+                action: lambda:InvokeFunction
+                principal: apigateway.amazonaws.com
+                statementId: AllowAPIGWToInvokeLambda
+          patches:
+            - type: PatchSet
+              patchSetName: common-fields-upbound
+            - type: FromCompositeFieldPath
+              fromFieldPath: metadata.name
+              toFieldPath: metadata.name
+              transforms:
+                - type: string
+                  string:
+                    type: Format
+                    fmt: "%s-authorizer-invoke"
+            - type: FromCompositeFieldPath
+              fromFieldPath: status.authorizerLambdaName
+              toFieldPath: spec.forProvider.functionName
+            - type: FromCompositeFieldPath
+              fromFieldPath: status.apiExecutionArn
+              toFieldPath: spec.forProvider.sourceArn
+              policy:
+                fromFieldPath: Required
+              transforms:
+                - type: string
+                  string:
+                    type: Format
+                    fmt: "%s/authorizers/*"
 
-    - name: authorizer-secretsmanager-access-policy
-      base:
-        apiVersion: iam.aws.upbound.io/v1beta1
-        kind: Policy
-        metadata:
-          labels:
-            type: authorizer-secretsmanager-access-policy
-        spec:
-          deletionPolicy: Delete
-          forProvider: {}
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: CombineFromComposite
-          toFieldPath: spec.forProvider.policy
-          combine:
-            variables:
-            - fromFieldPath: spec.authorizerPasswordParameterARN
-            strategy: string
-            string:
-              fmt: |
-                {
-                  "Version": "2012-10-17",
-                  "Statement": [
-                    {
-                        "Effect": "Allow",
-                        "Action": [
-                        "secretsmanager:GetSecretValue"
-                        ],
-                        "Resource": [
-                            "%s"
-                        ]
-                    }
-                  ]
-                }
-
-    - name: authorizer-secretsmanager-policy-attachment
-      base:
-        apiVersion: iam.aws.upbound.io/v1beta1
-        kind: RolePolicyAttachment
-        spec:
-          deletionPolicy: Delete
-          forProvider:
-            role: tbd
-            policyArnSelector:
-              matchLabels:
+        - name: authorizer-secretsmanager-access-policy
+          base:
+            apiVersion: iam.aws.upbound.io/v1beta1
+            kind: Policy
+            metadata:
+              labels:
                 type: authorizer-secretsmanager-access-policy
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.authorizerLambdaRoleName
-          toFieldPath: spec.forProvider.role
-          policy:
-            fromFieldPath: Required
+            spec:
+              deletionPolicy: Delete
+              forProvider: {}
+          patches:
+            - type: PatchSet
+              patchSetName: common-fields-upbound-global
+            - type: CombineFromComposite
+              toFieldPath: spec.forProvider.policy
+              combine:
+                variables:
+                - fromFieldPath: spec.authorizerPasswordParameterARN
+                strategy: string
+                string:
+                  type: Format
+                  fmt: |
+                    {
+                      "Version": "2012-10-17",
+                      "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": [
+                            "secretsmanager:GetSecretValue"
+                            ],
+                            "Resource": [
+                                "%s"
+                            ]
+                        }
+                      ]
+                    }
 
-    - name: alarms-topic
-      base:
-        apiVersion: awsblueprints.io/v1alpha1
-        kind: XNotification
-        spec:
-          deletionPolicy: Delete
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.name
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.topicArn
-          toFieldPath: status.snsAlarmsTopicArn
+        - name: authorizer-secretsmanager-policy-attachment
+          base:
+            apiVersion: iam.aws.upbound.io/v1beta1
+            kind: RolePolicyAttachment
+            spec:
+              deletionPolicy: Delete
+              forProvider:
+                role: tbd
+                policyArnSelector:
+                  matchLabels:
+                    type: authorizer-secretsmanager-access-policy
+          patches:
+            - type: PatchSet
+              patchSetName: common-fields-upbound-global
+            - type: FromCompositeFieldPath
+              fromFieldPath: status.authorizerLambdaRoleName
+              toFieldPath: spec.forProvider.role
+              policy:
+                fromFieldPath: Required
 
-    - name: api-5xx-errors-alarm
-      base:
-        apiVersion: cloudwatch.aws.upbound.io/v1beta1
-        kind: MetricAlarm
-        spec:
-          deletionPolicy: Delete
-          forProvider:
-            actionsEnabled: true
-            alarmActions: []
-            comparisonOperator: GreaterThanOrEqualToThreshold
-            dimensions: {
-              ApiName: my-rest-api
-              }
-            evaluationPeriods: 1
-            metricName: 5XXError
-            namespace: AWS/ApiGateway
-            period: 60
-            statistic: Sum
-            threshold: 1.0
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-api-5xx-alarm"
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.apiName
-          toFieldPath: spec.forProvider.dimensions['ApiName']
-          policy:
-            fromFieldPath: Required
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.snsAlarmsTopicArn
-          toFieldPath: spec.forProvider.alarmActions[0]
-          policy:
-            fromFieldPath: Required
+        - name: alarms-topic
+          base:
+            apiVersion: awsblueprints.io/v1alpha1
+            kind: XNotification
+          patches:
+            - type: PatchSet
+              patchSetName: common-fields
+            - type: FromCompositeFieldPath
+              fromFieldPath: metadata.name
+              toFieldPath: metadata.name
+            - type: ToCompositeFieldPath
+              fromFieldPath: status.topicArn
+              toFieldPath: status.snsAlarmsTopicArn
 
-    - name: database-throttling-alarm
-      base:
-        apiVersion: cloudwatch.aws.upbound.io/v1beta1
-        kind: MetricAlarm
-        spec:
-          deletionPolicy: Delete
-          forProvider:
-            actionsEnabled: true
-            alarmActions: []
-            comparisonOperator: GreaterThanOrEqualToThreshold
-            dimensions: {
-              TableName: logic-data
-              }
-            evaluationPeriods: 1
-            metricName: ThrottledRequests
-            namespace: AWS/DynamoDB
-            period: 60
-            statistic: Sum
-            threshold: 1.0
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-database-throttling-alarm"
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.tableName
-          toFieldPath: spec.forProvider.dimensions['TableName']
-          policy:
-            fromFieldPath: Required
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.snsAlarmsTopicArn
-          toFieldPath: spec.forProvider.alarmActions[0]
-          policy:
-            fromFieldPath: Required
+        - name: api-5xx-errors-alarm
+          base:
+            apiVersion: cloudwatch.aws.upbound.io/v1beta1
+            kind: MetricAlarm
+            spec:
+              deletionPolicy: Delete
+              forProvider:
+                actionsEnabled: true
+                alarmActions: []
+                comparisonOperator: GreaterThanOrEqualToThreshold
+                dimensions: {
+                  ApiName: my-rest-api
+                  }
+                evaluationPeriods: 1
+                metricName: 5XXError
+                namespace: AWS/ApiGateway
+                period: 60
+                statistic: Sum
+                threshold: 1.0
+          patches:
+            - type: PatchSet
+              patchSetName: common-fields-upbound
+            - type: FromCompositeFieldPath
+              fromFieldPath: metadata.name
+              toFieldPath: metadata.name
+              transforms:
+                - type: string
+                  string:
+                    type: Format
+                    fmt: "%s-api-5xx-alarm"
+            - type: FromCompositeFieldPath
+              fromFieldPath: status.apiName
+              toFieldPath: spec.forProvider.dimensions['ApiName']
+              policy:
+                fromFieldPath: Required
+            - type: FromCompositeFieldPath
+              fromFieldPath: status.snsAlarmsTopicArn
+              toFieldPath: spec.forProvider.alarmActions[0]
+              policy:
+                fromFieldPath: Required
 
-    - name: logic-function-throttling-alarm
-      base:
-        apiVersion: cloudwatch.aws.upbound.io/v1beta1
-        kind: MetricAlarm
-        spec:
-          deletionPolicy: Delete
-          forProvider:
-            actionsEnabled: true
-            alarmActions: []
-            comparisonOperator: GreaterThanOrEqualToThreshold
-            dimensions: {
-              FunctionName: logic-lambda
-              }
-            evaluationPeriods: 1
-            metricName: Throttles
-            namespace: AWS/Lambda
-            period: 60
-            statistic: Sum
-            threshold: 1.0
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-logic-throttling-alarm"
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.businessLogicLambdaName
-          toFieldPath: spec.forProvider.dimensions['FunctionName']
-          policy:
-            fromFieldPath: Required
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.snsAlarmsTopicArn
-          toFieldPath: spec.forProvider.alarmActions[0]
-          policy:
-            fromFieldPath: Required
+        - name: database-throttling-alarm
+          base:
+            apiVersion: cloudwatch.aws.upbound.io/v1beta1
+            kind: MetricAlarm
+            spec:
+              deletionPolicy: Delete
+              forProvider:
+                actionsEnabled: true
+                alarmActions: []
+                comparisonOperator: GreaterThanOrEqualToThreshold
+                dimensions: {
+                  TableName: logic-data
+                  }
+                evaluationPeriods: 1
+                metricName: ThrottledRequests
+                namespace: AWS/DynamoDB
+                period: 60
+                statistic: Sum
+                threshold: 1.0
+          patches:
+            - type: PatchSet
+              patchSetName: common-fields-upbound
+            - type: FromCompositeFieldPath
+              fromFieldPath: metadata.name
+              toFieldPath: metadata.name
+              transforms:
+                - type: string
+                  string:
+                    type: Format
+                    fmt: "%s-database-throttling-alarm"
+            - type: FromCompositeFieldPath
+              fromFieldPath: status.tableName
+              toFieldPath: spec.forProvider.dimensions['TableName']
+              policy:
+                fromFieldPath: Required
+            - type: FromCompositeFieldPath
+              fromFieldPath: status.snsAlarmsTopicArn
+              toFieldPath: spec.forProvider.alarmActions[0]
+              policy:
+                fromFieldPath: Required
 
-    - name: logic-function-errors-alarm
-      base:
-        apiVersion: cloudwatch.aws.upbound.io/v1beta1
-        kind: MetricAlarm
-        spec:
-          deletionPolicy: Delete
-          forProvider:
-            actionsEnabled: true
-            alarmActions: []
-            comparisonOperator: GreaterThanOrEqualToThreshold
-            dimensions: {
-              FunctionName: logic-lambda
-              }
-            evaluationPeriods: 1
-            metricName: Errors
-            namespace: AWS/Lambda
-            period: 60
-            statistic: Sum
-            threshold: 1.0
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-logic-error-alarm"
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.businessLogicLambdaName
-          toFieldPath: spec.forProvider.dimensions['FunctionName']
-          policy:
-            fromFieldPath: Required
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.snsAlarmsTopicArn
-          toFieldPath: spec.forProvider.alarmActions[0]
-          policy:
-            fromFieldPath: Required
+        - name: logic-function-throttling-alarm
+          base:
+            apiVersion: cloudwatch.aws.upbound.io/v1beta1
+            kind: MetricAlarm
+            spec:
+              deletionPolicy: Delete
+              forProvider:
+                actionsEnabled: true
+                alarmActions: []
+                comparisonOperator: GreaterThanOrEqualToThreshold
+                dimensions: {
+                  FunctionName: logic-lambda
+                  }
+                evaluationPeriods: 1
+                metricName: Throttles
+                namespace: AWS/Lambda
+                period: 60
+                statistic: Sum
+                threshold: 1.0
+          patches:
+            - type: PatchSet
+              patchSetName: common-fields-upbound
+            - type: FromCompositeFieldPath
+              fromFieldPath: metadata.name
+              toFieldPath: metadata.name
+              transforms:
+                - type: string
+                  string:
+                    type: Format
+                    fmt: "%s-logic-throttling-alarm"
+            - type: FromCompositeFieldPath
+              fromFieldPath: status.businessLogicLambdaName
+              toFieldPath: spec.forProvider.dimensions['FunctionName']
+              policy:
+                fromFieldPath: Required
+            - type: FromCompositeFieldPath
+              fromFieldPath: status.snsAlarmsTopicArn
+              toFieldPath: spec.forProvider.alarmActions[0]
+              policy:
+                fromFieldPath: Required
 
-    - name: authorizer-function-throttling-alarm
-      base:
-        apiVersion: cloudwatch.aws.upbound.io/v1beta1
-        kind: MetricAlarm
-        spec:
-          deletionPolicy: Delete
-          forProvider:
-            actionsEnabled: true
-            alarmActions: []
-            comparisonOperator: GreaterThanOrEqualToThreshold
-            dimensions: {
-              FunctionName: authorizer-lambda
-              }
-            evaluationPeriods: 1
-            metricName: Throttles
-            namespace: AWS/Lambda
-            period: 60
-            statistic: Sum
-            threshold: 1.0
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-authorizer-throttling-alarm"
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.authorizerLambdaName
-          toFieldPath: spec.forProvider.dimensions['FunctionName']
-          policy:
-            fromFieldPath: Required
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.snsAlarmsTopicArn
-          toFieldPath: spec.forProvider.alarmActions[0]
-          policy:
-            fromFieldPath: Required
+        - name: logic-function-errors-alarm
+          base:
+            apiVersion: cloudwatch.aws.upbound.io/v1beta1
+            kind: MetricAlarm
+            spec:
+              deletionPolicy: Delete
+              forProvider:
+                actionsEnabled: true
+                alarmActions: []
+                comparisonOperator: GreaterThanOrEqualToThreshold
+                dimensions: {
+                  FunctionName: logic-lambda
+                  }
+                evaluationPeriods: 1
+                metricName: Errors
+                namespace: AWS/Lambda
+                period: 60
+                statistic: Sum
+                threshold: 1.0
+          patches:
+            - type: PatchSet
+              patchSetName: common-fields-upbound
+            - type: FromCompositeFieldPath
+              fromFieldPath: metadata.name
+              toFieldPath: metadata.name
+              transforms:
+                - type: string
+                  string:
+                    type: Format
+                    fmt: "%s-logic-error-alarm"
+            - type: FromCompositeFieldPath
+              fromFieldPath: status.businessLogicLambdaName
+              toFieldPath: spec.forProvider.dimensions['FunctionName']
+              policy:
+                fromFieldPath: Required
+            - type: FromCompositeFieldPath
+              fromFieldPath: status.snsAlarmsTopicArn
+              toFieldPath: spec.forProvider.alarmActions[0]
+              policy:
+                fromFieldPath: Required
 
-    - name: authorizer-function-errors-alarm
-      base:
-        apiVersion: cloudwatch.aws.upbound.io/v1beta1
-        kind: MetricAlarm
-        spec:
-          deletionPolicy: Delete
-          forProvider:
-            actionsEnabled: true
-            alarmActions: []
-            comparisonOperator: GreaterThanOrEqualToThreshold
-            dimensions: {
-              FunctionName: authorizer-lambda
-              }
-            evaluationPeriods: 1
-            metricName: Errors
-            namespace: AWS/Lambda
-            period: 60
-            statistic: Sum
-            threshold: 1.0
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-authorizer-error-alarm"
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.authorizerLambdaName
-          toFieldPath: spec.forProvider.dimensions['FunctionName']
-          policy:
-            fromFieldPath: Required
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.snsAlarmsTopicArn
-          toFieldPath: spec.forProvider.alarmActions[0]
-          policy:
-            fromFieldPath: Required
+        - name: authorizer-function-throttling-alarm
+          base:
+            apiVersion: cloudwatch.aws.upbound.io/v1beta1
+            kind: MetricAlarm
+            spec:
+              deletionPolicy: Delete
+              forProvider:
+                actionsEnabled: true
+                alarmActions: []
+                comparisonOperator: GreaterThanOrEqualToThreshold
+                dimensions: {
+                  FunctionName: authorizer-lambda
+                  }
+                evaluationPeriods: 1
+                metricName: Throttles
+                namespace: AWS/Lambda
+                period: 60
+                statistic: Sum
+                threshold: 1.0
+          patches:
+            - type: PatchSet
+              patchSetName: common-fields-upbound
+            - type: FromCompositeFieldPath
+              fromFieldPath: metadata.name
+              toFieldPath: metadata.name
+              transforms:
+                - type: string
+                  string:
+                    type: Format
+                    fmt: "%s-authorizer-throttling-alarm"
+            - type: FromCompositeFieldPath
+              fromFieldPath: status.authorizerLambdaName
+              toFieldPath: spec.forProvider.dimensions['FunctionName']
+              policy:
+                fromFieldPath: Required
+            - type: FromCompositeFieldPath
+              fromFieldPath: status.snsAlarmsTopicArn
+              toFieldPath: spec.forProvider.alarmActions[0]
+              policy:
+                fromFieldPath: Required
 
-    - name: cloudwatch-dashboard
-      base:
-        apiVersion: cloudwatch.aws.upbound.io/v1beta1
-        kind: Dashboard
-        spec:
-          deletionPolicy: Delete
-          forProvider:
-            dashboardBody: "{}"
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: metadata.name
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-cloudwatch-dashboard"
-        - type: CombineFromComposite
-          toFieldPath: spec.forProvider.dashboardBody
-          policy:
-            fromFieldPath: Required
-          combine:
-            variables:
-              - fromFieldPath: status.businessLogicLambdaName
-              - fromFieldPath: status.authorizerLambdaName
-              - fromFieldPath: status.tableName
-              - fromFieldPath: status.apiName
-              - fromFieldPath: spec.resourceConfig.region
-            strategy: string
-            string: 
-              fmt: >-
-                {
-                  "widgets": [
-                      {
-                          "height": 6,
-                          "width": 6,
-                          "y": 12,
-                          "x": 0,
-                          "type": "metric",
-                          "properties": {
-                              "metrics": [
-                                  [ "AWS/Lambda", "Invocations", "FunctionName", "%[1]s" ],
-                                  [ ".", "Errors", ".", "." ],
-                                  [ ".", "Throttles", ".", "." ],
-                                  [ ".", "Duration", ".", ".", { "stat": "Average" } ],
-                                  [ ".", "ConcurrentExecutions", ".", ".", { "stat": "Maximum" } ]
-                              ],
-                              "view": "timeSeries",
-                              "region": "%[5]s",
-                              "stacked": false,
-                              "title": "Business Logic Lambda",
-                              "period": 60,
-                              "stat": "Sum"
+        - name: authorizer-function-errors-alarm
+          base:
+            apiVersion: cloudwatch.aws.upbound.io/v1beta1
+            kind: MetricAlarm
+            spec:
+              deletionPolicy: Delete
+              forProvider:
+                actionsEnabled: true
+                alarmActions: []
+                comparisonOperator: GreaterThanOrEqualToThreshold
+                dimensions: {
+                  FunctionName: authorizer-lambda
+                  }
+                evaluationPeriods: 1
+                metricName: Errors
+                namespace: AWS/Lambda
+                period: 60
+                statistic: Sum
+                threshold: 1.0
+          patches:
+            - type: PatchSet
+              patchSetName: common-fields-upbound
+            - type: FromCompositeFieldPath
+              fromFieldPath: metadata.name
+              toFieldPath: metadata.name
+              transforms:
+                - type: string
+                  string:
+                    type: Format
+                    fmt: "%s-authorizer-error-alarm"
+            - type: FromCompositeFieldPath
+              fromFieldPath: status.authorizerLambdaName
+              toFieldPath: spec.forProvider.dimensions['FunctionName']
+              policy:
+                fromFieldPath: Required
+            - type: FromCompositeFieldPath
+              fromFieldPath: status.snsAlarmsTopicArn
+              toFieldPath: spec.forProvider.alarmActions[0]
+              policy:
+                fromFieldPath: Required
+
+        - name: cloudwatch-dashboard
+          base:
+            apiVersion: cloudwatch.aws.upbound.io/v1beta1
+            kind: Dashboard
+            spec:
+              deletionPolicy: Delete
+              forProvider:
+                dashboardBody: "{}"
+          patches:
+            - type: PatchSet
+              patchSetName: common-fields-upbound
+            - type: FromCompositeFieldPath
+              fromFieldPath: metadata.name
+              toFieldPath: metadata.name
+              transforms:
+                - type: string
+                  string:
+                    type: Format
+                    fmt: "%s-cloudwatch-dashboard"
+            - type: CombineFromComposite
+              toFieldPath: spec.forProvider.dashboardBody
+              policy:
+                fromFieldPath: Required
+              combine:
+                variables:
+                  - fromFieldPath: status.businessLogicLambdaName
+                  - fromFieldPath: status.authorizerLambdaName
+                  - fromFieldPath: status.tableName
+                  - fromFieldPath: status.apiName
+                  - fromFieldPath: spec.resourceConfig.region
+                strategy: string
+                string: 
+                  type: Format
+                  fmt: >-
+                    {
+                      "widgets": [
+                          {
+                              "height": 6,
+                              "width": 6,
+                              "y": 12,
+                              "x": 0,
+                              "type": "metric",
+                              "properties": {
+                                  "metrics": [
+                                      [ "AWS/Lambda", "Invocations", "FunctionName", "%[1]s" ],
+                                      [ ".", "Errors", ".", "." ],
+                                      [ ".", "Throttles", ".", "." ],
+                                      [ ".", "Duration", ".", ".", { "stat": "Average" } ],
+                                      [ ".", "ConcurrentExecutions", ".", ".", { "stat": "Maximum" } ]
+                                  ],
+                                  "view": "timeSeries",
+                                  "region": "%[5]s",
+                                  "stacked": false,
+                                  "title": "Business Logic Lambda",
+                                  "period": 60,
+                                  "stat": "Sum"
+                              }
+                          },
+                          {
+                              "height": 6,
+                              "width": 6,
+                              "y": 6,
+                              "x": 6,
+                              "type": "metric",
+                              "properties": {
+                                  "metrics": [
+                                      [ "AWS/Lambda", "Invocations", "FunctionName", "%[2]s" ],
+                                      [ ".", "Errors", ".", "." ],
+                                      [ ".", "Throttles", ".", "." ],
+                                      [ ".", "Duration", ".", ".", { "stat": "Average" } ],
+                                      [ ".", "ConcurrentExecutions", ".", ".", { "stat": "Maximum" } ]
+                                  ],
+                                  "view": "timeSeries",
+                                  "region": "%[5]s",
+                                  "stacked": false,
+                                  "title": "Authorizer Lambda",
+                                  "period": 60,
+                                  "stat": "Sum"
+                              }
+                          },
+                          {
+                              "height": 6,
+                              "width": 6,
+                              "y": 12,
+                              "x": 6,
+                              "type": "metric",
+                              "properties": {
+                                  "metrics": [
+                                      [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "%[3]s", { "stat": "Maximum" } ],
+                                      [ ".", "ConsumedWriteCapacityUnits", ".", ".", { "stat": "Maximum" } ],
+                                      [ ".", "ProvisionedReadCapacityUnits", ".", ".", { "period": 300 } ],
+                                      [ ".", "ProvisionedWriteCapacityUnits", ".", ".", { "period": 300 } ]
+                                  ],
+                                  "view": "timeSeries",
+                                  "stacked": false,
+                                  "region": "%[5]s",
+                                  "title": "DynamoDB - Business Data",
+                                  "period": 60,
+                                  "stat": "Average"
+                              }
+                          },
+                          {
+                              "height": 6,
+                              "width": 6,
+                              "y": 6,
+                              "x": 0,
+                              "type": "metric",
+                              "properties": {
+                                  "metrics": [
+                                      [ "AWS/ApiGateway", "4xx", "ApiName", "%[4]s", { "yAxis": "right" } ],
+                                      [ ".", "5xx", ".", ".", { "yAxis": "right" } ],
+                                      [ ".", "DataProcessed", ".", ".", { "yAxis": "left" } ],
+                                      [ ".", "Count", ".", ".", { "label": "Count", "yAxis": "right" } ],
+                                      [ ".", "IntegrationLatency", ".", ".", { "stat": "Average" } ],
+                                      [ ".", "Latency", ".", ".", { "stat": "Average" } ]
+                                  ],
+                                  "view": "timeSeries",
+                                  "stacked": false,
+                                  "region": "%[5]s",
+                                  "period": 60,
+                                  "stat": "Sum",
+                                  "title": "API Gateway"
+                              }
                           }
-                      },
-                      {
-                          "height": 6,
-                          "width": 6,
-                          "y": 6,
-                          "x": 6,
-                          "type": "metric",
-                          "properties": {
-                              "metrics": [
-                                  [ "AWS/Lambda", "Invocations", "FunctionName", "%[2]s" ],
-                                  [ ".", "Errors", ".", "." ],
-                                  [ ".", "Throttles", ".", "." ],
-                                  [ ".", "Duration", ".", ".", { "stat": "Average" } ],
-                                  [ ".", "ConcurrentExecutions", ".", ".", { "stat": "Maximum" } ]
-                              ],
-                              "view": "timeSeries",
-                              "region": "%[5]s",
-                              "stacked": false,
-                              "title": "Authorizer Lambda",
-                              "period": 60,
-                              "stat": "Sum"
-                          }
-                      },
-                      {
-                          "height": 6,
-                          "width": 6,
-                          "y": 12,
-                          "x": 6,
-                          "type": "metric",
-                          "properties": {
-                              "metrics": [
-                                  [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "%[3]s", { "stat": "Maximum" } ],
-                                  [ ".", "ConsumedWriteCapacityUnits", ".", ".", { "stat": "Maximum" } ],
-                                  [ ".", "ProvisionedReadCapacityUnits", ".", ".", { "period": 300 } ],
-                                  [ ".", "ProvisionedWriteCapacityUnits", ".", ".", { "period": 300 } ]
-                              ],
-                              "view": "timeSeries",
-                              "stacked": false,
-                              "region": "%[5]s",
-                              "title": "DynamoDB - Business Data",
-                              "period": 60,
-                              "stat": "Average"
-                          }
-                      },
-                      {
-                          "height": 6,
-                          "width": 6,
-                          "y": 6,
-                          "x": 0,
-                          "type": "metric",
-                          "properties": {
-                              "metrics": [
-                                  [ "AWS/ApiGateway", "4xx", "ApiName", "%[4]s", { "yAxis": "right" } ],
-                                  [ ".", "5xx", ".", ".", { "yAxis": "right" } ],
-                                  [ ".", "DataProcessed", ".", ".", { "yAxis": "left" } ],
-                                  [ ".", "Count", ".", ".", { "label": "Count", "yAxis": "right" } ],
-                                  [ ".", "IntegrationLatency", ".", ".", { "stat": "Average" } ],
-                                  [ ".", "Latency", ".", ".", { "stat": "Average" } ]
-                              ],
-                              "view": "timeSeries",
-                              "stacked": false,
-                              "region": "%[5]s",
-                              "period": 60,
-                              "stat": "Sum",
-                              "title": "API Gateway"
-                          }
-                      }
-                  ]
-                }
-        - type: CombineToComposite
-          policy:
-            fromFieldPath: Required
-          combine:
-            variables:
-              - fromFieldPath: spec.forProvider.region
-              - fromFieldPath: status.atProvider.id
-            strategy: string
-            string: 
-              fmt: "https://console.aws.amazon.com/cloudwatch/home?region=%[1]s#dashboards:name=%[2]s"
-          toFieldPath: status.dashboardURL
+                      ]
+                    }
+            - type: CombineToComposite
+              policy:
+                fromFieldPath: Required
+              combine:
+                variables:
+                  - fromFieldPath: spec.forProvider.region
+                  - fromFieldPath: status.atProvider.id
+                strategy: string
+                string: 
+                  type: Format
+                  fmt: "https://console.aws.amazon.com/cloudwatch/home?region=%[1]s#dashboards:name=%[2]s"
+              toFieldPath: status.dashboardURL
 
