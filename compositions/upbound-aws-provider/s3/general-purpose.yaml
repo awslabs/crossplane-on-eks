@@ -10,6 +10,7 @@ metadata:
     awsblueprints.io/environment: dev
     s3.awsblueprints.io/configuration: standard
 spec:
+  writeConnectionSecretsToNamespace: crossplane-system
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
     kind: XObjectStorage
@@ -42,6 +43,10 @@ spec:
                 fmt: "bucket-%s"
   resources:
     - name: s3-bucket
+      connectionDetails:
+        - type: FromFieldPath
+          name: bucketName
+          fromFieldPath: status.atProvider.id
       base:
         apiVersion: s3.aws.upbound.io/v1beta1
         kind: Bucket
@@ -50,6 +55,8 @@ spec:
           forProvider:
             region: us-west-2
             forceDestroy: true # be careful with this
+            writeConnectionSecretToRef:
+              namespace: crossplane-system
       patches:
         - type: PatchSet
           patchSetName: common-fields
@@ -98,29 +105,4 @@ spec:
           toFieldPath: spec.providerConfigRef.name
         - fromFieldPath: spec.resourceConfig.region
           toFieldPath: spec.forProvider.region
-    - name: config-map
-      base:
-        apiVersion: kubernetes.crossplane.io/v1alpha1
-        kind: Object
-        spec:
-          forProvider:
-            manifest:
-              apiVersion: v1
-              kind: ConfigMap
-              metadata:
-                name: #to-be-patched
-                namespace: #to-be-patched
-              data:
-                bucketName: #to-be-patched
-      patches:
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
-          toFieldPath: spec.forProvider.manifest.metadata.namespace
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.labels[crossplane.io/claim-name]
-          toFieldPath: spec.forProvider.manifest.metadata.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.bucketName
-          toFieldPath: spec.forProvider.manifest.data.bucketName
-          policy:
-            fromFieldPath: Required
+          

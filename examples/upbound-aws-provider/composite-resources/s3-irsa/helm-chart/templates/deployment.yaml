@@ -36,7 +36,7 @@ spec:
         env:
         - name: BUCKET_NAME
           valueFrom:
-            configMapKeyRef:
+            secretKeyRef:
               name: {{ include "s3-irsa-app.name" . }}
               key: bucketName
       restartPolicy: Always
