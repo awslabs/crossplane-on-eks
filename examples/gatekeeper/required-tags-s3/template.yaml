@@ -23,16 +23,18 @@ spec:
         import future.keywords.every
         
         violation[{"msg": msg}] {
-          endswith(input.review.kind.group, "s3.aws.crossplane.io")
+          endswith(input.review.kind.group, "s3.aws.upbound.io")
           not startswith(input.review.kind.kind, "ProviderConfig")
           not input.review.object.spec.forProvider.tags
           msg := sprintf("Attempting to provision a resource without tags, the following tags are required '%v'", [input.parameters.tags])
         }
 
         violation[{"msg": msg}] {
-          some requested_tag in input.parameters.tags
-          every i in input.review.object.spec.forProvider.tags {
-              requested_tag != i.key
-          }
-          msg := sprintf("Attempting to provision a resource with the following tags '%v', one or more of the required tags '%v' is missing", [input.review.object.spec.forProvider.tags, input.parameters.tags])
+            not has_owner_tag
+            msg := sprintf("Attempting to provision a resource with the following tags '%v', one or more of the required tags '%v' is missing, and the 'owner' tag is not present", [input.review.object.spec.forProvider.tags, input.parameters.tags])
+        }
+        
+        has_owner_tag {
+            walk(input.review.object.spec.forProvider.tags, [path, value])
+            path == ["owner"]
         }

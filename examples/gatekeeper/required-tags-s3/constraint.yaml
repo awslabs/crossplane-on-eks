@@ -5,7 +5,7 @@ metadata:
 spec:
   match:
     kinds:
-      - apiGroups: ["*"]
-        kinds: ["*"]
+    - apiGroups: ["s3.aws.upbound.io"]
+      kinds: ["Bucket"]
   parameters:
     tags: ["owner"]
