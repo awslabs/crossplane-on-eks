@@ -4,6 +4,3 @@
 
 s3irsa:
   enabled: true
-  tags:
-    owner: devops
-    environment: production
