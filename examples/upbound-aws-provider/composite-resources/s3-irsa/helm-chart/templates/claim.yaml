@@ -14,4 +14,8 @@ spec:
   resourceConfig:
     providerConfigName: aws-provider-config
     region: us-east-1
+    {{- with .Values.s3irsa.tags }}
+    tags:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
 {{- end }}
