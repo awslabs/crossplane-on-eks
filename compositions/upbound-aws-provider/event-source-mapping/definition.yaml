@@ -42,11 +42,6 @@ spec:
                       type: string
                     region:
                       type: string
-                    tags:
-                      additionalProperties:
-                        type: string
-                      description: Key-value map of resource tags.
-                      type: object
                   required:
                   - providerConfigName
                   - region
