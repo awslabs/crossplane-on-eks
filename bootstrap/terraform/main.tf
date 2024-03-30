@@ -162,7 +162,6 @@ module "crossplane" {
   source = "github.com/awslabs/crossplane-on-eks/bootstrap/terraform/addon/"
   enable_crossplane = true
   crossplane = {
-    chart_version = "1.15.1"
     values = [yamlencode({
       args    = ["--enable-environment-configs"]
       metrics = {
