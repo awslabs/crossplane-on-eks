@@ -237,7 +237,7 @@ locals {
     enable               = var.enable_aws_provider # defaults to false
     version              = "v0.43.1"
     name                 = "aws-provider"
-    controller_config    = "aws-controller-config"
+    runtime_config       = "aws-runtime-config"
     provider_config_name = "aws-provider-config" #this is the providerConfigName used in all the examples in this repo
   }
 
@@ -352,11 +352,11 @@ module "irsa_aws_provider" {
   tags = local.tags
 }
 
-resource "kubectl_manifest" "aws_controller_config" {
+resource "kubectl_manifest" "aws_runtime_config" {
   count = local.aws_provider.enable == true ? 1 : 0
-  yaml_body = templatefile("${path.module}/providers/aws/controller-config.yaml", {
+  yaml_body = templatefile("${path.module}/providers/aws/runtime-config.yaml", {
     iam-role-arn          = module.irsa_aws_provider[0].iam_role_arn
-    controller-config = local.aws_provider.controller_config
+    runtime-config = local.aws_provider.runtime_config
   })
 
   depends_on = [module.crossplane]
@@ -367,11 +367,11 @@ resource "kubectl_manifest" "aws_provider" {
   yaml_body = templatefile("${path.module}/providers/aws/provider.yaml", {
     aws-provider-name = local.aws_provider.name
     version           = local.aws_provider.version
-    controller-config = local.aws_provider.controller_config
+    runtime-config = local.aws_provider.runtime_config
   })
   wait = true
 
-  depends_on = [kubectl_manifest.aws_controller_config]
+  depends_on = [kubectl_manifest.aws_runtime_config]
 }
 
 # Wait for the Upbound AWS Provider CRDs to be fully created before initiating aws_provider_config
