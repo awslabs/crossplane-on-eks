@@ -1,6 +1,8 @@
 prometheus:
   service:
     type: "LoadBalancer"
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
   additionalPodMonitors:
     - name: "crossplane"
       namespaceSelector:
@@ -12,6 +14,8 @@ prometheus:
 grafana:
   service:
     type: "LoadBalancer"
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
   resources: 
     requests:
       cpu : "100m"

@@ -136,11 +136,11 @@ module "eks_blueprints_addons" {
   enable_argocd         = true
   argocd = {
     namespace       = "argocd"
-    chart_version   = "5.46.1" # ArgoCD v2.8.3
+    chart_version   = "6.3.1" # ArgoCD v2.10.1
     values          = [
       templatefile("${path.module}/argocd-values.yaml", {
         crossplane_aws_provider_enable = local.aws_provider.enable
-        crossplane_upbound_aws_provider_enable = local.upbound_aws_provider.enable
+        crossplane_upjet_aws_provider_enable = local.upjet_aws_provider.enable
         crossplane_kubernetes_provider_enable = local.kubernetes_provider.enable
       })]
   }
@@ -209,13 +209,14 @@ resource "kubectl_manifest" "environmentconfig" {
 locals {
   crossplane_namespace = "crossplane-system"
   
-  upbound_aws_provider = {
-    enable               = var.enable_upbound_aws_provider # defaults to true
-    version              = "v1.2.1"
-    controller_config    = "upbound-aws-controller-config"
+  upjet_aws_provider = {
+    enable               = var.enable_upjet_aws_provider # defaults to true
+    version              = "v1.3.0"
+    runtime_config       = "upjet-aws-runtime-config"
     provider_config_name = "aws-provider-config" #this is the providerConfigName used in all the examples in this repo
     families = [
       "dynamodb",
+      "ec2",
       "elasticache",
       "iam",
       "kms",
@@ -235,16 +236,16 @@ locals {
     enable               = var.enable_aws_provider # defaults to false
     version              = "v0.43.1"
     name                 = "aws-provider"
-    controller_config    = "aws-controller-config"
+    runtime_config       = "aws-runtime-config"
     provider_config_name = "aws-provider-config" #this is the providerConfigName used in all the examples in this repo
   }
 
   kubernetes_provider = {
     enable                = var.enable_kubernetes_provider # defaults to true
-    version               = "v0.9.0"
+    version               = "v0.12.1"
     service_account       = "kubernetes-provider"
     name                  = "kubernetes-provider"
-    controller_config     = "kubernetes-controller-config"
+    runtime_config        = "kubernetes-runtime-config"
     provider_config_name  = "default"
     cluster_role          = "cluster-admin"
   }
@@ -254,7 +255,7 @@ locals {
     version               = "v0.15.0"
     service_account       = "helm-provider"
     name                  = "helm-provider"
-    controller_config     = "helm-controller-config"
+    runtime_config        = "helm-runtime-config"
     provider_config_name  = "default"
     cluster_role          = "cluster-admin"
   }
@@ -262,14 +263,14 @@ locals {
 }
 
 #---------------------------------------------------------------
-# Crossplane Upbound AWS Provider
+# Crossplane Upjet AWS Provider
 #---------------------------------------------------------------
-module "upbound_irsa_aws" {
-  count = local.upbound_aws_provider.enable == true ? 1 : 0
+module "upjet_irsa_aws" {
+  count = local.upjet_aws_provider.enable == true ? 1 : 0
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version = "~> 5.30"
 
-  role_name_prefix = "${local.name}-upbound-aws-"
+  role_name_prefix = "${local.name}-upjet-aws-"
   assume_role_condition_test = "StringLike"
 
   role_policy_arns = {
@@ -279,50 +280,50 @@ module "upbound_irsa_aws" {
   oidc_providers = {
     main = {
       provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["${local.crossplane_namespace}:upbound-aws-provider-*"]
+      namespace_service_accounts = ["${local.crossplane_namespace}:provider-upjet-aws-*"]
     }
   }
 
   tags = local.tags
 }
 
-resource "kubectl_manifest" "upbound_aws_controller_config" {
-  count = local.upbound_aws_provider.enable == true ? 1 : 0
-  yaml_body = templatefile("${path.module}/providers/aws-upbound/controller-config.yaml", {
-    iam-role-arn          = module.upbound_irsa_aws[0].iam_role_arn
-    controller-config = local.upbound_aws_provider.controller_config
+resource "kubectl_manifest" "upjet_aws_runtime_config" {
+  count = local.upjet_aws_provider.enable == true ? 1 : 0
+  yaml_body = templatefile("${path.module}/providers/upjet-aws/runtime-config.yaml", {
+    iam-role-arn          = module.upjet_irsa_aws[0].iam_role_arn
+    runtime-config        = local.upjet_aws_provider.runtime_config
   })
 
   depends_on = [module.crossplane]
 }
 
-resource "kubectl_manifest" "upbound_aws_provider" {
-  for_each = local.upbound_aws_provider.enable ? toset(local.upbound_aws_provider.families) : toset([])
-  yaml_body = templatefile("${path.module}/providers/aws-upbound/provider.yaml", {
+resource "kubectl_manifest" "upjet_aws_provider" {
+  for_each = local.upjet_aws_provider.enable ? toset(local.upjet_aws_provider.families) : toset([])
+  yaml_body = templatefile("${path.module}/providers/upjet-aws/provider.yaml", {
     family            = each.key
-    version           = local.upbound_aws_provider.version
-    controller-config = local.upbound_aws_provider.controller_config
+    version           = local.upjet_aws_provider.version
+    runtime-config = local.upjet_aws_provider.runtime_config
   })
   wait = true
 
-  depends_on = [kubectl_manifest.upbound_aws_controller_config]
+  depends_on = [kubectl_manifest.upjet_aws_runtime_config]
 }
 
-# Wait for the Upbound AWS Provider CRDs to be fully created before initiating upbound_aws_provider_config
-resource "time_sleep" "upbound_wait_60_seconds" {
-  count           = local.upbound_aws_provider.enable == true ? 1 : 0
+# Wait for the Upbound AWS Provider CRDs to be fully created before initiating upjet_aws_provider_config
+resource "time_sleep" "upjet_wait_60_seconds" {
+  count           = local.upjet_aws_provider.enable == true ? 1 : 0
   create_duration = "60s"
 
-  depends_on = [kubectl_manifest.upbound_aws_provider]
+  depends_on = [kubectl_manifest.upjet_aws_provider]
 }
 
-resource "kubectl_manifest" "upbound_aws_provider_config" {
-  count = local.upbound_aws_provider.enable == true ? 1 : 0
-  yaml_body = templatefile("${path.module}/providers/aws-upbound/provider-config.yaml", {
-    provider-config-name = local.upbound_aws_provider.provider_config_name
+resource "kubectl_manifest" "upjet_aws_provider_config" {
+  count = local.upjet_aws_provider.enable == true ? 1 : 0
+  yaml_body = templatefile("${path.module}/providers/upjet-aws/provider-config.yaml", {
+    provider-config-name = local.upjet_aws_provider.provider_config_name
   })
 
-  depends_on = [kubectl_manifest.upbound_aws_provider, time_sleep.upbound_wait_60_seconds]
+  depends_on = [kubectl_manifest.upjet_aws_provider, time_sleep.upjet_wait_60_seconds]
 }
 
 #---------------------------------------------------------------
@@ -350,11 +351,11 @@ module "irsa_aws_provider" {
   tags = local.tags
 }
 
-resource "kubectl_manifest" "aws_controller_config" {
+resource "kubectl_manifest" "aws_runtime_config" {
   count = local.aws_provider.enable == true ? 1 : 0
-  yaml_body = templatefile("${path.module}/providers/aws/controller-config.yaml", {
+  yaml_body = templatefile("${path.module}/providers/aws/runtime-config.yaml", {
     iam-role-arn          = module.irsa_aws_provider[0].iam_role_arn
-    controller-config = local.aws_provider.controller_config
+    runtime-config = local.aws_provider.runtime_config
   })
 
   depends_on = [module.crossplane]
@@ -365,11 +366,11 @@ resource "kubectl_manifest" "aws_provider" {
   yaml_body = templatefile("${path.module}/providers/aws/provider.yaml", {
     aws-provider-name = local.aws_provider.name
     version           = local.aws_provider.version
-    controller-config = local.aws_provider.controller_config
+    runtime-config = local.aws_provider.runtime_config
   })
   wait = true
 
-  depends_on = [kubectl_manifest.aws_controller_config]
+  depends_on = [kubectl_manifest.aws_runtime_config]
 }
 
 # Wait for the Upbound AWS Provider CRDs to be fully created before initiating aws_provider_config
@@ -393,7 +394,7 @@ resource "kubectl_manifest" "aws_provider_config" {
 #---------------------------------------------------------------
 # Crossplane Kubernetes Provider
 #---------------------------------------------------------------
-resource "kubernetes_service_account_v1" "kubernetes_controller" {
+resource "kubernetes_service_account_v1" "kubernetes_runtime" {
   count = local.kubernetes_provider.enable == true ? 1 : 0
   metadata {
     name      = local.kubernetes_provider.service_account
@@ -403,23 +404,23 @@ resource "kubernetes_service_account_v1" "kubernetes_controller" {
   depends_on = [module.crossplane]
 }
 
-resource "kubectl_manifest" "kubernetes_controller_clusterolebinding" {
+resource "kubectl_manifest" "kubernetes_provider_clusterolebinding" {
   count = local.kubernetes_provider.enable == true ? 1 : 0
   yaml_body = templatefile("${path.module}/providers/kubernetes/clusterrolebinding.yaml", {
     namespace      = local.crossplane_namespace
     cluster-role   = local.kubernetes_provider.cluster_role
-    sa-name        = kubernetes_service_account_v1.kubernetes_controller[0].metadata[0].name
+    sa-name        = kubernetes_service_account_v1.kubernetes_runtime[0].metadata[0].name
   })
   wait = true
 
   depends_on = [module.crossplane]
 }
 
-resource "kubectl_manifest" "kubernetes_controller_config" {
+resource "kubectl_manifest" "kubernetes_runtime_config" {
   count = local.kubernetes_provider.enable == true ? 1 : 0
-  yaml_body = templatefile("${path.module}/providers/kubernetes/controller-config.yaml", {
-    sa-name           = kubernetes_service_account_v1.kubernetes_controller[0].metadata[0].name
-    controller-config = local.kubernetes_provider.controller_config
+  yaml_body = templatefile("${path.module}/providers/kubernetes/runtime-config.yaml", {
+    sa-name           = kubernetes_service_account_v1.kubernetes_runtime[0].metadata[0].name
+    runtime-config    = local.kubernetes_provider.runtime_config
   })
   wait = true
 
@@ -431,11 +432,11 @@ resource "kubectl_manifest" "kubernetes_provider" {
   yaml_body = templatefile("${path.module}/providers/kubernetes/provider.yaml", {
     version                   = local.kubernetes_provider.version
     kubernetes-provider-name  = local.kubernetes_provider.name
-    controller-config         = local.kubernetes_provider.controller_config
+    runtime-config            = local.kubernetes_provider.runtime_config
   })
   wait = true
 
-  depends_on = [kubectl_manifest.kubernetes_controller_config]
+  depends_on = [kubectl_manifest.kubernetes_runtime_config]
 }
 
 # Wait for the AWS Provider CRDs to be fully created before initiating provider_config deployment
@@ -457,7 +458,7 @@ resource "kubectl_manifest" "kubernetes_provider_config" {
 #---------------------------------------------------------------
 # Crossplane Helm Provider
 #---------------------------------------------------------------
-resource "kubernetes_service_account_v1" "helm_controller" {
+resource "kubernetes_service_account_v1" "helm_runtime" {
   count = local.helm_provider.enable == true ? 1 : 0
   metadata {
     name      = local.helm_provider.service_account
@@ -467,23 +468,23 @@ resource "kubernetes_service_account_v1" "helm_controller" {
   depends_on = [module.crossplane]
 }
 
-resource "kubectl_manifest" "helm_controller_clusterolebinding" {
+resource "kubectl_manifest" "helm_runtime_clusterolebinding" {
   count = local.helm_provider.enable == true ? 1 : 0
   yaml_body = templatefile("${path.module}/providers/helm/clusterrolebinding.yaml", {
     namespace      = local.crossplane_namespace
     cluster-role   = local.helm_provider.cluster_role
-    sa-name        = kubernetes_service_account_v1.helm_controller[0].metadata[0].name
+    sa-name        = kubernetes_service_account_v1.helm_runtime[0].metadata[0].name
   })
   wait = true
 
   depends_on = [module.crossplane]
 }
 
-resource "kubectl_manifest" "helm_controller_config" {
+resource "kubectl_manifest" "helm_runtime_config" {
   count = local.helm_provider.enable == true ? 1 : 0
-  yaml_body = templatefile("${path.module}/providers/helm/controller-config.yaml", {
-    sa-name           = kubernetes_service_account_v1.helm_controller[0].metadata[0].name
-    controller-config = local.helm_provider.controller_config
+  yaml_body = templatefile("${path.module}/providers/helm/runtime-config.yaml", {
+    sa-name        = kubernetes_service_account_v1.helm_runtime[0].metadata[0].name
+    runtime-config = local.helm_provider.runtime_config
   })
   wait = true
 
@@ -493,13 +494,13 @@ resource "kubectl_manifest" "helm_controller_config" {
 resource "kubectl_manifest" "helm_provider" {
   count = local.helm_provider.enable == true ? 1 : 0
   yaml_body = templatefile("${path.module}/providers/helm/provider.yaml", {
-    version                   = local.helm_provider.version
-    helm-provider-name  = local.helm_provider.name
-    controller-config         = local.helm_provider.controller_config
+    version                = local.helm_provider.version
+    helm-provider-name     = local.helm_provider.name
+    runtime-config         = local.helm_provider.runtime_config
   })
   wait = true
 
-  depends_on = [kubectl_manifest.helm_controller_config]
+  depends_on = [kubectl_manifest.helm_runtime_config]
 }
 
 # Wait for the AWS Provider CRDs to be fully created before initiating provider_config deployment
