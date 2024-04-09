@@ -31,7 +31,7 @@ grafana:
         type: prometheus
         access: proxy
         url: http://kube-prometheus-stack-prometheus.kube-prometheus-stack:9090/
-        isDefault: true
+        isDefault: false
         uid: prometheusdatasource
       deleteDatasources:
       - name: Prometheus
