@@ -118,7 +118,7 @@ helm install crossplane crossplane-stable/crossplane \
 --namespace crossplane-system \
 --create-namespace \
 --set args='{"--enable-environment-configs"}' \
---version 1.13.2 # Get the latest version from https://github.com/crossplane/crossplane/releases
+--version 1.15.0 # Get the latest version from https://github.com/crossplane/crossplane/releases
 
 ```
 

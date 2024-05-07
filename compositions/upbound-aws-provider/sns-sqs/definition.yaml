@@ -42,6 +42,10 @@ spec:
                       type: string
                     region:
                       type: string
+                    tags:
+                      additionalProperties:
+                        type: string
+                      type: object
                   required:
                   - region
                   type: object

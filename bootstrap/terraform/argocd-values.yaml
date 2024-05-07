@@ -58,6 +58,8 @@ server:
         prometheus.io/scrape: true
   service:
     type: "LoadBalancer"
+    annotations: 
+      service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
 
 configs:
   params:
@@ -108,7 +110,7 @@ configs:
           end
 
           return health_status
-      %{ if crossplane_upbound_aws_provider_enable }
+      %{ if crossplane_upjet_aws_provider_enable }
       "*.aws.upbound.io/*":
         health.lua: |
           health_status = {

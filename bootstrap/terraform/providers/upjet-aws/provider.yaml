@@ -1,0 +1,10 @@
+# https://github.com/crossplane-contrib/provider-upjet-aws/blob/main/docs/family/Configuration.md#install-the-provider-family-aws-1
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-upjet-aws-${family}
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-${family}:${version}
+  runtimeConfigRef:
+    name: ${runtime-config}

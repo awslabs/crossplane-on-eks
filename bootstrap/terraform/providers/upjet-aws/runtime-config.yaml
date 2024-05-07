@@ -1,0 +1,23 @@
+# https://github.com/crossplane-contrib/provider-upjet-aws/blob/main/docs/family/Configuration.md
+---
+apiVersion: pkg.crossplane.io/v1beta1
+kind: DeploymentRuntimeConfig
+metadata:
+  name: ${runtime-config}
+spec:
+  deploymentTemplate:
+    spec:
+      replicas: 1
+      selector: {}
+      template:
+        spec:
+          containers:
+            - name: package-runtime
+              args:
+              - --debug
+          securityContext:
+            fsGroup: 2000
+  serviceAccountTemplate:
+    metadata:
+      annotations:
+        eks.amazonaws.com/role-arn: ${iam-role-arn}

@@ -4,5 +4,5 @@ metadata:
   name: ${helm-provider-name}
 spec:
   package: xpkg.upbound.io/crossplane-contrib/provider-helm:${version}
-  controllerConfigRef:
-    name: ${controller-config}
+  runtimeConfigRef:
+    name: ${runtime-config}

@@ -16,7 +16,7 @@ variable "name" {
 variable "cluster_version" {
   type        = string
   description = "Kubernetes Version"
-  default     = "1.27"
+  default     = "1.29"
 }
 
 variable "capacity_type" {
@@ -25,9 +25,9 @@ variable "capacity_type" {
   default     = "SPOT"
 }
 
-variable "enable_upbound_aws_provider" {
+variable "enable_upjet_aws_provider" {
   type        = bool
-  description = "Installs the upbound aws provider"
+  description = "Installs the upjet aws provider"
   default     = true
 }
 
@@ -46,5 +46,5 @@ variable "enable_kubernetes_provider" {
 variable "enable_helm_provider" {
   type        = bool
   description = "Installs the helm provider"
-  default     = true
+  default     = false 
 }
