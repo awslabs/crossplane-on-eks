@@ -35,8 +35,8 @@ provider "kubectl" {
     args        = ["eks", "get-token", "--cluster-name", local.name, "--region", var.region]
     command     = "aws"
   }
-  load_config_file       = false
-  apply_retry_count      = 15
+  load_config_file  = false
+  apply_retry_count = 15
 }
 
 data "aws_caller_identity" "current" {}
@@ -98,9 +98,9 @@ module "eks" {
     aws-ebs-csi-driver = {
       service_account_role_arn = module.ebs_csi_driver_irsa.iam_role_arn
     }
-    coredns =    {}
+    coredns    = {}
     kube-proxy = {}
-    vpc-cni =    {}
+    vpc-cni    = {}
   }
 
   vpc_id     = module.vpc.vpc_id
@@ -109,12 +109,12 @@ module "eks" {
   # for production cluster, add a node group for add-ons that should not be inerrupted such as coredns
   eks_managed_node_groups = {
     initial = {
-      instance_types  = ["m6i.large", "m5.large", "m5n.large", "m5zn.large"]
-      capacity_type   = var.capacity_type # defaults to SPOT
-      min_size        = 1
-      max_size        = 5
-      desired_size    = 3
-      subnet_ids      = module.vpc.private_subnets
+      instance_types = ["m6i.large", "m5.large", "m5n.large", "m5zn.large"]
+      capacity_type  = var.capacity_type # defaults to SPOT
+      min_size       = 1
+      max_size       = 5
+      desired_size   = 3
+      subnet_ids     = module.vpc.private_subnets
     }
   }
 
@@ -129,24 +129,24 @@ module "eks_blueprints_addons" {
   source  = "aws-ia/eks-blueprints-addons/aws"
   version = "1.8.0"
 
-  cluster_name          = module.eks.cluster_name
-  cluster_endpoint      = module.eks.cluster_endpoint
-  cluster_version       = module.eks.cluster_version
-  oidc_provider_arn     = module.eks.oidc_provider_arn
-  enable_argocd         = true
+  cluster_name      = module.eks.cluster_name
+  cluster_endpoint  = module.eks.cluster_endpoint
+  cluster_version   = module.eks.cluster_version
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  enable_argocd     = true
   argocd = {
-    namespace       = "argocd"
-    chart_version   = "6.3.1" # ArgoCD v2.10.1
-    values          = [
+    namespace     = "argocd"
+    chart_version = "6.3.1" # ArgoCD v2.10.1
+    values = [
       templatefile("${path.module}/argocd-values.yaml", {
-        crossplane_aws_provider_enable = local.aws_provider.enable
-        crossplane_upjet_aws_provider_enable = local.upjet_aws_provider.enable
+        crossplane_aws_provider_enable        = local.aws_provider.enable
+        crossplane_upjet_aws_provider_enable  = local.upjet_aws_provider.enable
         crossplane_kubernetes_provider_enable = local.kubernetes_provider.enable
-      })]
+    })]
   }
-  enable_gatekeeper                = true
-  enable_metrics_server            = true
-  enable_kube_prometheus_stack     = true
+  enable_gatekeeper                   = true
+  enable_metrics_server               = true
+  enable_kube_prometheus_stack        = true
   enable_aws_load_balancer_controller = true
   kube_prometheus_stack = {
     values = [file("${path.module}/kube-prometheus-stack-values.yaml")]
@@ -159,31 +159,31 @@ module "eks_blueprints_addons" {
 # Crossplane
 #---------------------------------------------------------------
 module "crossplane" {
-  source = "github.com/awslabs/crossplane-on-eks/bootstrap/terraform/addon/"
+  source            = "github.com/awslabs/crossplane-on-eks/bootstrap/terraform/addon/"
   enable_crossplane = true
   crossplane = {
     values = [yamlencode({
-      args    = ["--enable-environment-configs"]
+      args = ["--enable-environment-configs"]
       metrics = {
         enabled = true
       }
       resourcesCrossplane = {
         limits = {
-          cpu = "1"
+          cpu    = "1"
           memory = "2Gi"
         }
         requests = {
-          cpu = "100m"
+          cpu    = "100m"
           memory = "1Gi"
         }
       }
       resourcesRBACManager = {
         limits = {
-          cpu = "500m"
+          cpu    = "500m"
           memory = "1Gi"
         }
         requests = {
-          cpu = "100m"
+          cpu    = "100m"
           memory = "512Mi"
         }
       }
@@ -208,10 +208,10 @@ resource "kubectl_manifest" "environmentconfig" {
 #---------------------------------------------------------------
 locals {
   crossplane_namespace = "crossplane-system"
-  
+
   upjet_aws_provider = {
     enable               = var.enable_upjet_aws_provider # defaults to true
-    version              = "v1.3.0"
+    version              = "v1.4.0"
     runtime_config       = "upjet-aws-runtime-config"
     provider_config_name = "aws-provider-config" #this is the providerConfigName used in all the examples in this repo
     families = [
@@ -234,30 +234,30 @@ locals {
 
   aws_provider = {
     enable               = var.enable_aws_provider # defaults to false
-    version              = "v0.43.1"
+    version              = "v0.48.0"
     name                 = "aws-provider"
     runtime_config       = "aws-runtime-config"
     provider_config_name = "aws-provider-config" #this is the providerConfigName used in all the examples in this repo
   }
 
   kubernetes_provider = {
-    enable                = var.enable_kubernetes_provider # defaults to true
-    version               = "v0.12.1"
-    service_account       = "kubernetes-provider"
-    name                  = "kubernetes-provider"
-    runtime_config        = "kubernetes-runtime-config"
-    provider_config_name  = "default"
-    cluster_role          = "cluster-admin"
+    enable               = var.enable_kubernetes_provider # defaults to true
+    version              = "v0.13.0"
+    service_account      = "kubernetes-provider"
+    name                 = "kubernetes-provider"
+    runtime_config       = "kubernetes-runtime-config"
+    provider_config_name = "default"
+    cluster_role         = "cluster-admin"
   }
 
   helm_provider = {
-    enable                = var.enable_helm_provider # defaults to true
-    version               = "v0.15.0"
-    service_account       = "helm-provider"
-    name                  = "helm-provider"
-    runtime_config        = "helm-runtime-config"
-    provider_config_name  = "default"
-    cluster_role          = "cluster-admin"
+    enable               = var.enable_helm_provider # defaults to true
+    version              = "v0.18.1"
+    service_account      = "helm-provider"
+    name                 = "helm-provider"
+    runtime_config       = "helm-runtime-config"
+    provider_config_name = "default"
+    cluster_role         = "cluster-admin"
   }
 
 }
@@ -266,11 +266,11 @@ locals {
 # Crossplane Upjet AWS Provider
 #---------------------------------------------------------------
 module "upjet_irsa_aws" {
-  count = local.upjet_aws_provider.enable == true ? 1 : 0
+  count   = local.upjet_aws_provider.enable == true ? 1 : 0
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version = "~> 5.30"
 
-  role_name_prefix = "${local.name}-upjet-aws-"
+  role_name_prefix           = "${local.name}-upjet-aws-"
   assume_role_condition_test = "StringLike"
 
   role_policy_arns = {
@@ -290,8 +290,8 @@ module "upjet_irsa_aws" {
 resource "kubectl_manifest" "upjet_aws_runtime_config" {
   count = local.upjet_aws_provider.enable == true ? 1 : 0
   yaml_body = templatefile("${path.module}/providers/upjet-aws/runtime-config.yaml", {
-    iam-role-arn          = module.upjet_irsa_aws[0].iam_role_arn
-    runtime-config        = local.upjet_aws_provider.runtime_config
+    iam-role-arn   = module.upjet_irsa_aws[0].iam_role_arn
+    runtime-config = local.upjet_aws_provider.runtime_config
   })
 
   depends_on = [module.crossplane]
@@ -300,8 +300,8 @@ resource "kubectl_manifest" "upjet_aws_runtime_config" {
 resource "kubectl_manifest" "upjet_aws_provider" {
   for_each = local.upjet_aws_provider.enable ? toset(local.upjet_aws_provider.families) : toset([])
   yaml_body = templatefile("${path.module}/providers/upjet-aws/provider.yaml", {
-    family            = each.key
-    version           = local.upjet_aws_provider.version
+    family         = each.key
+    version        = local.upjet_aws_provider.version
     runtime-config = local.upjet_aws_provider.runtime_config
   })
   wait = true
@@ -330,11 +330,11 @@ resource "kubectl_manifest" "upjet_aws_provider_config" {
 # Crossplane AWS Provider
 #---------------------------------------------------------------
 module "irsa_aws_provider" {
-  count = local.aws_provider.enable == true ? 1 : 0
+  count   = local.aws_provider.enable == true ? 1 : 0
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version = "~> 5.30"
 
-  role_name_prefix = "${local.name}-aws-provider-"
+  role_name_prefix           = "${local.name}-aws-provider-"
   assume_role_condition_test = "StringLike"
 
   role_policy_arns = {
@@ -354,7 +354,7 @@ module "irsa_aws_provider" {
 resource "kubectl_manifest" "aws_runtime_config" {
   count = local.aws_provider.enable == true ? 1 : 0
   yaml_body = templatefile("${path.module}/providers/aws/runtime-config.yaml", {
-    iam-role-arn          = module.irsa_aws_provider[0].iam_role_arn
+    iam-role-arn   = module.irsa_aws_provider[0].iam_role_arn
     runtime-config = local.aws_provider.runtime_config
   })
 
@@ -366,7 +366,7 @@ resource "kubectl_manifest" "aws_provider" {
   yaml_body = templatefile("${path.module}/providers/aws/provider.yaml", {
     aws-provider-name = local.aws_provider.name
     version           = local.aws_provider.version
-    runtime-config = local.aws_provider.runtime_config
+    runtime-config    = local.aws_provider.runtime_config
   })
   wait = true
 
@@ -407,9 +407,9 @@ resource "kubernetes_service_account_v1" "kubernetes_runtime" {
 resource "kubectl_manifest" "kubernetes_provider_clusterolebinding" {
   count = local.kubernetes_provider.enable == true ? 1 : 0
   yaml_body = templatefile("${path.module}/providers/kubernetes/clusterrolebinding.yaml", {
-    namespace      = local.crossplane_namespace
-    cluster-role   = local.kubernetes_provider.cluster_role
-    sa-name        = kubernetes_service_account_v1.kubernetes_runtime[0].metadata[0].name
+    namespace    = local.crossplane_namespace
+    cluster-role = local.kubernetes_provider.cluster_role
+    sa-name      = kubernetes_service_account_v1.kubernetes_runtime[0].metadata[0].name
   })
   wait = true
 
@@ -419,8 +419,8 @@ resource "kubectl_manifest" "kubernetes_provider_clusterolebinding" {
 resource "kubectl_manifest" "kubernetes_runtime_config" {
   count = local.kubernetes_provider.enable == true ? 1 : 0
   yaml_body = templatefile("${path.module}/providers/kubernetes/runtime-config.yaml", {
-    sa-name           = kubernetes_service_account_v1.kubernetes_runtime[0].metadata[0].name
-    runtime-config    = local.kubernetes_provider.runtime_config
+    sa-name        = kubernetes_service_account_v1.kubernetes_runtime[0].metadata[0].name
+    runtime-config = local.kubernetes_provider.runtime_config
   })
   wait = true
 
@@ -430,9 +430,9 @@ resource "kubectl_manifest" "kubernetes_runtime_config" {
 resource "kubectl_manifest" "kubernetes_provider" {
   count = local.kubernetes_provider.enable == true ? 1 : 0
   yaml_body = templatefile("${path.module}/providers/kubernetes/provider.yaml", {
-    version                   = local.kubernetes_provider.version
-    kubernetes-provider-name  = local.kubernetes_provider.name
-    runtime-config            = local.kubernetes_provider.runtime_config
+    version                  = local.kubernetes_provider.version
+    kubernetes-provider-name = local.kubernetes_provider.name
+    runtime-config           = local.kubernetes_provider.runtime_config
   })
   wait = true
 
@@ -471,9 +471,9 @@ resource "kubernetes_service_account_v1" "helm_runtime" {
 resource "kubectl_manifest" "helm_runtime_clusterolebinding" {
   count = local.helm_provider.enable == true ? 1 : 0
   yaml_body = templatefile("${path.module}/providers/helm/clusterrolebinding.yaml", {
-    namespace      = local.crossplane_namespace
-    cluster-role   = local.helm_provider.cluster_role
-    sa-name        = kubernetes_service_account_v1.helm_runtime[0].metadata[0].name
+    namespace    = local.crossplane_namespace
+    cluster-role = local.helm_provider.cluster_role
+    sa-name      = kubernetes_service_account_v1.helm_runtime[0].metadata[0].name
   })
   wait = true
 
@@ -494,9 +494,9 @@ resource "kubectl_manifest" "helm_runtime_config" {
 resource "kubectl_manifest" "helm_provider" {
   count = local.helm_provider.enable == true ? 1 : 0
   yaml_body = templatefile("${path.module}/providers/helm/provider.yaml", {
-    version                = local.helm_provider.version
-    helm-provider-name     = local.helm_provider.name
-    runtime-config         = local.helm_provider.runtime_config
+    version            = local.helm_provider.version
+    helm-provider-name = local.helm_provider.name
+    runtime-config     = local.helm_provider.runtime_config
   })
   wait = true
 
@@ -535,8 +535,8 @@ module "vpc" {
   public_subnets  = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k)]
   private_subnets = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 10)]
 
-  enable_nat_gateway   = true
-  single_nat_gateway   = true
+  enable_nat_gateway = true
+  single_nat_gateway = true
 
   public_subnet_tags = {
     "kubernetes.io/role/elb" = 1
