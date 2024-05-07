@@ -82,7 +82,7 @@ For debugging Compositions, CompositionResourceDefinitions, etc, [please see the
 
 ## Adopters
 
-A list of publicly known users of the Crossplane Blueprints for Amazon EKS project can be found in [ADOPTERS.md].
+A list of publicly known users of the Crossplane Blueprints for Amazon EKS project can be found in [ADOPTERS.md](ADOPTERS.md).
 
 ## Security
 
