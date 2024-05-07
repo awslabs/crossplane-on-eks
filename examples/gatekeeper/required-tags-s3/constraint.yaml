@@ -1,0 +1,11 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: AwsRequiredTags
+metadata:
+  name: awsrequiredtags
+spec:
+  match:
+    kinds:
+    - apiGroups: ["s3.aws.upbound.io"]
+      kinds: ["Bucket"]
+  parameters:
+    tags: ["owner"]

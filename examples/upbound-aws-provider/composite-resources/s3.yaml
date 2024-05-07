@@ -3,6 +3,8 @@ kind: ObjectStorage
 metadata:
   name: test-bucket-awsblueprint-123456789
 spec:
+  writeConnectionSecretToRef:
+    name: s3bucket
   resourceConfig:
     providerConfigName: aws-provider-config
     region: us-east-1

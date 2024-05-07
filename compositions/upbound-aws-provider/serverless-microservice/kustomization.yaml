@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
 - definition.yaml
 - rest-lambda-ddb.yaml
+- functions.yaml

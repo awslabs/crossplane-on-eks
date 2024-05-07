@@ -9,7 +9,13 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-10"
 spec:
+  writeConnectionSecretToRef:
+    name: {{ include "s3-irsa-app.name" . }}
   resourceConfig:
     providerConfigName: aws-provider-config
     region: us-east-1
+    {{- with .Values.s3irsa.tags }}
+    tags:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
 {{- end }}

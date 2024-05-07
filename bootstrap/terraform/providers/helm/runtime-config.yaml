@@ -1,0 +1,14 @@
+apiVersion: pkg.crossplane.io/v1beta1
+kind: DeploymentRuntimeConfig
+metadata:
+  name: ${runtime-config}
+spec:
+spec:
+  deploymentTemplate:
+    spec:
+      replicas: 1
+      selector: {}
+      template: {}
+  serviceAccountTemplate:
+    metadata:
+      name: ${sa-name}

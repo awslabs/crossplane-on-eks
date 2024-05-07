@@ -20,12 +20,6 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: spec.resourceConfig.providerConfigName
           toFieldPath: spec.providerConfigRef.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.tags
-          toFieldPath: spec.forProvider.tags
-          policy:
-            mergeOptions:
-              keepMapValues: true
         - fromFieldPath: "metadata.name"
           toFieldPath: "metadata.name"
           transforms:
