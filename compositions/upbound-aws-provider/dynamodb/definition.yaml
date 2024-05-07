@@ -59,9 +59,9 @@ spec:
                             type: string
                           type:
                             enum:
-                            - B #binary
-                            - N #number
-                            - S #string
+                            - "B" #binary
+                            - "N" #number
+                            - "S" #string
                             type: string
                         required:
                         - name
