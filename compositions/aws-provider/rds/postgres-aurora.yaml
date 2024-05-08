@@ -104,7 +104,7 @@ spec:
               matchControllerRef: true
             enableHTTPEndpoint: false
             engine: aurora-postgresql
-            engineVersion: "14.10"
+            engineVersion: "14.11"
             finalDBSnapshotIdentifier: "to-be-patched"
             masterUserPasswordSecretRef:
               key: password
