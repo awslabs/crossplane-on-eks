@@ -80,6 +80,10 @@ Crossplane can be configured to publish secrets external to the cluster in which
 ## Debugging
 For debugging Compositions, CompositionResourceDefinitions, etc, [please see the debugging guide](doc/debugging.md).
 
+## Adopters
+
+A list of publicly known users of the Crossplane Blueprints for Amazon EKS project can be found in [ADOPTERS.md](ADOPTERS.md).
+
 ## Security
 
 See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
