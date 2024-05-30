@@ -10,7 +10,7 @@ provider "kubernetes" {
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
   exec {
     api_version = "client.authentication.k8s.io/v1beta1"
-    args        = ["eks", "get-token", "--cluster-name", local.name, "--region", var.region]
+    args        = ["eks", "get-token", "--cluster-name", local.name, "--region", local.region]
     command     = "aws"
   }
 }
@@ -21,7 +21,7 @@ provider "helm" {
     cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
     exec {
       api_version = "client.authentication.k8s.io/v1beta1"
-      args        = ["eks", "get-token", "--cluster-name", local.name, "--region", var.region]
+      args        = ["eks", "get-token", "--cluster-name", local.name, "--region", local.region]
       command     = "aws"
     }
   }
@@ -32,7 +32,7 @@ provider "kubectl" {
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
   exec {
     api_version = "client.authentication.k8s.io/v1beta1"
-    args        = ["eks", "get-token", "--cluster-name", local.name, "--region", var.region]
+    args        = ["eks", "get-token", "--cluster-name", local.name, "--region", local.region]
     command     = "aws"
   }
   load_config_file  = false
@@ -43,10 +43,11 @@ data "aws_caller_identity" "current" {}
 data "aws_availability_zones" "available" {}
 
 locals {
-  name   = var.name
-  region = var.region
+  name   = "crossplane-blueprints"
+  region = "us-east-1"
 
-  cluster_version = var.cluster_version
+  cluster_version = "1.30"
+  capacity_type   = "SPOT"
   cluster_name    = local.name
 
   vpc_name = local.name
@@ -121,7 +122,7 @@ module "eks" {
   eks_managed_node_groups = {
     initial = {
       instance_types = ["m6i.large", "m5.large", "m5n.large", "m5zn.large"]
-      capacity_type  = var.capacity_type # defaults to SPOT
+      capacity_type  = local.capacity_type # defaults to SPOT
       min_size       = 1
       max_size       = 5
       desired_size   = 3
@@ -204,7 +205,7 @@ locals {
   crossplane_namespace = "crossplane-system"
 
   upjet_aws_provider = {
-    enable               = var.enable_upjet_aws_provider # defaults to true
+    enable               = true
     version              = "v1.5.0"
     runtime_config       = "upjet-aws-runtime-config"
     provider_config_name = "aws-provider-config" #this is the providerConfigName used in all the examples in this repo
@@ -227,7 +228,7 @@ locals {
   }
 
   aws_provider = {
-    enable               = var.enable_aws_provider # defaults to false
+    enable               = false
     version              = "v0.48.0"
     name                 = "aws-provider"
     runtime_config       = "aws-runtime-config"
@@ -235,7 +236,7 @@ locals {
   }
 
   kubernetes_provider = {
-    enable               = var.enable_kubernetes_provider # defaults to true
+    enable               = true
     version              = "v0.13.0"
     service_account      = "kubernetes-provider"
     name                 = "kubernetes-provider"
@@ -245,7 +246,7 @@ locals {
   }
 
   helm_provider = {
-    enable               = var.enable_helm_provider # defaults to true
+    enable               = true
     version              = "v0.18.1"
     service_account      = "helm-provider"
     name                 = "helm-provider"
