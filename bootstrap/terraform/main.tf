@@ -49,7 +49,7 @@ module "ebs_csi_driver_irsa" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 20.12"
+  version = "~> 20.0"
 
   cluster_name                   = local.name
   cluster_version                = local.cluster_version
@@ -86,6 +86,9 @@ module "eks" {
       subnet_ids     = module.vpc.private_subnets
     }
   }
+
+  # To add the current caller identity as an administrator
+  enable_cluster_creator_admin_permissions = true
 
   tags = local.tags
 }
