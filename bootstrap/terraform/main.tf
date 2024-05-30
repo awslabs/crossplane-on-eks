@@ -175,32 +175,7 @@ module "crossplane" {
   source            = "github.com/awslabs/crossplane-on-eks/bootstrap/terraform/addon/"
   enable_crossplane = true
   crossplane = {
-    values = [yamlencode({
-      args = ["--enable-environment-configs"]
-      metrics = {
-        enabled = true
-      }
-      resourcesCrossplane = {
-        limits = {
-          cpu    = "1"
-          memory = "2Gi"
-        }
-        requests = {
-          cpu    = "100m"
-          memory = "1Gi"
-        }
-      }
-      resourcesRBACManager = {
-        limits = {
-          cpu    = "500m"
-          memory = "1Gi"
-        }
-        requests = {
-          cpu    = "100m"
-          memory = "512Mi"
-        }
-      }
-    })]
+    values = [file("${path.module}/values/control-plane-eks-crossplane-stack.yaml")]
   }
 
   depends_on = [module.eks.eks_managed_node_groups]
