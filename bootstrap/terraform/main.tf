@@ -359,7 +359,6 @@ resource "kubectl_manifest" "aws_provider_config" {
   depends_on = [kubectl_manifest.aws_provider, time_sleep.aws_wait_60_seconds]
 }
 
-
 #---------------------------------------------------------------
 # Crossplane Kubernetes Provider
 #---------------------------------------------------------------
@@ -487,7 +486,6 @@ resource "kubectl_manifest" "helm_provider_config" {
 
   depends_on = [kubectl_manifest.helm_provider, time_sleep.wait_60_seconds_helm]
 }
-
 
 #---------------------------------------------------------------
 # Supporting Resources
