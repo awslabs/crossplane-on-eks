@@ -150,6 +150,7 @@ module "eks_blueprints_addons" {
   argocd = {
     namespace     = "argocd"
     chart_version = "6.11.1" # ArgoCD v2.11.2
+    timeout       = "600"
     values = [
       templatefile("${path.module}/values/control-plane-eks-argocd-stack.yaml", {
         crossplane_aws_provider_enable        = local.aws_provider.enable
@@ -163,7 +164,8 @@ module "eks_blueprints_addons" {
   enable_kube_prometheus_stack        = true
   enable_aws_load_balancer_controller = true
   kube_prometheus_stack = {
-    values = [file("${path.module}/values/control-plane-eks-prometheus-stack.yaml")]
+    timeout = "600"
+    values  = [file("${path.module}/values/control-plane-eks-prometheus-stack.yaml")]
   }
 
   depends_on = [module.eks.eks_managed_node_groups]
