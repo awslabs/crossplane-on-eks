@@ -16,7 +16,7 @@ variable "name" {
 variable "cluster_version" {
   type        = string
   description = "Kubernetes Version"
-  default     = "1.29"
+  default     = "1.30"
 }
 
 variable "capacity_type" {
@@ -46,5 +46,5 @@ variable "enable_kubernetes_provider" {
 variable "enable_helm_provider" {
   type        = bool
   description = "Installs the helm provider"
-  default     = false 
+  default     = false
 }

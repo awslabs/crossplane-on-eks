@@ -1,44 +1,6 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-provider "aws" {
-  region = local.region
-}
-
-provider "kubernetes" {
-  host                   = module.eks.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    args        = ["eks", "get-token", "--cluster-name", local.name, "--region", var.region]
-    command     = "aws"
-  }
-}
-
-provider "helm" {
-  kubernetes {
-    host                   = module.eks.cluster_endpoint
-    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-    exec {
-      api_version = "client.authentication.k8s.io/v1beta1"
-      args        = ["eks", "get-token", "--cluster-name", local.name, "--region", var.region]
-      command     = "aws"
-    }
-  }
-}
-
-provider "kubectl" {
-  host                   = module.eks.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    args        = ["eks", "get-token", "--cluster-name", local.name, "--region", var.region]
-    command     = "aws"
-  }
-  load_config_file  = false
-  apply_retry_count = 15
-}
-
 data "aws_caller_identity" "current" {}
 data "aws_availability_zones" "available" {}
 
@@ -87,7 +49,7 @@ module "ebs_csi_driver_irsa" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.13"
+  version = "~> 20.12"
 
   cluster_name                   = local.name
   cluster_version                = local.cluster_version
@@ -96,11 +58,18 @@ module "eks" {
 
   cluster_addons = {
     aws-ebs-csi-driver = {
+      most_recent              = true
       service_account_role_arn = module.ebs_csi_driver_irsa.iam_role_arn
     }
-    coredns    = {}
-    kube-proxy = {}
-    vpc-cni    = {}
+    coredns = {
+      most_recent = true
+    }
+    kube-proxy = {
+      most_recent = true
+    }
+    vpc-cni = {
+      most_recent = true
+    }
   }
 
   vpc_id     = module.vpc.vpc_id
