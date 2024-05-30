@@ -191,7 +191,7 @@ module "crossplane" {
 }
 
 resource "kubectl_manifest" "environmentconfig" {
-  yaml_body = templatefile("${path.module}/environmentconfig.yaml", {
+  yaml_body = templatefile("${path.module}/config/environmentconfig.yaml", {
     awsAccountID = data.aws_caller_identity.current.account_id
     eksOIDC      = module.eks.oidc_provider
     vpcID        = module.vpc.vpc_id
