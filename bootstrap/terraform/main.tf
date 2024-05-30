@@ -159,10 +159,15 @@ module "eks_blueprints_addons" {
     })]
   }
 
-  enable_gatekeeper                   = true
+  enable_gatekeeper = true
+  gatekeeper = {
+    timeout = "600s"
+  }
+
   enable_metrics_server               = true
-  enable_kube_prometheus_stack        = true
   enable_aws_load_balancer_controller = true
+
+  enable_kube_prometheus_stack = true
   kube_prometheus_stack = {
     timeout = "600"
     values  = [file("${path.module}/values/control-plane-eks-prometheus-stack.yaml")]
