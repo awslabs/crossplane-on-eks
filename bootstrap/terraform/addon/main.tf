@@ -4,7 +4,7 @@
 
 module "crossplane" {
   source  = "aws-ia/eks-blueprints-addon/aws"
-  version = "1.1.0"
+  version = "1.1.1"
 
   create = var.enable_crossplane
 
@@ -14,7 +14,7 @@ module "crossplane" {
   namespace        = try(var.crossplane.namespace, "crossplane-system")
   create_namespace = try(var.crossplane.create_namespace, true)
   chart            = try(var.crossplane.chart, "crossplane")
-  chart_version    = try(var.crossplane.chart_version, "1.15.1")
+  chart_version    = try(var.crossplane.chart_version, "1.16.0")
   repository       = try(var.crossplane.repository, "https://charts.crossplane.io/stable/")
   values           = try(var.crossplane.values, [])
 
