@@ -43,11 +43,10 @@ data "aws_caller_identity" "current" {}
 data "aws_availability_zones" "available" {}
 
 locals {
-  name   = "crossplane-blueprints"
-  region = "us-east-1"
+  name   = var.name
+  region = var.region
 
-  cluster_version = "1.30"
-  capacity_type   = "SPOT"
+  cluster_version = var.cluster_version
   cluster_name    = local.name
 
   vpc_name = local.name
@@ -122,7 +121,7 @@ module "eks" {
   eks_managed_node_groups = {
     initial = {
       instance_types = ["m6i.large", "m5.large", "m5n.large", "m5zn.large"]
-      capacity_type  = local.capacity_type # defaults to SPOT
+      capacity_type  = var.capacity_type # defaults to SPOT
       min_size       = 1
       max_size       = 5
       desired_size   = 3

@@ -22,4 +22,11 @@ terraform {
       version = ">= 2.13"
     }
   }
+
+  # ##  Used for end-to-end testing on project; update to suit your needs
+  # backend "s3" {
+  #   bucket = "terraform-crossplane-on-eks-github-actions-state"
+  #   region = "us-east-1"
+  #   key    = "e2e/bootstrap/terraform/terraform.tfstate"
+  # }
 }
