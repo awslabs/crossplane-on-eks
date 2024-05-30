@@ -153,7 +153,7 @@ module "eks_blueprints_addons" {
     wait          = true
     timeout       = "600"
     values = [
-      templatefile("${path.module}/values/control-plane-eks-argocd-stack.yaml", {
+      templatefile("${path.module}/values/argocd-stack.yaml", {
         crossplane_aws_provider_enable        = local.aws_provider.enable
         crossplane_upjet_aws_provider_enable  = local.upjet_aws_provider.enable
         crossplane_kubernetes_provider_enable = local.kubernetes_provider.enable
@@ -172,7 +172,7 @@ module "eks_blueprints_addons" {
   kube_prometheus_stack = {
     wait    = true
     timeout = "600"
-    values  = [file("${path.module}/values/control-plane-eks-prometheus-stack.yaml")]
+    values  = [file("${path.module}/values/prometheus-stack.yaml")]
   }
 
   depends_on = [module.eks.eks_managed_node_groups]
@@ -192,7 +192,7 @@ module "crossplane" {
   chart            = "crossplane"
   chart_version    = "1.16.0"
   repository       = "https://charts.crossplane.io/stable/"
-  values           = [file("${path.module}/values/control-plane-eks-crossplane-stack.yaml")]
+  values           = [file("${path.module}/values/crossplane-stack.yaml")]
 
   depends_on = [module.eks.eks_managed_node_groups]
 }
