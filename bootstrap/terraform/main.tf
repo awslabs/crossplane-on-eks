@@ -150,6 +150,7 @@ module "eks_blueprints_addons" {
   argocd = {
     namespace     = "argocd"
     chart_version = "6.11.1" # ArgoCD v2.11.2
+    wait          = true
     timeout       = "600"
     values = [
       templatefile("${path.module}/values/control-plane-eks-argocd-stack.yaml", {
@@ -158,12 +159,18 @@ module "eks_blueprints_addons" {
         crossplane_kubernetes_provider_enable = local.kubernetes_provider.enable
     })]
   }
+  enable_gatekeeper = true
+  gatekeeper = {
+    timeout = "600"
+    wait    = true
+  }
 
   enable_metrics_server               = true
   enable_aws_load_balancer_controller = true
 
   enable_kube_prometheus_stack = true
   kube_prometheus_stack = {
+    wait    = true
     timeout = "600"
     values  = [file("${path.module}/values/control-plane-eks-prometheus-stack.yaml")]
   }
