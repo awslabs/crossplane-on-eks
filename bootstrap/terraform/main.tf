@@ -27,7 +27,7 @@ locals {
 
 module "ebs_csi_driver_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.14"
+  version = "~> 5.20"
 
   role_name = "${local.name}-ebs-csi-driver"
 
@@ -99,16 +99,17 @@ module "eks" {
 
 module "eks_blueprints_addons" {
   source  = "aws-ia/eks-blueprints-addons/aws"
-  version = "1.8.0"
+  version = "~> 1.16"
 
   cluster_name      = module.eks.cluster_name
   cluster_endpoint  = module.eks.cluster_endpoint
   cluster_version   = module.eks.cluster_version
   oidc_provider_arn = module.eks.oidc_provider_arn
-  enable_argocd     = true
+
+  enable_argocd = true
   argocd = {
     namespace     = "argocd"
-    chart_version = "6.3.1" # ArgoCD v2.10.1
+    chart_version = "6.11.1" # ArgoCD v2.11.2
     values = [
       templatefile("${path.module}/argocd-values.yaml", {
         crossplane_aws_provider_enable        = local.aws_provider.enable
@@ -116,6 +117,7 @@ module "eks_blueprints_addons" {
         crossplane_kubernetes_provider_enable = local.kubernetes_provider.enable
     })]
   }
+
   enable_gatekeeper                   = true
   enable_metrics_server               = true
   enable_kube_prometheus_stack        = true
