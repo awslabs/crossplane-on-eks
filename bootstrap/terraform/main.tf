@@ -207,7 +207,7 @@ locals {
   crossplane_namespace = "crossplane-system"
 
   upjet_aws_provider = {
-    enable               = true
+    enable               = var.enable_upjet_aws_provider # defaults to true
     version              = "v1.5.0"
     runtime_config       = "upjet-aws-runtime-config"
     provider_config_name = "aws-provider-config" #this is the providerConfigName used in all the examples in this repo
@@ -230,7 +230,7 @@ locals {
   }
 
   aws_provider = {
-    enable               = false
+    enable               = var.enable_aws_provider # defaults to false
     version              = "v0.48.0"
     name                 = "aws-provider"
     runtime_config       = "aws-runtime-config"
@@ -238,7 +238,7 @@ locals {
   }
 
   kubernetes_provider = {
-    enable               = true
+    enable               = var.enable_kubernetes_provider # defaults to true
     version              = "v0.13.0"
     service_account      = "kubernetes-provider"
     name                 = "kubernetes-provider"
@@ -248,7 +248,7 @@ locals {
   }
 
   helm_provider = {
-    enable               = true
+    enable               = var.enable_helm_provider # defaults to true
     version              = "v0.18.1"
     service_account      = "helm-provider"
     name                 = "helm-provider"
