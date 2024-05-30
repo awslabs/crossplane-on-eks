@@ -1,6 +1,44 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+provider "aws" {
+  region = local.region
+}
+
+provider "kubernetes" {
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    args        = ["eks", "get-token", "--cluster-name", local.name, "--region", var.region]
+    command     = "aws"
+  }
+}
+
+provider "helm" {
+  kubernetes {
+    host                   = module.eks.cluster_endpoint
+    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+    exec {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      args        = ["eks", "get-token", "--cluster-name", local.name, "--region", var.region]
+      command     = "aws"
+    }
+  }
+}
+
+provider "kubectl" {
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    args        = ["eks", "get-token", "--cluster-name", local.name, "--region", var.region]
+    command     = "aws"
+  }
+  load_config_file  = false
+  apply_retry_count = 15
+}
+
 data "aws_caller_identity" "current" {}
 data "aws_availability_zones" "available" {}
 
@@ -27,7 +65,7 @@ locals {
 
 module "ebs_csi_driver_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.20"
+  version = "~> 5.30"
 
   role_name = "${local.name}-ebs-csi-driver"
 
@@ -56,6 +94,13 @@ module "eks" {
   cluster_endpoint_public_access = true
   kms_key_enable_default_policy  = true
 
+  # Give the Terraform identity admin access to the cluster
+  # which will allow resources to be deployed into the cluster
+  enable_cluster_creator_admin_permissions = true
+
+  vpc_id     = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnets
+
   cluster_addons = {
     aws-ebs-csi-driver = {
       most_recent              = true
@@ -72,9 +117,6 @@ module "eks" {
     }
   }
 
-  vpc_id     = module.vpc.vpc_id
-  subnet_ids = module.vpc.private_subnets
-
   # for production cluster, add a node group for add-ons that should not be inerrupted such as coredns
   eks_managed_node_groups = {
     initial = {
@@ -86,9 +128,6 @@ module "eks" {
       subnet_ids     = module.vpc.private_subnets
     }
   }
-
-  # To add the current caller identity as an administrator
-  enable_cluster_creator_admin_permissions = true
 
   tags = local.tags
 }
@@ -111,7 +150,7 @@ module "eks_blueprints_addons" {
     namespace     = "argocd"
     chart_version = "6.11.1" # ArgoCD v2.11.2
     values = [
-      templatefile("${path.module}/argocd-values.yaml", {
+      templatefile("${path.module}/values/control-plane-eks-argocd-stack.yaml", {
         crossplane_aws_provider_enable        = local.aws_provider.enable
         crossplane_upjet_aws_provider_enable  = local.upjet_aws_provider.enable
         crossplane_kubernetes_provider_enable = local.kubernetes_provider.enable
@@ -123,7 +162,7 @@ module "eks_blueprints_addons" {
   enable_kube_prometheus_stack        = true
   enable_aws_load_balancer_controller = true
   kube_prometheus_stack = {
-    values = [file("${path.module}/kube-prometheus-stack-values.yaml")]
+    values = [file("${path.module}/values/control-plane-eks-prometheus-stack.yaml")]
   }
 
   depends_on = [module.eks.eks_managed_node_groups]
