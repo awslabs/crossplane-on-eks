@@ -172,11 +172,17 @@ module "eks_blueprints_addons" {
 # Crossplane
 #---------------------------------------------------------------
 module "crossplane" {
-  source            = "github.com/awslabs/crossplane-on-eks/bootstrap/terraform/addon/"
-  enable_crossplane = true
-  crossplane = {
-    values = [file("${path.module}/values/control-plane-eks-crossplane-stack.yaml")]
-  }
+  source  = "aws-ia/eks-blueprints-addon/aws"
+  version = "1.1.1"
+
+  name             = "crossplane"
+  description      = "A Helm chart to deploy crossplane project"
+  namespace        = "crossplane-system"
+  create_namespace = true
+  chart            = "crossplane"
+  chart_version    = "1.16.0"
+  repository       = "https://charts.crossplane.io/stable/"
+  values           = [file("${path.module}/values/control-plane-eks-crossplane-stack.yaml")]
 
   depends_on = [module.eks.eks_managed_node_groups]
 }
