@@ -148,8 +148,9 @@ module "eks_blueprints_addons" {
   enable_argocd = true
   argocd = {
     namespace     = "argocd"
-    chart_version = "6.11.1" # ArgoCD v2.11.2
+    chart_version = "7.1.0" # ArgoCD v2.11.2
     wait          = true
+    wait_for_jobs = true
     timeout       = "600"
     values = [
       templatefile("${path.module}/values/argocd.yaml", {
@@ -160,8 +161,9 @@ module "eks_blueprints_addons" {
   }
   enable_gatekeeper = true
   gatekeeper = {
-    timeout = "600"
-    wait    = true
+    wait          = true
+    wait_for_jobs = true
+    timeout       = "600"
   }
 
   enable_metrics_server               = true
@@ -169,9 +171,10 @@ module "eks_blueprints_addons" {
 
   enable_kube_prometheus_stack = true
   kube_prometheus_stack = {
-    wait    = true
-    timeout = "600"
-    values  = [file("${path.module}/values/prometheus.yaml")]
+    wait          = true
+    wait_for_jobs = true
+    timeout       = "600"
+    values        = [file("${path.module}/values/prometheus.yaml")]
   }
 
   depends_on = [module.eks.eks_managed_node_groups]

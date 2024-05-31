@@ -19,7 +19,7 @@ Following command line tools:
 Note:
 - As of Crossplane 1.9.0, the support for external secret store is still in alpha state and may go under changes.
 - This assumes a use case for single-cluster multi-tenant. However, the underlying concepts discussed here should be applicable to multi-cluster setup as well.
-- This doc is based on the excellent [vault secret store guide](https://github.com/crossplane/crossplane/blob/master/docs/guides/vault-as-secret-store.md#prepare-vault) and [external vault configuration guide](https://learn.hashicorp.com/tutorials/vault/kubernetes-external-vault). Please check these guides out for more detailed information. 
+- This doc is based on the excellent [external vault configuration guide](https://learn.hashicorp.com/tutorials/vault/kubernetes-external-vault). Please check these guides out for more detailed information. 
 
 # Procedure
 
@@ -34,7 +34,7 @@ eksctl create cluster -f bootstrap/eksctl/eksctl.yaml
 You can create a vault service in the same cluster as Crossplane or create a service on a VM. 
 
 ### In-cluster
-Follow: https://github.com/crossplane/crossplane/blob/master/docs/guides/vault-as-secret-store.md#prepare-vault
+Follow: https://docs.crossplane.io/latest/guides/vault-as-secret-store/
 
 ### On an external VM
 This VM must be reachable by the Crossplane installation. If you are using an EC2 instance, routing, network ACL, and Security Groups must be configured to allow for traffic from Crossplane pod to the VM. 
@@ -161,7 +161,7 @@ helm upgrade --install crossplane crossplane-stable/crossplane --namespace cross
 
 Once Crossplane is installed, install its AWS provider. 
 
-Update the [AWS provider YAML file](../bootstrap/eksctl/crossplane/aws-provider-vault-secret.yaml) with your role ARN, then execute the following commands.
+Update the [AWS provider YAML file](../../bootstrap/eksctl/crossplane/aws-provider-vault-secret.yaml) with your role ARN, then execute the following commands.
 
 ```bash 
 kubectl apply -f bootstrap/eksctl/crossplane/aws-provider-vault-secret.yaml
@@ -173,7 +173,7 @@ kubectl get ProviderRevision
 
 `StoreConfig` objects provides Crossplane and its providers information about how to connect to secret stores. These objects must be configured for external secret integrations to work.
 
-Update the [store config YAML file](../bootstrap/eksctl/crossplane/store-config-vault.yaml) with your endpoint information. If you configured vault outside of the cluster, it should be the private IP address. e.g. `10.0.0.1:8200`
+Update the [store config YAML file](../../bootstrap/eksctl/crossplane/store-config-vault.yaml) with your endpoint information. If you configured vault outside of the cluster, it should be the private IP address. e.g. `10.0.0.1:8200`
 
 ```bash
 kubectl apply -f bootstrap/eksctl/crossplane/store-config-vault.yaml
@@ -219,7 +219,7 @@ kubectl describe bucket
 #  ----     ------                   ----              ----                                 -------
 #  Warning  CannotConnectToProvider  1s (x5 over 14s)  managed/bucket.s3.aws.crossplane.io  cannot get referenced Provider: ProviderConfig.aws.crossplane.io "default-provider-config" not found
 ```
-In the [claim file](../examples/aws-provider/composite-resources/s3/multi-tenant.yaml), we specify a provider config name. However, this is patched out to use the provider config with name `<NAMESPACE>-provider-config`. This is why the error message indicates provider config with name `default-provider-config` is not found. 
+In the [claim file](../../examples/aws-provider/composite-resources/s3/multi-tenant.yaml), we specify a provider config name. However, this is patched out to use the provider config with name `<NAMESPACE>-provider-config`. This is why the error message indicates provider config with name `default-provider-config` is not found. 
 
 Since we created a provider config named `application1-provider-config`, we should be able to create a claim in namespace called application1. 
 
