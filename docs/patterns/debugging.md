@@ -32,7 +32,7 @@ Most error messages are logged to resources' event field. Whenever your Composit
 _Note:_ Debugging is also enabled for the AWS provider pods. You may find it
 useful to check the logs for the provider pods for extra information on
 failures. You can also disable logging
-[here](/bootstrap/eksctl/crossplane/aws-provider.yaml#L24).
+[here](../../bootstrap/eksctl/crossplane/aws-provider.yaml#L24).
 
 ```bash
 # kubectl get pods -n crossplane-system
