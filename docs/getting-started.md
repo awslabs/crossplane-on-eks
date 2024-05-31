@@ -18,9 +18,11 @@ Ensure that you have installed the following tools locally:
 
 ### terraform
 
-1. For consuming Crossplane Blueprints, please see the [Consumption]() section. 
+1. For consuming Crossplane Blueprints, please see the [Getting Started](https://awslabs.github.io/crossplane-on-eks/#getting-started) section. For exploring and trying out the patterns provided, please
+clone the project locally to quickly get up and running with a pattern. After cloning the project locally, `cd` into the pattern
+directory of your choice.
 
-2. To bootstrap using terraform, the typical steps of execution are as follows:
+2. To provision the pattern, the typical steps of execution are as follows:
 
     ```sh
     terraform init
@@ -35,7 +37,7 @@ Ensure that you have installed the following tools locally:
 on your local machine and allow you to interact with your EKS Cluster using `kubectl`.
 
     ```sh
-    aws eks --region <REGION> update-kubeconfig --name <CLUSTER_NAME>
+    aws eks --region <REGION> update-kubeconfig --name <CLUSTER_NAME> --alias <CLUSTER_NAME>
     ```
 
     !!! info "Terraform outputs"
