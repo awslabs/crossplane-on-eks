@@ -16,39 +16,43 @@ grafana:
     type: "LoadBalancer"
     annotations:
       service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
-  resources: 
+  resources:
     requests:
-      cpu : "100m"
-      memory : "1Gi"
+      cpu: "100m"
+      memory: "1Gi"
     limits:
       cpu: "1"
       memory: "2Gi"
-  datasources: 
+  datasources:
     datasources.yaml:
       apiVersion: 1
       datasources:
-      - name: Prometheus
-        type: prometheus
-        access: proxy
-        url: http://kube-prometheus-stack-prometheus.kube-prometheus-stack:9090/
-        isDefault: false
-        uid: prometheusdatasource
+        - name: Prometheus
+          type: prometheus
+          access: proxy
+          url: http://kube-prometheus-stack-prometheus.kube-prometheus-stack:9090/
+          isDefault: false
+          uid: prometheusdatasource
       deleteDatasources:
-      - name: Prometheus
+        - name: Prometheus
   dashboardProviders:
     dashboardproviders.yaml:
       apiVersion: 1
       providers:
-      - name: 'default'
-        orgId: 1
-        type: file
-        disableDeletion: false
-        editable: true
-        options:
-          path: /var/lib/grafana/dashboards/default
+        - name: "default"
+          orgId: 1
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/default
   dashboards:
     default:
       crossplane:
-        gnetId: 19747
-        revision: 5
+        gnetId: 21169
+        revision: 1
+        datasource: prometheusdatasource
+      argocd:
+        gnetId: 14584
+        revision: 1
         datasource: prometheusdatasource

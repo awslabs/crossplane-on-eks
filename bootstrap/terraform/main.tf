@@ -10,7 +10,7 @@ provider "kubernetes" {
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
   exec {
     api_version = "client.authentication.k8s.io/v1beta1"
-    args        = ["eks", "get-token", "--cluster-name", local.name, "--region", var.region]
+    args        = ["eks", "get-token", "--cluster-name", local.name, "--region", local.region]
     command     = "aws"
   }
 }
@@ -21,7 +21,7 @@ provider "helm" {
     cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
     exec {
       api_version = "client.authentication.k8s.io/v1beta1"
-      args        = ["eks", "get-token", "--cluster-name", local.name, "--region", var.region]
+      args        = ["eks", "get-token", "--cluster-name", local.name, "--region", local.region]
       command     = "aws"
     }
   }
@@ -32,7 +32,7 @@ provider "kubectl" {
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
   exec {
     api_version = "client.authentication.k8s.io/v1beta1"
-    args        = ["eks", "get-token", "--cluster-name", local.name, "--region", var.region]
+    args        = ["eks", "get-token", "--cluster-name", local.name, "--region", local.region]
     command     = "aws"
   }
   load_config_file  = false
@@ -65,7 +65,7 @@ locals {
 
 module "ebs_csi_driver_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.14"
+  version = "~> 5.30"
 
   role_name = "${local.name}-ebs-csi-driver"
 
@@ -87,24 +87,35 @@ module "ebs_csi_driver_irsa" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.13"
+  version = "~> 20.0"
 
   cluster_name                   = local.name
   cluster_version                = local.cluster_version
   cluster_endpoint_public_access = true
   kms_key_enable_default_policy  = true
 
-  cluster_addons = {
-    aws-ebs-csi-driver = {
-      service_account_role_arn = module.ebs_csi_driver_irsa.iam_role_arn
-    }
-    coredns    = {}
-    kube-proxy = {}
-    vpc-cni    = {}
-  }
+  # Give the Terraform identity admin access to the cluster
+  # which will allow resources to be deployed into the cluster
+  enable_cluster_creator_admin_permissions = true
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
+
+  cluster_addons = {
+    aws-ebs-csi-driver = {
+      most_recent              = true
+      service_account_role_arn = module.ebs_csi_driver_irsa.iam_role_arn
+    }
+    coredns = {
+      most_recent = true
+    }
+    kube-proxy = {
+      most_recent = true
+    }
+    vpc-cni = {
+      most_recent = true
+    }
+  }
 
   # for production cluster, add a node group for add-ons that should not be inerrupted such as coredns
   eks_managed_node_groups = {
@@ -127,29 +138,40 @@ module "eks" {
 
 module "eks_blueprints_addons" {
   source  = "aws-ia/eks-blueprints-addons/aws"
-  version = "1.8.0"
+  version = "~> 1.16"
 
   cluster_name      = module.eks.cluster_name
   cluster_endpoint  = module.eks.cluster_endpoint
   cluster_version   = module.eks.cluster_version
   oidc_provider_arn = module.eks.oidc_provider_arn
-  enable_argocd     = true
+
+  enable_argocd = true
   argocd = {
     namespace     = "argocd"
-    chart_version = "6.3.1" # ArgoCD v2.10.1
+    chart_version = "6.11.1" # ArgoCD v2.11.2
+    wait          = true
+    timeout       = "600"
     values = [
-      templatefile("${path.module}/argocd-values.yaml", {
+      templatefile("${path.module}/values/argocd.yaml", {
         crossplane_aws_provider_enable        = local.aws_provider.enable
         crossplane_upjet_aws_provider_enable  = local.upjet_aws_provider.enable
         crossplane_kubernetes_provider_enable = local.kubernetes_provider.enable
     })]
   }
-  enable_gatekeeper                   = true
+  enable_gatekeeper = true
+  gatekeeper = {
+    timeout = "600"
+    wait    = true
+  }
+
   enable_metrics_server               = true
-  enable_kube_prometheus_stack        = true
   enable_aws_load_balancer_controller = true
+
+  enable_kube_prometheus_stack = true
   kube_prometheus_stack = {
-    values = [file("${path.module}/kube-prometheus-stack-values.yaml")]
+    wait    = true
+    timeout = "600"
+    values  = [file("${path.module}/values/prometheus.yaml")]
   }
 
   depends_on = [module.eks.eks_managed_node_groups]
@@ -159,42 +181,23 @@ module "eks_blueprints_addons" {
 # Crossplane
 #---------------------------------------------------------------
 module "crossplane" {
-  source            = "github.com/awslabs/crossplane-on-eks/bootstrap/terraform/addon/"
-  enable_crossplane = true
-  crossplane = {
-    values = [yamlencode({
-      args = ["--enable-environment-configs"]
-      metrics = {
-        enabled = true
-      }
-      resourcesCrossplane = {
-        limits = {
-          cpu    = "1"
-          memory = "2Gi"
-        }
-        requests = {
-          cpu    = "100m"
-          memory = "1Gi"
-        }
-      }
-      resourcesRBACManager = {
-        limits = {
-          cpu    = "500m"
-          memory = "1Gi"
-        }
-        requests = {
-          cpu    = "100m"
-          memory = "512Mi"
-        }
-      }
-    })]
-  }
+  source  = "aws-ia/eks-blueprints-addon/aws"
+  version = "1.1.1"
+
+  name             = "crossplane"
+  description      = "A Helm chart to deploy crossplane project"
+  namespace        = "crossplane-system"
+  create_namespace = true
+  chart            = "crossplane"
+  chart_version    = "1.16.0"
+  repository       = "https://charts.crossplane.io/stable/"
+  values           = [file("${path.module}/values/crossplane.yaml")]
 
   depends_on = [module.eks.eks_managed_node_groups]
 }
 
 resource "kubectl_manifest" "environmentconfig" {
-  yaml_body = templatefile("${path.module}/environmentconfig.yaml", {
+  yaml_body = templatefile("${path.module}/config/environmentconfig.yaml", {
     awsAccountID = data.aws_caller_identity.current.account_id
     eksOIDC      = module.eks.oidc_provider
     vpcID        = module.vpc.vpc_id
@@ -211,7 +214,7 @@ locals {
 
   upjet_aws_provider = {
     enable               = var.enable_upjet_aws_provider # defaults to true
-    version              = "v1.4.0"
+    version              = "v1.5.0"
     runtime_config       = "upjet-aws-runtime-config"
     provider_config_name = "aws-provider-config" #this is the providerConfigName used in all the examples in this repo
     families = [
@@ -390,7 +393,6 @@ resource "kubectl_manifest" "aws_provider_config" {
   depends_on = [kubectl_manifest.aws_provider, time_sleep.aws_wait_60_seconds]
 }
 
-
 #---------------------------------------------------------------
 # Crossplane Kubernetes Provider
 #---------------------------------------------------------------
@@ -518,7 +520,6 @@ resource "kubectl_manifest" "helm_provider_config" {
 
   depends_on = [kubectl_manifest.helm_provider, time_sleep.wait_60_seconds_helm]
 }
-
 
 #---------------------------------------------------------------
 # Supporting Resources
