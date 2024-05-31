@@ -34,7 +34,7 @@ eksctl create cluster -f bootstrap/eksctl/eksctl.yaml
 You can create a vault service in the same cluster as Crossplane or create a service on a VM. 
 
 ### In-cluster
-Follow: https://github.com/crossplane/crossplane/blob/master/docs/guides/vault-as-secret-store.md#prepare-vault
+Follow: https://docs.crossplane.io/latest/guides/vault-as-secret-store/
 
 ### On an external VM
 This VM must be reachable by the Crossplane installation. If you are using an EC2 instance, routing, network ACL, and Security Groups must be configured to allow for traffic from Crossplane pod to the VM. 

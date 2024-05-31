@@ -145,7 +145,7 @@ Debugging Composition Definitions is similar to debugging Compositions.
 ### Providers
 
 There are two ways to install providers in Crossplane. Using `configuration.pkg.crossplane.io` and `provider.pkg.crossplane.io`. In this repository, we use `provider.pkg.crossplane.io`. 
-Note that if you define a `configuration.pkg.crossplane.io` object, Crossplane will create a `provider.pkg.crossplane.io` object. This object is managed by Crossplane. Please refer to [this guide](https://github.com/crossplane/crossplane/blob/master/docs/concepts/packages.md) for more information about Crossplane Packages.
+Note that if you define a `configuration.pkg.crossplane.io` object, Crossplane will create a `provider.pkg.crossplane.io` object. This object is managed by Crossplane. Please refer to [this guide](https://docs.crossplane.io/latest/concepts/packages/) for more information about Crossplane Packages.
 
 If you are experiencing provider issues, steps below are a good starting point. 
 
