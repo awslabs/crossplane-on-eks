@@ -1,5 +1,5 @@
 nav:
-  - Overview: index.md
+  - Overview: ../README.md
   - Getting Started: getting-started.md
   - Patterns: patterns
   - FAQ: faq.md
