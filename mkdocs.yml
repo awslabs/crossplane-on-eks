@@ -107,9 +107,3 @@ markdown_extensions:
 
 extra_javascript:
   - https://cdn.jsdelivr.net/npm/@glidejs/glide
-
-nav:
-  - Overview: ../README.md
-  - Getting Started: getting-started.md
-  - Patterns: patterns
-  - FAQ: faq.md
