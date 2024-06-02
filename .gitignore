@@ -15,3 +15,5 @@ kubeconfig_*
 *.tfplan
 
 cluster-keys.json
+
+.vscode

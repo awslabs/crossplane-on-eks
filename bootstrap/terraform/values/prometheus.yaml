@@ -56,3 +56,11 @@ grafana:
         gnetId: 14584
         revision: 1
         datasource: prometheusdatasource
+      eks:
+        gnetId: 14623
+        revision: 1
+        datasource: prometheusdatasource
+      ekscontrolplane:
+        gnetId: 21192
+        revision: 1
+        datasource: prometheusdatasource
