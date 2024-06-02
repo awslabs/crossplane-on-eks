@@ -11,6 +11,13 @@ prometheus:
       podMetricsEndpoints:
         - port: "metrics"
       selector: {}
+    - name: "argocd"
+      namespaceSelector:
+        matchNames:
+          - "argocd"
+      podMetricsEndpoints:
+        - port: "metrics"
+      selector: {}
 grafana:
   service:
     type: "LoadBalancer"
