@@ -159,12 +159,6 @@ module "eks_blueprints_addons" {
         crossplane_kubernetes_provider_enable = local.kubernetes_provider.enable
     })]
   }
-  enable_gatekeeper = true
-  gatekeeper = {
-    wait          = true
-    wait_for_jobs = true
-    timeout       = "600"
-  }
 
   enable_metrics_server               = true
   enable_aws_load_balancer_controller = true
@@ -181,6 +175,26 @@ module "eks_blueprints_addons" {
 }
 
 #---------------------------------------------------------------
+# Gatekeeper
+#---------------------------------------------------------------
+module "gatekeeper" {
+  source  = "aws-ia/eks-blueprints-addon/aws"
+  version = "1.1.1"
+
+  name             = "gatekeeper"
+  description      = "A Helm chart to deploy gatekeeper project"
+  namespace        = "gatekeeper-system"
+  create_namespace = true
+  chart            = "gatekeeper"
+  chart_version    = "3.16.3"
+  repository       = "https://open-policy-agent.github.io/gatekeeper/charts"
+  wait             = true
+  timeout          = "600"
+
+  depends_on = [module.eks_blueprints_addons]
+}
+
+#---------------------------------------------------------------
 # Crossplane
 #---------------------------------------------------------------
 module "crossplane" {
@@ -194,9 +208,11 @@ module "crossplane" {
   chart            = "crossplane"
   chart_version    = "1.16.0"
   repository       = "https://charts.crossplane.io/stable/"
+  wait             = true
+  timeout          = "600"
   values           = [file("${path.module}/values/crossplane.yaml")]
 
-  depends_on = [module.eks.eks_managed_node_groups]
+  depends_on = [module.eks_blueprints_addons]
 }
 
 resource "kubectl_manifest" "environmentconfig" {
