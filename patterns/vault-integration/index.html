@@ -1,914 +1,182 @@
-
-<!doctype html>
-<html lang="en" class="no-js">
-  <head>
-    
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width,initial-scale=1">
-      
-      
-        <meta name="author" content="AWS">
-      
-      
-        <link rel="canonical" href="https://awslabs.github.io/crossplane-on-eks/patterns/vault-integration/">
-      
-      
-        <link rel="prev" href="../rds-day-2/">
-      
-      
-        <link rel="next" href="../../faq/">
-      
-      
-      <link rel="icon" href="../../images/colored-logo.png">
-      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.21">
-    
-    
-      
-        <title>Overview - Amazon Crossplane Blueprints</title>
-      
-    
-    
-      <link rel="stylesheet" href="../../assets/stylesheets/main.66ac8b77.min.css">
-      
-        
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
-      
-      
-  
-  
-    
-    
-  
-    
-    
-  
-    
-    
-  
-    
-    
-  
-    
-    
-  
-    
-    
-  
-    
-    
-  
-    
-    
-  
-    
-    
-  
-    
-    
-  
-    
-    
-  
-    
-    
-  
-  
-  <style>:root{--md-admonition-icon--note:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M1 7.775V2.75C1 1.784 1.784 1 2.75 1h5.025c.464 0 .91.184 1.238.513l6.25 6.25a1.75 1.75 0 0 1 0 2.474l-5.026 5.026a1.75 1.75 0 0 1-2.474 0l-6.25-6.25A1.752 1.752 0 0 1 1 7.775Zm1.5 0c0 .066.026.13.073.177l6.25 6.25a.25.25 0 0 0 .354 0l5.025-5.025a.25.25 0 0 0 0-.354l-6.25-6.25a.25.25 0 0 0-.177-.073H2.75a.25.25 0 0 0-.25.25ZM6 5a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z"/></svg>');--md-admonition-icon--abstract:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M2.5 1.75v11.5c0 .138.112.25.25.25h3.17a.75.75 0 0 1 0 1.5H2.75A1.75 1.75 0 0 1 1 13.25V1.75C1 .784 1.784 0 2.75 0h8.5C12.216 0 13 .784 13 1.75v7.736a.75.75 0 0 1-1.5 0V1.75a.25.25 0 0 0-.25-.25h-8.5a.25.25 0 0 0-.25.25Zm13.274 9.537v-.001l-4.557 4.45a.75.75 0 0 1-1.055-.008l-1.943-1.95a.75.75 0 0 1 1.062-1.058l1.419 1.425 4.026-3.932a.75.75 0 1 1 1.048 1.074ZM4.75 4h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM4 7.75A.75.75 0 0 1 4.75 7h2a.75.75 0 0 1 0 1.5h-2A.75.75 0 0 1 4 7.75Z"/></svg>');--md-admonition-icon--info:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>');--md-admonition-icon--tip:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M3.499.75a.75.75 0 0 1 1.5 0v.996C5.9 2.903 6.793 3.65 7.662 4.376l.24.202c-.036-.694.055-1.422.426-2.163C9.1.873 10.794-.045 12.622.26 14.408.558 16 1.94 16 4.25c0 1.278-.954 2.575-2.44 2.734l.146.508.065.22c.203.701.412 1.455.476 2.226.142 1.707-.4 3.03-1.487 3.898C11.714 14.671 10.27 15 8.75 15h-6a.75.75 0 0 1 0-1.5h1.376a4.484 4.484 0 0 1-.563-1.191 3.835 3.835 0 0 1-.05-2.063 4.647 4.647 0 0 1-2.025-.293.75.75 0 0 1 .525-1.406c1.357.507 2.376-.006 2.698-.318l.009-.01a.747.747 0 0 1 1.06 0 .748.748 0 0 1-.012 1.074c-.912.92-.992 1.835-.768 2.586.221.74.745 1.337 1.196 1.621H8.75c1.343 0 2.398-.296 3.074-.836.635-.507 1.036-1.31.928-2.602-.05-.603-.216-1.224-.422-1.93l-.064-.221c-.12-.407-.246-.84-.353-1.29a2.425 2.425 0 0 1-.507-.441 3.075 3.075 0 0 1-.633-1.248.75.75 0 0 1 1.455-.364c.046.185.144.436.31.627.146.168.353.305.712.305.738 0 1.25-.615 1.25-1.25 0-1.47-.95-2.315-2.123-2.51-1.172-.196-2.227.387-2.706 1.345-.46.92-.27 1.774.019 3.062l.042.19a.884.884 0 0 1 .01.05c.348.443.666.949.94 1.553a.75.75 0 1 1-1.365.62c-.553-1.217-1.32-1.94-2.3-2.768L6.7 5.527c-.814-.68-1.75-1.462-2.692-2.619a3.737 3.737 0 0 0-1.023.88c-.406.495-.663 1.036-.722 1.508.116.122.306.21.591.239.388.038.797-.06 1.032-.19a.75.75 0 0 1 .728 1.31c-.515.287-1.23.439-1.906.373-.682-.067-1.473-.38-1.879-1.193L.75 5.677V5.5c0-.984.48-1.94 1.077-2.664.46-.559 1.05-1.055 1.673-1.353V.75Z"/></svg>');--md-admonition-icon--success:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/></svg>');--md-admonition-icon--question:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.92 6.085h.001a.749.749 0 1 1-1.342-.67c.169-.339.436-.701.849-.977C6.845 4.16 7.369 4 8 4a2.756 2.756 0 0 1 1.637.525c.503.377.863.965.863 1.725 0 .448-.115.83-.329 1.15-.205.307-.47.513-.692.662-.109.072-.22.138-.313.195l-.006.004a6.24 6.24 0 0 0-.26.16.952.952 0 0 0-.276.245.75.75 0 0 1-1.248-.832c.184-.264.42-.489.692-.661.103-.067.207-.132.313-.195l.007-.004c.1-.061.182-.11.258-.161a.969.969 0 0 0 .277-.245C8.96 6.514 9 6.427 9 6.25a.612.612 0 0 0-.262-.525A1.27 1.27 0 0 0 8 5.5c-.369 0-.595.09-.74.187a1.01 1.01 0 0 0-.34.398ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/></svg>');--md-admonition-icon--warning:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/></svg>');--md-admonition-icon--failure:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M2.344 2.343h-.001a8 8 0 0 1 11.314 11.314A8.002 8.002 0 0 1 .234 10.089a8 8 0 0 1 2.11-7.746Zm1.06 10.253a6.5 6.5 0 1 0 9.108-9.275 6.5 6.5 0 0 0-9.108 9.275ZM6.03 4.97 8 6.94l1.97-1.97a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l1.97 1.97a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-1.97 1.97a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734L6.94 8 4.97 6.03a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018Z"/></svg>');--md-admonition-icon--danger:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M9.504.43a1.516 1.516 0 0 1 2.437 1.713L10.415 5.5h2.123c1.57 0 2.346 1.909 1.22 3.004l-7.34 7.142a1.249 1.249 0 0 1-.871.354h-.302a1.25 1.25 0 0 1-1.157-1.723L5.633 10.5H3.462c-1.57 0-2.346-1.909-1.22-3.004L9.503.429Zm1.047 1.074L3.286 8.571A.25.25 0 0 0 3.462 9H6.75a.75.75 0 0 1 .694 1.034l-1.713 4.188 6.982-6.793A.25.25 0 0 0 12.538 7H9.25a.75.75 0 0 1-.683-1.06l2.008-4.418.003-.006a.036.036 0 0 0-.004-.009l-.006-.006-.008-.001c-.003 0-.006.002-.009.004Z"/></svg>');--md-admonition-icon--bug:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M4.72.22a.75.75 0 0 1 1.06 0l1 .999a3.488 3.488 0 0 1 2.441 0l.999-1a.748.748 0 0 1 1.265.332.75.75 0 0 1-.205.729l-.775.776c.616.63.995 1.493.995 2.444v.327c0 .1-.009.197-.025.292.408.14.764.392 1.029.722l1.968-.787a.75.75 0 0 1 .556 1.392L13 7.258V9h2.25a.75.75 0 0 1 0 1.5H13v.5c0 .409-.049.806-.141 1.186l2.17.868a.75.75 0 0 1-.557 1.392l-2.184-.873A4.997 4.997 0 0 1 8 16a4.997 4.997 0 0 1-4.288-2.427l-2.183.873a.75.75 0 0 1-.558-1.392l2.17-.868A5.036 5.036 0 0 1 3 11v-.5H.75a.75.75 0 0 1 0-1.5H3V7.258L.971 6.446a.75.75 0 0 1 .558-1.392l1.967.787c.265-.33.62-.583 1.03-.722a1.677 1.677 0 0 1-.026-.292V4.5c0-.951.38-1.814.995-2.444L4.72 1.28a.75.75 0 0 1 0-1.06Zm.53 6.28a.75.75 0 0 0-.75.75V11a3.5 3.5 0 1 0 7 0V7.25a.75.75 0 0 0-.75-.75ZM6.173 5h3.654A.172.172 0 0 0 10 4.827V4.5a2 2 0 1 0-4 0v.327c0 .096.077.173.173.173Z"/></svg>');--md-admonition-icon--example:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M5 5.782V2.5h-.25a.75.75 0 0 1 0-1.5h6.5a.75.75 0 0 1 0 1.5H11v3.282l3.666 5.76C15.619 13.04 14.543 15 12.767 15H3.233c-1.776 0-2.852-1.96-1.899-3.458Zm-2.4 6.565a.75.75 0 0 0 .633 1.153h9.534a.75.75 0 0 0 .633-1.153L12.225 10.5h-8.45ZM9.5 2.5h-3V6c0 .143-.04.283-.117.403L4.73 9h6.54L9.617 6.403A.746.746 0 0 1 9.5 6Z"/></svg>');--md-admonition-icon--quote:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M1.75 2.5h10.5a.75.75 0 0 1 0 1.5H1.75a.75.75 0 0 1 0-1.5Zm4 5h8.5a.75.75 0 0 1 0 1.5h-8.5a.75.75 0 0 1 0-1.5Zm0 5h8.5a.75.75 0 0 1 0 1.5h-8.5a.75.75 0 0 1 0-1.5ZM2.5 7.75v6a.75.75 0 0 1-1.5 0v-6a.75.75 0 0 1 1.5 0Z"/></svg>');}</style>
-
-
-
-    
-    
-      
-    
-    
-      
-        
-        
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=ember:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"ember";--md-code-font:"Roboto Mono"}</style>
-      
-    
-    
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
-    
-      
-
-    
-    
-    
-  </head>
-  
-  
-    
-    
-    
-    
-    
-    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="orange" data-md-color-accent="orange">
-  
-    
-    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
-    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer"></label>
-    <div data-md-component="skip">
-      
-        
-        <a href="#overview" class="md-skip">
-          Skip to content
-        </a>
-      
-    </div>
-    <div data-md-component="announce">
-      
-    </div>
-    
-      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
-        
-      </div>
-    
-    
-      
-
-  
-
-<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
-  <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="Amazon Crossplane Blueprints" class="md-header__button md-logo" aria-label="Amazon Crossplane Blueprints" data-md-component="logo">
-      
-  <img src="../../images/white-logo.png" alt="logo">
-
-    </a>
-    <label class="md-header__button md-icon" for="__drawer">
-      
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
-    </label>
-    <div class="md-header__title" data-md-component="header-title">
-      <div class="md-header__ellipsis">
-        <div class="md-header__topic">
-          <span class="md-ellipsis">
-            Amazon Crossplane Blueprints
-          </span>
-        </div>
-        <div class="md-header__topic" data-md-component="header-topic">
-          <span class="md-ellipsis">
-            
-              Overview
-            
-          </span>
-        </div>
-      </div>
-    </div>
-    
-      
-    
-    
-    
-    
-      <label class="md-header__button md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
-      </label>
-      <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
-      <label class="md-search__icon md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Search">
-        
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
-        </button>
-      </nav>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Initializing search
-          </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-    
-    
-      <div class="md-header__source">
-        <a href="https://github.com/awslabs/crossplane-on-eks" title="Go to repository" class="md-source" data-md-component="source">
-  <div class="md-source__icon md-icon">
-    
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
-  </div>
-  <div class="md-source__repository">
-    crossplane-on-eks
-  </div>
-</a>
-      </div>
-    
-  </nav>
-  
-    
-  
-</header>
-    
-    <div class="md-container" data-md-component="container">
-      
-      
-        
-      
-      <main class="md-main" data-md-component="main">
-        <div class="md-main__inner md-grid">
-          
-            
-              
-              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
-                <div class="md-sidebar__scrollwrap">
-                  <div class="md-sidebar__inner">
-                    
-
-
-
-<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
-  <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="Amazon Crossplane Blueprints" class="md-nav__button md-logo" aria-label="Amazon Crossplane Blueprints" data-md-component="logo">
-      
-  <img src="../../images/white-logo.png" alt="logo">
-
-    </a>
-    Amazon Crossplane Blueprints
-  </label>
-  
-    <div class="md-nav__source">
-      <a href="https://github.com/awslabs/crossplane-on-eks" title="Go to repository" class="md-source" data-md-component="source">
-  <div class="md-source__icon md-icon">
-    
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
-  </div>
-  <div class="md-source__repository">
-    crossplane-on-eks
-  </div>
-</a>
-    </div>
-  
-  <ul class="md-nav__list" data-md-scrollfix>
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Overview
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../getting-started/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Getting Started
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-    
-  
-  
-  
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
-        
-          
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
-            
-  
-  <span class="md-ellipsis">
-    Patterns
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_3">
-            <span class="md-nav__icon md-icon"></span>
-            Patterns
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../debugging/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Debugging CompositeResourceDefinitions (XRD) and Compositions
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../nested-compositions/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Nested Compositions
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../patching-101/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Patching 101
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../rds-day-2/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    RDS day 2 operations
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Overview
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        
-  
-  <span class="md-ellipsis">
-    Overview
-  </span>
-  
-
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#goals" class="md-nav__link">
-    <span class="md-ellipsis">
-      Goals
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#prerequisites" class="md-nav__link">
-    <span class="md-ellipsis">
-      Prerequisites
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../faq/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    FAQ
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-  </ul>
-</nav>
-                  </div>
-                </div>
-              </div>
-            
-            
-              
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
-                <div class="md-sidebar__scrollwrap">
-                  <div class="md-sidebar__inner">
-                    
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#goals" class="md-nav__link">
-    <span class="md-ellipsis">
-      Goals
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#prerequisites" class="md-nav__link">
-    <span class="md-ellipsis">
-      Prerequisites
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-                  </div>
-                </div>
-              </div>
-            
-          
-          
-            <div class="md-content" data-md-component="content">
-              <article class="md-content__inner md-typeset">
-                
-                  
-
-  
-  
-
-
-<h1 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h1>
-<h2 id="goals">Goals<a class="headerlink" href="#goals" title="Permanent link">&para;</a></h2>
-<p>In this doc, we will configure the following:
-- A Vault server (in-cluster or outside cluster)
-- A Crossplane installation with AWS provider on EKS
-- Provision a S3 bucket through Crossplane.
-- Publish bucket information as a Vault secret.
-- Access the published information in Vault from a pod using Vault Agent Injector</p>
-<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
-<p>Following command line tools:
-- kubectl
-- helm
-- eksctl
-- aws</p>
-<p>Note:
-- As of Crossplane 1.9.0, the support for external secret store is still in alpha state and may go under changes.
-- This assumes a use case for single-cluster multi-tenant. However, the underlying concepts discussed here should be applicable to multi-cluster setup as well.
-- This doc is based on the excellent <a href="https://learn.hashicorp.com/tutorials/vault/kubernetes-external-vault">external vault configuration guide</a>. Please check these guides out for more detailed information. </p>
-<h1 id="procedure">Procedure<a class="headerlink" href="#procedure" title="Permanent link">&para;</a></h1>
-<h2 id="provision-a-eks-cluster">Provision a EKS cluster<a class="headerlink" href="#provision-a-eks-cluster" title="Permanent link">&para;</a></h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># from this repository root</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>eksctl<span class="w"> </span>create<span class="w"> </span>cluster<span class="w"> </span>-f<span class="w"> </span>bootstrap/eksctl/eksctl.yaml
-</span></code></pre></div>
-<h2 id="create-a-vault-service">Create a Vault service<a class="headerlink" href="#create-a-vault-service" title="Permanent link">&para;</a></h2>
-<p>You can create a vault service in the same cluster as Crossplane or create a service on a VM. </p>
-<h3 id="in-cluster">In-cluster<a class="headerlink" href="#in-cluster" title="Permanent link">&para;</a></h3>
-<p>Follow: https://docs.crossplane.io/latest/guides/vault-as-secret-store/</p>
-<h3 id="on-an-external-vm">On an external VM<a class="headerlink" href="#on-an-external-vm" title="Permanent link">&para;</a></h3>
-<p>This VM must be reachable by the Crossplane installation. If you are using an EC2 instance, routing, network ACL, and Security Groups must be configured to allow for traffic from Crossplane pod to the VM. </p>
-<p>Commands below assumes the VM is an Ubuntu instance. </p>
-<h4 id="install-vault">Install Vault<a class="headerlink" href="#install-vault" title="Permanent link">&para;</a></h4>
-<p>Run the following commands in your VM.</p>
-<p>Install vault on Ubuntu following the vault <a href="https://developer.hashicorp.com/vault/tutorials/getting-started/getting-started-install">docs</a></p>
-<p>Configure vault
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>vault.service
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># create a configuration file for vault. NOTE: this creates a vault service with TLS disabled. </span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># This is done to make the configuration step easy to follow only. TLS should be enabled for real workloads.</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>cat<span class="w"> </span><span class="o">&lt;&lt;&lt;</span><span class="w"> </span><span class="s1">&#39;ui = true</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="s1">storage &quot;file&quot; {</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="s1">  path = &quot;/opt/vault/data&quot;</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="s1">}</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="s1">listener &quot;tcp&quot; {</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="s1">  address = &quot;0.0.0.0:8200&quot;</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="s1">  tls_disable = 1</span>
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="s1">}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>-u<span class="w"> </span>vault<span class="w"> </span>tee<span class="w"> </span>/etc/vault.d/vault.hcl<span class="w"> </span>&gt;<span class="w"> </span>/dev/null
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>vault.service
-</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
-</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="nb">export</span><span class="w"> </span><span class="nv">VAULT_ADDR</span><span class="o">=</span><span class="s1">&#39;http://127.0.0.1:8200&#39;</span>
-</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="c1"># This command will print out unseal keys and the root token.</span>
-</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>vault<span class="w"> </span>operator<span class="w"> </span>init
-</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>vault<span class="w"> </span>operator<span class="w"> </span>unseal<span class="w"> </span><span class="c1"># do this three times. each time with a different unseal key.</span>
-</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>vault<span class="w"> </span>secrets<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>-path<span class="o">=</span>secret<span class="w"> </span>kv-v2
-</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>vault<span class="w"> </span>auth<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>kubernetes
-</span></code></pre></div></p>
-<p>Get the IP address of this instance. For an EC2 instance, it should be the private IP of the instance. For a simple EC2 instance:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>aws<span class="w"> </span>ec2<span class="w"> </span>describe-instances<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>--filters<span class="w"> </span><span class="nv">Name</span><span class="o">=</span>instance-id,Values<span class="o">=</span>&lt;INSERT_INSTANCE_ID_HERE&gt;<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s2">&quot;.Reservations[0].Instances[0].NetworkInterfaces[0].PrivateIpAddress&quot;</span>
-</span></code></pre></div></p>
-<h4 id="install-vault-agent-sidecar-injector">Install Vault Agent Sidecar Injector<a class="headerlink" href="#install-vault-agent-sidecar-injector" title="Permanent link">&para;</a></h4>
-<p>Rut the following commands from a place where you have access to your Kubernetes cluster, e.g. your laptop. The Vault Agent Sidecar injector looks for CREATE and UPDATE events, then it will inject vault secret into the containers. </p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>kubectl<span class="w"> </span>create<span class="w"> </span>ns<span class="w"> </span>vault-system
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="c1"># install vault injector. be sure to use the IP address obtained above.</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>helm<span class="w"> </span>-n<span class="w"> </span>vault-system<span class="w"> </span>install<span class="w"> </span>vault<span class="w"> </span>hashicorp/vault<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span>--set<span class="w"> </span><span class="s2">&quot;injector.externalVaultAddr=http://&lt;PRIVATE_IP_ADDRESS&gt;:8200&quot;</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="nv">TOKEN_REVIEW_JWJ</span><span class="o">=</span><span class="k">$(</span>kubectl<span class="w"> </span>-n<span class="w"> </span>vault-system<span class="w"> </span>get<span class="w"> </span>secret<span class="w"> </span><span class="k">$(</span>kubectl<span class="w"> </span>-n<span class="w"> </span>vault-system<span class="w"> </span>get<span class="w"> </span>secrets<span class="w"> </span>--output<span class="o">=</span>json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.items[].metadata | select(.name|startswith(&quot;vault-token-&quot;)).name&#39;</span><span class="k">)</span><span class="w"> </span>--output<span class="o">=</span><span class="s1">&#39;go-template={{ .data.token }}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>base64<span class="w"> </span>--decode<span class="k">)</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="nv">KUBE_HOST</span><span class="o">=</span><span class="k">$(</span>kubectl<span class="w"> </span>config<span class="w"> </span>view<span class="w"> </span>--raw<span class="w"> </span>--minify<span class="w"> </span>--flatten<span class="w"> </span>--output<span class="o">=</span><span class="s1">&#39;jsonpath={.clusters[].cluster.server}&#39;</span><span class="k">)</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="nv">KUBE_CA_CERT</span><span class="o">=</span><span class="k">$(</span>kubectl<span class="w"> </span>config<span class="w"> </span>view<span class="w"> </span>--raw<span class="w"> </span>--minify<span class="w"> </span>--flatten<span class="w"> </span>--output<span class="o">=</span><span class="s1">&#39;jsonpath={.clusters[].cluster.certificate-authority-data}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>base64<span class="w"> </span>--decode<span class="k">)</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="nv">ISSUER</span><span class="o">=</span><span class="k">$(</span>kubectl<span class="w"> </span>get<span class="w"> </span>--raw<span class="w"> </span>/.well-known/openid-configuration<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span>.issuer<span class="k">)</span>
-</span></code></pre></div>
-<p>Configure Kubernetes authentication, policy, and role for Crossplane to use in your VM:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>vault<span class="w"> </span>write<span class="w"> </span>auth/kubernetes/config<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">     </span><span class="nv">token_reviewer_jwt</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$TOKEN_REVIEW_JWT</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">     </span><span class="nv">kubernetes_host</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$KUBE_HOST</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">     </span><span class="nv">kubernetes_ca_cert</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$KUBE_CA_CERT</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">     </span><span class="nv">issuer</span><span class="o">=</span><span class="nv">$ISSUER</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>vault<span class="w"> </span>policy<span class="w"> </span>write<span class="w"> </span>crossplane<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;EOF</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="s">path &quot;secret/data/crossplane-system*&quot; {</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="s">    capabilities = [&quot;create&quot;, &quot;read&quot;, &quot;update&quot;, &quot;delete&quot;]</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="s">}</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="s">path &quot;secret/metadata/crossplane-system*&quot; {</span>
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="s">    capabilities = [&quot;create&quot;, &quot;read&quot;, &quot;update&quot;, &quot;delete&quot;]</span>
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="s">}</span>
-</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="s">EOF</span>
-</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>
-</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>vault<span class="w"> </span>write<span class="w"> </span>auth/kubernetes/role/crossplane<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="w">    </span><span class="nv">bound_service_account_names</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="w">    </span><span class="nv">bound_service_account_namespaces</span><span class="o">=</span>crossplane-system<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="w">    </span><span class="nv">policies</span><span class="o">=</span>crossplane<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="w">    </span><span class="nv">ttl</span><span class="o">=</span>24h
-</span></code></pre></div>
-<h2 id="configure-vault">Configure Vault<a class="headerlink" href="#configure-vault" title="Permanent link">&para;</a></h2>
-<p>For our test cases to work, we need to configure additional Vault policy and role. Run the following commands in your vault pod or VM.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># create policy and role for applications to use.</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nv">ACCESSOR</span><span class="o">=</span><span class="k">$(</span>vault<span class="w"> </span>auth<span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>kubernetes<span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span>-s<span class="w"> </span><span class="s1">&#39; &#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>cut<span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39; &#39;</span><span class="w"> </span>-f3<span class="k">)</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>vault<span class="w"> </span>policy<span class="w"> </span>write<span class="w"> </span>k8s-application<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt; EOF</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="s">path &quot;secret/data/crossplane-system/{{identity.entity.aliases.${ACCESSOR}.metadata.service_account_namespace}}/*&quot; {</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="s">  capabilities = [&quot;read&quot;, &quot;list&quot;]</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="s">}</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="s">path &quot;secret/metadata/crossplane-system/{{identity.entity.aliases.${ACCESSOR}.metadata.service_account_namespace}}/*&quot; {</span>
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="s">  capabilities = [&quot;read&quot;, &quot;list&quot;]</span>
-</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="s">}</span>
-</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="s">EOF</span>
-</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>
-</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>vault<span class="w"> </span>write<span class="w"> </span>auth/kubernetes/role/k8s-application<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">    </span><span class="nv">bound_service_account_names</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">    </span><span class="nv">bound_service_account_namespaces</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="w">    </span><span class="nv">policies</span><span class="o">=</span>k8s-application<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="w">    </span><span class="nv">ttl</span><span class="o">=</span>1h
-</span></code></pre></div>
-<h2 id="install-and-configure-crossplane">Install and configure Crossplane<a class="headerlink" href="#install-and-configure-crossplane" title="Permanent link">&para;</a></h2>
-<p>Crossplane must be configured with external secret store support. In addition, the Crossplane pod must have access to the vault token.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>kubectl<span class="w"> </span>create<span class="w"> </span>ns<span class="w"> </span>crossplane-system
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>helm<span class="w"> </span>upgrade<span class="w"> </span>--install<span class="w"> </span>crossplane<span class="w"> </span>crossplane-stable/crossplane<span class="w"> </span>--namespace<span class="w"> </span>crossplane-system<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>--version<span class="w"> </span><span class="m">1</span>.10.0<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span>--set<span class="w"> </span><span class="s1">&#39;args={--enable-external-secret-stores}&#39;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span>--set-string<span class="w"> </span>customAnnotations.<span class="s2">&quot;vault\.hashicorp\.com/agent-inject&quot;</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span>--set-string<span class="w"> </span>customAnnotations.<span class="s2">&quot;vault\.hashicorp\.com/agent-inject-token&quot;</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span>--set-string<span class="w"> </span>customAnnotations.<span class="s2">&quot;vault\.hashicorp\.com/role&quot;</span><span class="o">=</span>crossplane<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span>--set-string<span class="w"> </span>customAnnotations.<span class="s2">&quot;vault\.hashicorp\.com/agent-run-as-user&quot;</span><span class="o">=</span><span class="m">65532</span>
-</span></code></pre></div>
-<p>Once Crossplane is installed, install its AWS provider. </p>
-<p>Update the <a href="../../bootstrap/eksctl/crossplane/aws-provider-vault-secret.yaml">AWS provider YAML file</a> with your role ARN, then execute the following commands.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>bootstrap/eksctl/crossplane/aws-provider-vault-secret.yaml
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>ProviderRevision
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="c1"># example output</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># NAME                        HEALTHY   REVISION   IMAGE                             STATE    DEP-FOUND   DEP-INSTALLED   AGE</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="c1"># provider-aws-a2e16ca2fc1a   True      1          crossplane/provider-aws:v0.29.0   Active                               23s</span>
-</span></code></pre></div>
-<p><code>StoreConfig</code> objects provides Crossplane and its providers information about how to connect to secret stores. These objects must be configured for external secret integrations to work.</p>
-<p>Update the <a href="../../bootstrap/eksctl/crossplane/store-config-vault.yaml">store config YAML file</a> with your endpoint information. If you configured vault outside of the cluster, it should be the private IP address. e.g. <code>10.0.0.1:8200</code></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>bootstrap/eksctl/crossplane/store-config-vault.yaml
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;apiVersion: aws.crossplane.io/v1beta1</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="s2">kind: ProviderConfig</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="s2">metadata:</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="s2">  name: application1-provider-config</span>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="s2">spec:</span>
-</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="s2">  credentials:</span>
-</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="s2">    source: InjectedIdentity&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>-<span class="w"> </span>
-</span></code></pre></div>
-<p>This creates two configurations for secrets stores:
-- A configuration named <code>in-cluster</code> for Crossplane (compositions). This tells Crossplane to store composition secrets in the same cluster as Kubernetes secrets.
-- Another configuration named <code>vault</code> for AWS provider. This tells the provider to store secrets the vault instance under the <code>/secret/crossplane-system</code> namespace. To access the vault instance, a token is created by the sidecar at <code>/vault/secrets/token</code>. </p>
-<h2 id="create-compositions">Create compositions<a class="headerlink" href="#create-compositions" title="Permanent link">&para;</a></h2>
-<p>Apply the S3 compositions:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>compositions/aws-provider/s3
-</span></code></pre></div>
-<p>The composition that is of interest is <code>compositions/aws-provider/s3/multi-tenant.yaml</code>. This composition demonstrates the following:
-- <code>ProviderConfig</code> selection based on the claim's namespace.
-- Publishes bucket information to Kubernetes secrets and Vault.
-- Published Vault secrets are created under the claim's namespace in Vault.</p>
-<h2 id="test-compositions">Test compositions<a class="headerlink" href="#test-compositions" title="Permanent link">&para;</a></h2>
-<p>Try creating a bucket claim in the default namespace</p>
-<p><div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>examples/aws-provider/composite-resources/s3/multi-tenant.yaml
-</span></code></pre></div>
-Then inspect the events for the bucket:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>kubectl<span class="w"> </span>describe<span class="w"> </span>bucket
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="c1"># example events</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="c1"># Events:</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="c1">#  Type     Reason                   Age               From                                 Message</span>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="c1">#  ----     ------                   ----              ----                                 -------</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="c1">#  Warning  CannotConnectToProvider  1s (x5 over 14s)  managed/bucket.s3.aws.crossplane.io  cannot get referenced Provider: ProviderConfig.aws.crossplane.io &quot;default-provider-config&quot; not found</span>
-</span></code></pre></div>
-In the <a href="../../examples/aws-provider/composite-resources/s3/multi-tenant.yaml">claim file</a>, we specify a provider config name. However, this is patched out to use the provider config with name <code>&lt;NAMESPACE&gt;-provider-config</code>. This is why the error message indicates provider config with name <code>default-provider-config</code> is not found. </p>
-<p>Since we created a provider config named <code>application1-provider-config</code>, we should be able to create a claim in namespace called application1. </p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1">#create namespace</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>kubectl<span class="w"> </span>create<span class="w"> </span>ns<span class="w"> </span>application1<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="c1"># create in new namespace</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-n<span class="w"> </span>application1<span class="w"> </span>-f<span class="w"> </span>examples/aws-provider/composite-resources/s3/multi-tenant.yaml
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>kubectl<span class="w"> </span>-n<span class="w"> </span>application1<span class="w"> </span>get<span class="w"> </span>objectstorage
-</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="c1"># NAME                      READY   CONNECTION-SECRET   AGE</span>
-</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="c1"># standard-object-storage   True                        22s</span>
-</span></code></pre></div>
-<p>Once the claim reaches the ready state, you should be able to verify. Secret creation:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>kubectl<span class="w"> </span>-n<span class="w"> </span>crossplane-system<span class="w"> </span>get<span class="w"> </span>secret<span class="w"> </span><span class="sb">`</span>kubectl<span class="w"> </span>get<span class="w"> </span>xobjectstorage<span class="w"> </span>-o<span class="w"> </span>json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.items[0].metadata.uid&#39;</span><span class="sb">`</span><span class="w"> </span>-o<span class="w"> </span>go-template<span class="o">=</span><span class="s1">&#39;{{range $k,$v := .data}}{{printf &quot;%s: &quot; $k}}{{if not $v}}{{$v}}{{else}}{{$v | base64decode}}{{end}}{{&quot;\n&quot;}}{{end}}&#39;</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="c1"># example output</span>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="c1"># bucket-name: standard-object-storage-qlgvz-hz2dn</span>
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="c1"># region: us-west-2</span>
-</span></code></pre></div>
-<p>The same information should be available in Vault:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># in your vault installation</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>vault<span class="w"> </span>kv<span class="w"> </span>get<span class="w"> </span>secret/crossplane-system/application1/dev/bucket
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="c1"># ==================== Secret Path ====================</span>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="c1"># secret/data/crossplane-system/application1/dev/bucket</span>
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="c1">#</span>
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="c1"># ======= Metadata =======</span>
-</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="c1"># Key                Value</span>
-</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="c1"># ---                -----</span>
-</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="c1"># created_time       2022-07-22T20:51:27.852598176Z</span>
-</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="c1"># custom_metadata    map[awsblueprints.io/composition-name:s3bucket-multi-tenant.awsblueprints.io awsblueprints.io/environment:dev awsblueprints.io/provider:aws secret.crossplane.io/owner-uid:0c601153-358d-45e1-8e0a-0f34991bed82]</span>
-</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="c1"># deletion_time      n/a</span>
-</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a><span class="c1"># destroyed          false</span>
-</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="c1"># version            1</span>
-</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a><span class="c1">#</span>
-</span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a><span class="c1"># ====== Data ======</span>
-</span><span id="__span-14-16"><a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a><span class="c1"># Key         Value</span>
-</span><span id="__span-14-17"><a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a><span class="c1"># ---         -----</span>
-</span><span id="__span-14-18"><a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a><span class="c1"># endpoint    standard-object-storage-4p2wr-lxb74</span>
-</span><span id="__span-14-19"><a id="__codelineno-14-19" name="__codelineno-14-19" href="#__codelineno-14-19"></a><span class="c1"># region      us-west-2</span>
-</span></code></pre></div>
-<h2 id="test-applications">Test Applications<a class="headerlink" href="#test-applications" title="Permanent link">&para;</a></h2>
-<p>Vault sidecar injector can inject secrets into pods. Create an example pod that access the secret created by the sidecar</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;apiVersion: v1</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="s1">kind: Pod</span>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="s1">metadata:</span>
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="s1">  name: test-pod</span>
-</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="s1">  annotations:</span>
-</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="s1">    vault.hashicorp.com/agent-inject: &quot;true&quot;</span>
-</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="s1">    vault.hashicorp.com/role: &quot;k8s-application&quot;</span>
-</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="s1">    vault.hashicorp.com/agent-inject-secret-credentials.txt: &quot;secret/crossplane-system/application1/dev/bucket&quot;</span>
-</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="s1">spec:</span>
-</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="s1">  containers:</span>
-</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="s1">    - name: busybox</span>
-</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="s1">      image: busybox:1.28</span>
-</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="s1">      command:</span>
-</span><span id="__span-15-14"><a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a><span class="s1">        - sh</span>
-</span><span id="__span-15-15"><a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a><span class="s1">        - -c</span>
-</span><span id="__span-15-16"><a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a><span class="s1">        - echo &quot;Hello there!&quot; &amp;&amp; cat /vault/secrets/credentials.txt  &amp;&amp; sleep 3600&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>-<span class="w"> </span>
-</span></code></pre></div>
-<p>This will create an pod in the default namespace. However, the pod will not reach the ready state. Check the logs:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>kubectl<span class="w"> </span>logs<span class="w">  </span>test-pod<span class="w"> </span>vault-agent-init
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="c1"># URL: GET http://192.168.67.77:8200/v1/secret/data/crossplane-system/application1/dev/bucket</span>
-</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="c1"># Code: 403. Errors:</span>
-</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>
-</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="c1"># * 1 error occurred:</span>
-</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="c1">#   * permission denied</span>
-</span></code></pre></div>
-<p>This is because the pod is created in the default namespace and the Vault policy we configured earlier does not allow it to access secrets in another namespace. </p>
-<p>Try creating the pod in the correct namespace.</p>
-<p><div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;apiVersion: v1</span>
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="s1">kind: Pod</span>
-</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="s1">metadata:</span>
-</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="s1">  name: test-pod</span>
-</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="s1">  namespace: application1</span>
-</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="s1">  annotations:</span>
-</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="s1">    vault.hashicorp.com/agent-inject: &quot;true&quot;</span>
-</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="s1">    vault.hashicorp.com/role: &quot;k8s-application&quot;</span>
-</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="s1">    vault.hashicorp.com/agent-inject-secret-credentials.txt: &quot;secret/crossplane-system/application1/dev/bucket&quot;</span>
-</span><span id="__span-17-10"><a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="s1">spec:</span>
-</span><span id="__span-17-11"><a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a><span class="s1">  containers:</span>
-</span><span id="__span-17-12"><a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a><span class="s1">    - name: busybox</span>
-</span><span id="__span-17-13"><a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a><span class="s1">      image: busybox:1.28</span>
-</span><span id="__span-17-14"><a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a><span class="s1">      command:</span>
-</span><span id="__span-17-15"><a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a><span class="s1">        - sh</span>
-</span><span id="__span-17-16"><a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a><span class="s1">        - -c</span>
-</span><span id="__span-17-17"><a id="__codelineno-17-17" name="__codelineno-17-17" href="#__codelineno-17-17"></a><span class="s1">        - echo &quot;Hello there!&quot; &amp;&amp; cat /vault/secrets/credentials.txt  &amp;&amp; sleep 3600&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>-<span class="w"> </span>
-</span></code></pre></div>
-The pod should reach ready state. </p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>kubectl<span class="w"> </span>-n<span class="w"> </span>application1<span class="w"> </span>logs<span class="w"> </span>test-pod<span class="w"> </span>busybox
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="c1"># Hello there!</span>
-</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="c1"># data: map[endpoint:standard-object-storage-qlgvz-hz2dn region:us-west-2]</span>
-</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="c1"># metadata: map[created_time:2022-07-21T21:27:38.82988124Z custom_metadata:map[awsblueprints.io/composition-name:s3bucket-multi-tenant.awsblueprints.io awsblueprints.io/environment:dev awsblueprints.io/provider:aws secret.crossplane.io/owner-uid:5089919f-e80f-4889-80f4-c8e3cacd8fb7] deletion_time: destroyed:false version:1]</span>
-</span></code></pre></div>
-
-
-
-
-
-
-
-
-
-
-
-
-                
-              </article>
-            </div>
-          
-          
-<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
-        </div>
-        
-      </main>
-      
-        <footer class="md-footer">
-  
-  <div class="md-footer-meta md-typeset">
-    <div class="md-footer-meta__inner md-grid">
-      <div class="md-copyright">
-  
-    <div class="md-copyright__highlight">
-      Copyright &copy; Amazon 2024
-    </div>
-  
-  
-    Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
-    </a>
-  
-</div>
-      
-    </div>
-  </div>
-</footer>
-      
-    </div>
-    <div class="md-dialog" data-md-component="dialog">
-      <div class="md-dialog__inner md-typeset"></div>
-    </div>
-    
-    
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs.sticky"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
-    
-    
-      <script src="../../assets/javascripts/bundle.a7c05c9e.min.js"></script>
-      
-    
-  </body>
-</html>
+<!DOCTYPE html><html class=no-js lang=en> <head><meta charset=utf-8><meta content="width=device-width,initial-scale=1" name=viewport><meta content=AWS name=author><link href=https://awslabs.github.io/crossplane-on-eks/patterns/vault-integration/ rel=canonical><link href=../rds-day-2/ rel=prev><link href=../../faq/ rel=next><link href=../../images/colored-logo.png rel=icon><meta content="mkdocs-1.6.0, mkdocs-material-9.5.21" name=generator><title>Overview - Amazon Crossplane Blueprints</title><link href=../../assets/stylesheets/main.66ac8b77.min.css rel=stylesheet><link href=../../assets/stylesheets/palette.06af60db.min.css rel=stylesheet><style>:root{--md-admonition-icon--note:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M1 7.775V2.75C1 1.784 1.784 1 2.75 1h5.025c.464 0 .91.184 1.238.513l6.25 6.25a1.75 1.75 0 0 1 0 2.474l-5.026 5.026a1.75 1.75 0 0 1-2.474 0l-6.25-6.25A1.752 1.752 0 0 1 1 7.775Zm1.5 0c0 .066.026.13.073.177l6.25 6.25a.25.25 0 0 0 .354 0l5.025-5.025a.25.25 0 0 0 0-.354l-6.25-6.25a.25.25 0 0 0-.177-.073H2.75a.25.25 0 0 0-.25.25ZM6 5a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z"/></svg>');--md-admonition-icon--abstract:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M2.5 1.75v11.5c0 .138.112.25.25.25h3.17a.75.75 0 0 1 0 1.5H2.75A1.75 1.75 0 0 1 1 13.25V1.75C1 .784 1.784 0 2.75 0h8.5C12.216 0 13 .784 13 1.75v7.736a.75.75 0 0 1-1.5 0V1.75a.25.25 0 0 0-.25-.25h-8.5a.25.25 0 0 0-.25.25Zm13.274 9.537v-.001l-4.557 4.45a.75.75 0 0 1-1.055-.008l-1.943-1.95a.75.75 0 0 1 1.062-1.058l1.419 1.425 4.026-3.932a.75.75 0 1 1 1.048 1.074ZM4.75 4h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM4 7.75A.75.75 0 0 1 4.75 7h2a.75.75 0 0 1 0 1.5h-2A.75.75 0 0 1 4 7.75Z"/></svg>');--md-admonition-icon--info:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>');--md-admonition-icon--tip:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M3.499.75a.75.75 0 0 1 1.5 0v.996C5.9 2.903 6.793 3.65 7.662 4.376l.24.202c-.036-.694.055-1.422.426-2.163C9.1.873 10.794-.045 12.622.26 14.408.558 16 1.94 16 4.25c0 1.278-.954 2.575-2.44 2.734l.146.508.065.22c.203.701.412 1.455.476 2.226.142 1.707-.4 3.03-1.487 3.898C11.714 14.671 10.27 15 8.75 15h-6a.75.75 0 0 1 0-1.5h1.376a4.484 4.484 0 0 1-.563-1.191 3.835 3.835 0 0 1-.05-2.063 4.647 4.647 0 0 1-2.025-.293.75.75 0 0 1 .525-1.406c1.357.507 2.376-.006 2.698-.318l.009-.01a.747.747 0 0 1 1.06 0 .748.748 0 0 1-.012 1.074c-.912.92-.992 1.835-.768 2.586.221.74.745 1.337 1.196 1.621H8.75c1.343 0 2.398-.296 3.074-.836.635-.507 1.036-1.31.928-2.602-.05-.603-.216-1.224-.422-1.93l-.064-.221c-.12-.407-.246-.84-.353-1.29a2.425 2.425 0 0 1-.507-.441 3.075 3.075 0 0 1-.633-1.248.75.75 0 0 1 1.455-.364c.046.185.144.436.31.627.146.168.353.305.712.305.738 0 1.25-.615 1.25-1.25 0-1.47-.95-2.315-2.123-2.51-1.172-.196-2.227.387-2.706 1.345-.46.92-.27 1.774.019 3.062l.042.19a.884.884 0 0 1 .01.05c.348.443.666.949.94 1.553a.75.75 0 1 1-1.365.62c-.553-1.217-1.32-1.94-2.3-2.768L6.7 5.527c-.814-.68-1.75-1.462-2.692-2.619a3.737 3.737 0 0 0-1.023.88c-.406.495-.663 1.036-.722 1.508.116.122.306.21.591.239.388.038.797-.06 1.032-.19a.75.75 0 0 1 .728 1.31c-.515.287-1.23.439-1.906.373-.682-.067-1.473-.38-1.879-1.193L.75 5.677V5.5c0-.984.48-1.94 1.077-2.664.46-.559 1.05-1.055 1.673-1.353V.75Z"/></svg>');--md-admonition-icon--success:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/></svg>');--md-admonition-icon--question:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.92 6.085h.001a.749.749 0 1 1-1.342-.67c.169-.339.436-.701.849-.977C6.845 4.16 7.369 4 8 4a2.756 2.756 0 0 1 1.637.525c.503.377.863.965.863 1.725 0 .448-.115.83-.329 1.15-.205.307-.47.513-.692.662-.109.072-.22.138-.313.195l-.006.004a6.24 6.24 0 0 0-.26.16.952.952 0 0 0-.276.245.75.75 0 0 1-1.248-.832c.184-.264.42-.489.692-.661.103-.067.207-.132.313-.195l.007-.004c.1-.061.182-.11.258-.161a.969.969 0 0 0 .277-.245C8.96 6.514 9 6.427 9 6.25a.612.612 0 0 0-.262-.525A1.27 1.27 0 0 0 8 5.5c-.369 0-.595.09-.74.187a1.01 1.01 0 0 0-.34.398ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/></svg>');--md-admonition-icon--warning:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/></svg>');--md-admonition-icon--failure:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M2.344 2.343h-.001a8 8 0 0 1 11.314 11.314A8.002 8.002 0 0 1 .234 10.089a8 8 0 0 1 2.11-7.746Zm1.06 10.253a6.5 6.5 0 1 0 9.108-9.275 6.5 6.5 0 0 0-9.108 9.275ZM6.03 4.97 8 6.94l1.97-1.97a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l1.97 1.97a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-1.97 1.97a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734L6.94 8 4.97 6.03a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018Z"/></svg>');--md-admonition-icon--danger:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M9.504.43a1.516 1.516 0 0 1 2.437 1.713L10.415 5.5h2.123c1.57 0 2.346 1.909 1.22 3.004l-7.34 7.142a1.249 1.249 0 0 1-.871.354h-.302a1.25 1.25 0 0 1-1.157-1.723L5.633 10.5H3.462c-1.57 0-2.346-1.909-1.22-3.004L9.503.429Zm1.047 1.074L3.286 8.571A.25.25 0 0 0 3.462 9H6.75a.75.75 0 0 1 .694 1.034l-1.713 4.188 6.982-6.793A.25.25 0 0 0 12.538 7H9.25a.75.75 0 0 1-.683-1.06l2.008-4.418.003-.006a.036.036 0 0 0-.004-.009l-.006-.006-.008-.001c-.003 0-.006.002-.009.004Z"/></svg>');--md-admonition-icon--bug:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M4.72.22a.75.75 0 0 1 1.06 0l1 .999a3.488 3.488 0 0 1 2.441 0l.999-1a.748.748 0 0 1 1.265.332.75.75 0 0 1-.205.729l-.775.776c.616.63.995 1.493.995 2.444v.327c0 .1-.009.197-.025.292.408.14.764.392 1.029.722l1.968-.787a.75.75 0 0 1 .556 1.392L13 7.258V9h2.25a.75.75 0 0 1 0 1.5H13v.5c0 .409-.049.806-.141 1.186l2.17.868a.75.75 0 0 1-.557 1.392l-2.184-.873A4.997 4.997 0 0 1 8 16a4.997 4.997 0 0 1-4.288-2.427l-2.183.873a.75.75 0 0 1-.558-1.392l2.17-.868A5.036 5.036 0 0 1 3 11v-.5H.75a.75.75 0 0 1 0-1.5H3V7.258L.971 6.446a.75.75 0 0 1 .558-1.392l1.967.787c.265-.33.62-.583 1.03-.722a1.677 1.677 0 0 1-.026-.292V4.5c0-.951.38-1.814.995-2.444L4.72 1.28a.75.75 0 0 1 0-1.06Zm.53 6.28a.75.75 0 0 0-.75.75V11a3.5 3.5 0 1 0 7 0V7.25a.75.75 0 0 0-.75-.75ZM6.173 5h3.654A.172.172 0 0 0 10 4.827V4.5a2 2 0 1 0-4 0v.327c0 .096.077.173.173.173Z"/></svg>');--md-admonition-icon--example:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M5 5.782V2.5h-.25a.75.75 0 0 1 0-1.5h6.5a.75.75 0 0 1 0 1.5H11v3.282l3.666 5.76C15.619 13.04 14.543 15 12.767 15H3.233c-1.776 0-2.852-1.96-1.899-3.458Zm-2.4 6.565a.75.75 0 0 0 .633 1.153h9.534a.75.75 0 0 0 .633-1.153L12.225 10.5h-8.45ZM9.5 2.5h-3V6c0 .143-.04.283-.117.403L4.73 9h6.54L9.617 6.403A.746.746 0 0 1 9.5 6Z"/></svg>');--md-admonition-icon--quote:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M1.75 2.5h10.5a.75.75 0 0 1 0 1.5H1.75a.75.75 0 0 1 0-1.5Zm4 5h8.5a.75.75 0 0 1 0 1.5h-8.5a.75.75 0 0 1 0-1.5Zm0 5h8.5a.75.75 0 0 1 0 1.5h-8.5a.75.75 0 0 1 0-1.5ZM2.5 7.75v6a.75.75 0 0 1-1.5 0v-6a.75.75 0 0 1 1.5 0Z"/></svg>');}</style><link crossorigin href=https://fonts.gstatic.com rel=preconnect><link href="https://fonts.googleapis.com/css?family=ember:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback" rel=stylesheet><style>:root{--md-text-font:"ember";--md-code-font:"Roboto Mono"}</style><script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script><meta content=website property=og:type><meta content="Overview - Amazon Crossplane Blueprints" property=og:title><meta content=None property=og:description><meta content=https://awslabs.github.io/crossplane-on-eks/assets/images/social/patterns/vault-integration.png property=og:image><meta content=image/png property=og:image:type><meta content=1200 property=og:image:width><meta content=630 property=og:image:height><meta content=https://awslabs.github.io/crossplane-on-eks/patterns/vault-integration/ property=og:url><meta content=summary_large_image name=twitter:card><meta content="Overview - Amazon Crossplane Blueprints" name=twitter:title><meta content=None name=twitter:description><meta content=https://awslabs.github.io/crossplane-on-eks/assets/images/social/patterns/vault-integration.png name=twitter:image><link href=https://awslabs.github.io/crossplane-on-eks/assets/stylesheets/glightbox.min.css rel=stylesheet><script src=https://awslabs.github.io/crossplane-on-eks/assets/javascripts/glightbox.min.js></script></head> <body data-md-color-accent=orange data-md-color-primary=orange data-md-color-scheme=default dir=ltr> <input autocomplete=off class=md-toggle data-md-toggle=drawer id=__drawer type=checkbox> <input autocomplete=off class=md-toggle data-md-toggle=search id=__search type=checkbox> <label class=md-overlay for=__drawer></label> <div data-md-component=skip> <a class=md-skip href=#overview> Skip to content </a> </div> <div data-md-component=announce> </div> <div data-md-color-scheme=default data-md-component=outdated hidden> </div> <header class="md-header md-header--shadow md-header--lifted" data-md-component=header> <nav aria-label=Header class="md-header__inner md-grid"> <a aria-label="Amazon Crossplane Blueprints" class="md-header__button md-logo" data-md-component=logo href=../.. title="Amazon Crossplane Blueprints"> <img alt=logo src=../../images/white-logo.png> </a> <label class="md-header__button md-icon" for=__drawer> <svg viewbox="0 0 24 24" xmlns=http://www.w3.org/2000/svg><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"></path></svg> </label> <div class=md-header__title data-md-component=header-title> <div class=md-header__ellipsis> <div class=md-header__topic> <span class=md-ellipsis> Amazon Crossplane Blueprints </span> </div> <div class=md-header__topic data-md-component=header-topic> <span class=md-ellipsis> Overview </span> </div> </div> </div> <form class=md-header__option data-md-component=palette> <input aria-label="Switch to dark mode" class=md-option data-md-color-accent=orange data-md-color-media="(prefers-color-scheme: light)" data-md-color-primary=orange data-md-color-scheme=default id=__palette_0 name=__palette type=radio> <label class="md-header__button md-icon" for=__palette_1 hidden title="Switch to dark mode"> <svg viewbox="0 0 24 24" xmlns=http://www.w3.org/2000/svg><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3 3.19.09m3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95 2.06.05m-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31Z"></path></svg> </label> <input aria-label="Switch to light mode" class=md-option data-md-color-accent=orange data-md-color-media="(prefers-color-scheme: dark)" data-md-color-primary=orange data-md-color-scheme=slate id=__palette_1 name=__palette type=radio> <label class="md-header__button md-icon" for=__palette_0 hidden title="Switch to light mode"> <svg viewbox="0 0 24 24" xmlns=http://www.w3.org/2000/svg><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5c-.84 0-1.65.15-2.39.42L12 2M3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29L3.34 7m.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14L3.36 17M20.65 7l-1.77 3.79a7.023 7.023 0 0 0-2.38-4.15l4.15.36m-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29L20.64 17M12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44L12 22Z"></path></svg> </label> </form> <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script> <label class="md-header__button md-icon" for=__search> <svg viewbox="0 0 24 24" xmlns=http://www.w3.org/2000/svg><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"></path></svg> </label> <div class=md-search data-md-component=search role=dialog> <label class=md-search__overlay for=__search></label> <div class=md-search__inner role=search> <form class=md-search__form name=search> <input aria-label=Search autocapitalize=off autocomplete=off autocorrect=off class=md-search__input data-md-component=search-query name=query placeholder=Search required spellcheck=false type=text> <label class="md-search__icon md-icon" for=__search> <svg viewbox="0 0 24 24" xmlns=http://www.w3.org/2000/svg><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"></path></svg> <svg viewbox="0 0 24 24" xmlns=http://www.w3.org/2000/svg><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"></path></svg> </label> <nav aria-label=Search class=md-search__options> <a aria-label=Share class="md-search__icon md-icon" data-clipboard data-clipboard-text data-md-component=search-share href=javascript:void(0) tabindex=-1 title=Share> <svg viewbox="0 0 24 24" xmlns=http://www.w3.org/2000/svg><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7 0-.24-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91 1.61 0 2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08Z"></path></svg> </a> <button aria-label=Clear class="md-search__icon md-icon" tabindex=-1 title=Clear type=reset> <svg viewbox="0 0 24 24" xmlns=http://www.w3.org/2000/svg><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"></path></svg> </button> </nav> <div class=md-search__suggest data-md-component=search-suggest></div> </form> <div class=md-search__output> <div class=md-search__scrollwrap data-md-scrollfix> <div class=md-search-result data-md-component=search-result> <div class=md-search-result__meta> Initializing search </div> <ol class=md-search-result__list role=presentation></ol> </div> </div> </div> </div> </div> <div class=md-header__source> <a class=md-source data-md-component=source href=https://github.com/awslabs/crossplane-on-eks title="Go to repository"> <div class="md-source__icon md-icon"> <svg viewbox="0 0 496 512" xmlns=http://www.w3.org/2000/svg><!-- Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"></path></svg> </div> <div class=md-source__repository> crossplane-on-eks </div> </a> </div> </nav> </header> <div class=md-container data-md-component=container> <main class=md-main data-md-component=main> <div class="md-main__inner md-grid"> <div class="md-sidebar md-sidebar--primary" data-md-component=sidebar data-md-type=navigation> <div class=md-sidebar__scrollwrap> <div class=md-sidebar__inner> <nav aria-label=Navigation class="md-nav md-nav--primary" data-md-level=0> <label class=md-nav__title for=__drawer> <a aria-label="Amazon Crossplane Blueprints" class="md-nav__button md-logo" data-md-component=logo href=../.. title="Amazon Crossplane Blueprints"> <img alt=logo src=../../images/white-logo.png> </a> Amazon Crossplane Blueprints </label> <div class=md-nav__source> <a class=md-source data-md-component=source href=https://github.com/awslabs/crossplane-on-eks title="Go to repository"> <div class="md-source__icon md-icon"> <svg viewbox="0 0 496 512" xmlns=http://www.w3.org/2000/svg><!-- Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"></path></svg> </div> <div class=md-source__repository> crossplane-on-eks </div> </a> </div> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a class=md-nav__link href=../..> <span class=md-ellipsis> Overview </span> </a> </li> <li class=md-nav__item> <a href=../../getting-started/ class=md-nav__link> <span class=md-ellipsis> Getting Started </span> </a> </li> <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested"> <input checked class="md-nav__toggle md-toggle" id=__nav_3 type=checkbox> <label class=md-nav__link for=__nav_3 id=__nav_3_label tabindex> <span class=md-ellipsis> Patterns </span> <span class="md-nav__icon md-icon"></span> </label> <nav aria-expanded=true aria-labelledby=__nav_3_label class=md-nav data-md-level=1> <label class=md-nav__title for=__nav_3> <span class="md-nav__icon md-icon"></span> Patterns </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../debugging/ class=md-nav__link> <span class=md-ellipsis> Debugging CompositeResourceDefinitions (XRD) and Compositions </span> </a> </li> <li class=md-nav__item> <a href=../nested-compositions/ class=md-nav__link> <span class=md-ellipsis> Nested Compositions </span> </a> </li> <li class=md-nav__item> <a href=../patching-101/ class=md-nav__link> <span class=md-ellipsis> Patching 101 </span> </a> </li> <li class=md-nav__item> <a href=../rds-day-2/ class=md-nav__link> <span class=md-ellipsis> RDS day 2 operations </span> </a> </li> <li class="md-nav__item md-nav__item--active"> <input class="md-nav__toggle md-toggle" id=__toc type=checkbox> <label class="md-nav__link md-nav__link--active" for=__toc> <span class=md-ellipsis> Overview </span> <span class="md-nav__icon md-icon"></span> </label> <a href=./ class="md-nav__link md-nav__link--active"> <span class=md-ellipsis> Overview </span> </a> <nav aria-label="Table of contents" class="md-nav md-nav--secondary"> <label class=md-nav__title for=__toc> <span class="md-nav__icon md-icon"></span> Table of contents </label> <ul class=md-nav__list data-md-component=toc data-md-scrollfix> <li class=md-nav__item> <a class=md-nav__link href=#goals> <span class=md-ellipsis> Goals </span> </a> </li> <li class=md-nav__item> <a class=md-nav__link href=#prerequisites> <span class=md-ellipsis> Prerequisites </span> </a> </li> </ul> </nav> </li> </ul> </nav> </li> <li class=md-nav__item> <a href=../../faq/ class=md-nav__link> <span class=md-ellipsis> FAQ </span> </a> </li> </ul> </nav> </div> </div> </div> <div class="md-sidebar md-sidebar--secondary" data-md-component=sidebar data-md-type=toc> <div class=md-sidebar__scrollwrap> <div class=md-sidebar__inner> <nav aria-label="Table of contents" class="md-nav md-nav--secondary"> <label class=md-nav__title for=__toc> <span class="md-nav__icon md-icon"></span> Table of contents </label> <ul class=md-nav__list data-md-component=toc data-md-scrollfix> <li class=md-nav__item> <a class=md-nav__link href=#goals> <span class=md-ellipsis> Goals </span> </a> </li> <li class=md-nav__item> <a class=md-nav__link href=#prerequisites> <span class=md-ellipsis> Prerequisites </span> </a> </li> </ul> </nav> </div> </div> </div> <div class=md-content data-md-component=content> <article class="md-content__inner md-typeset"> <h1 id=overview>Overview<a class=headerlink href=#overview title="Permanent link">¶</a></h1> <h2 id=goals>Goals<a class=headerlink href=#goals title="Permanent link">¶</a></h2> <p>In this doc, we will configure the following: - A Vault server (in-cluster or outside cluster) - A Crossplane installation with AWS provider on EKS - Provision a S3 bucket through Crossplane. - Publish bucket information as a Vault secret. - Access the published information in Vault from a pod using Vault Agent Injector</p> <h2 id=prerequisites>Prerequisites<a class=headerlink href=#prerequisites title="Permanent link">¶</a></h2> <p>Following command line tools: - kubectl - helm - eksctl - aws</p> <p>Note: - As of Crossplane 1.9.0, the support for external secret store is still in alpha state and may go under changes. - This assumes a use case for single-cluster multi-tenant. However, the underlying concepts discussed here should be applicable to multi-cluster setup as well. - This doc is based on the excellent <a href=https://learn.hashicorp.com/tutorials/vault/kubernetes-external-vault>external vault configuration guide</a>. Please check these guides out for more detailed information. </p> <h1 id=procedure>Procedure<a class=headerlink href=#procedure title="Permanent link">¶</a></h1> <h2 id=provision-a-eks-cluster>Provision a EKS cluster<a class=headerlink href=#provision-a-eks-cluster title="Permanent link">¶</a></h2> <div class="language-bash highlight"><pre><span></span><code><span id=__span-0-1><a href=#__codelineno-0-1 id=__codelineno-0-1 name=__codelineno-0-1></a><span class=c1># from this repository root</span>
+</span><span id=__span-0-2><a href=#__codelineno-0-2 id=__codelineno-0-2 name=__codelineno-0-2></a>eksctl<span class=w> </span>create<span class=w> </span>cluster<span class=w> </span>-f<span class=w> </span>bootstrap/eksctl/eksctl.yaml
+</span></code></pre></div> <h2 id=create-a-vault-service>Create a Vault service<a class=headerlink href=#create-a-vault-service title="Permanent link">¶</a></h2> <p>You can create a vault service in the same cluster as Crossplane or create a service on a VM. </p> <h3 id=in-cluster>In-cluster<a class=headerlink href=#in-cluster title="Permanent link">¶</a></h3> <p>Follow: https://docs.crossplane.io/latest/guides/vault-as-secret-store/</p> <h3 id=on-an-external-vm>On an external VM<a class=headerlink href=#on-an-external-vm title="Permanent link">¶</a></h3> <p>This VM must be reachable by the Crossplane installation. If you are using an EC2 instance, routing, network ACL, and Security Groups must be configured to allow for traffic from Crossplane pod to the VM. </p> <p>Commands below assumes the VM is an Ubuntu instance. </p> <h4 id=install-vault>Install Vault<a class=headerlink href=#install-vault title="Permanent link">¶</a></h4> <p>Run the following commands in your VM.</p> <p>Install vault on Ubuntu following the vault <a href=https://developer.hashicorp.com/vault/tutorials/getting-started/getting-started-install>docs</a></p> <p>Configure vault <div class="language-bash highlight"><pre><span></span><code><span id=__span-1-1><a href=#__codelineno-1-1 id=__codelineno-1-1 name=__codelineno-1-1></a>sudo<span class=w> </span>systemctl<span class=w> </span><span class=nb>enable</span><span class=w> </span>vault.service
+</span><span id=__span-1-2><a href=#__codelineno-1-2 id=__codelineno-1-2 name=__codelineno-1-2></a>
+</span><span id=__span-1-3><a href=#__codelineno-1-3 id=__codelineno-1-3 name=__codelineno-1-3></a><span class=c1># create a configuration file for vault. NOTE: this creates a vault service with TLS disabled. </span>
+</span><span id=__span-1-4><a href=#__codelineno-1-4 id=__codelineno-1-4 name=__codelineno-1-4></a><span class=c1># This is done to make the configuration step easy to follow only. TLS should be enabled for real workloads.</span>
+</span><span id=__span-1-5><a href=#__codelineno-1-5 id=__codelineno-1-5 name=__codelineno-1-5></a>cat<span class=w> </span><span class=o>&lt;&lt;&lt;</span><span class=w> </span><span class=s1>'ui = true</span>
+</span><span id=__span-1-6><a href=#__codelineno-1-6 id=__codelineno-1-6 name=__codelineno-1-6></a>
+</span><span id=__span-1-7><a href=#__codelineno-1-7 id=__codelineno-1-7 name=__codelineno-1-7></a><span class=s1>storage "file" {</span>
+</span><span id=__span-1-8><a href=#__codelineno-1-8 id=__codelineno-1-8 name=__codelineno-1-8></a><span class=s1>  path = "/opt/vault/data"</span>
+</span><span id=__span-1-9><a href=#__codelineno-1-9 id=__codelineno-1-9 name=__codelineno-1-9></a><span class=s1>}</span>
+</span><span id=__span-1-10><a href=#__codelineno-1-10 id=__codelineno-1-10 name=__codelineno-1-10></a>
+</span><span id=__span-1-11><a href=#__codelineno-1-11 id=__codelineno-1-11 name=__codelineno-1-11></a><span class=s1>listener "tcp" {</span>
+</span><span id=__span-1-12><a href=#__codelineno-1-12 id=__codelineno-1-12 name=__codelineno-1-12></a><span class=s1>  address = "0.0.0.0:8200"</span>
+</span><span id=__span-1-13><a href=#__codelineno-1-13 id=__codelineno-1-13 name=__codelineno-1-13></a><span class=s1>  tls_disable = 1</span>
+</span><span id=__span-1-14><a href=#__codelineno-1-14 id=__codelineno-1-14 name=__codelineno-1-14></a><span class=s1>}'</span><span class=w> </span><span class=p>|</span><span class=w> </span>sudo<span class=w> </span>-u<span class=w> </span>vault<span class=w> </span>tee<span class=w> </span>/etc/vault.d/vault.hcl<span class=w> </span>&gt;<span class=w> </span>/dev/null
+</span><span id=__span-1-15><a href=#__codelineno-1-15 id=__codelineno-1-15 name=__codelineno-1-15></a>
+</span><span id=__span-1-16><a href=#__codelineno-1-16 id=__codelineno-1-16 name=__codelineno-1-16></a>sudo<span class=w> </span>systemctl<span class=w> </span>start<span class=w> </span>vault.service
+</span><span id=__span-1-17><a href=#__codelineno-1-17 id=__codelineno-1-17 name=__codelineno-1-17></a>
+</span><span id=__span-1-18><a href=#__codelineno-1-18 id=__codelineno-1-18 name=__codelineno-1-18></a><span class=nb>export</span><span class=w> </span><span class=nv>VAULT_ADDR</span><span class=o>=</span><span class=s1>'http://127.0.0.1:8200'</span>
+</span><span id=__span-1-19><a href=#__codelineno-1-19 id=__codelineno-1-19 name=__codelineno-1-19></a><span class=c1># This command will print out unseal keys and the root token.</span>
+</span><span id=__span-1-20><a href=#__codelineno-1-20 id=__codelineno-1-20 name=__codelineno-1-20></a>vault<span class=w> </span>operator<span class=w> </span>init
+</span><span id=__span-1-21><a href=#__codelineno-1-21 id=__codelineno-1-21 name=__codelineno-1-21></a>vault<span class=w> </span>operator<span class=w> </span>unseal<span class=w> </span><span class=c1># do this three times. each time with a different unseal key.</span>
+</span><span id=__span-1-22><a href=#__codelineno-1-22 id=__codelineno-1-22 name=__codelineno-1-22></a>vault<span class=w> </span>secrets<span class=w> </span><span class=nb>enable</span><span class=w> </span>-path<span class=o>=</span>secret<span class=w> </span>kv-v2
+</span><span id=__span-1-23><a href=#__codelineno-1-23 id=__codelineno-1-23 name=__codelineno-1-23></a>vault<span class=w> </span>auth<span class=w> </span><span class=nb>enable</span><span class=w> </span>kubernetes
+</span></code></pre></div></p> <p>Get the IP address of this instance. For an EC2 instance, it should be the private IP of the instance. For a simple EC2 instance: <div class="language-bash highlight"><pre><span></span><code><span id=__span-2-1><a href=#__codelineno-2-1 id=__codelineno-2-1 name=__codelineno-2-1></a>aws<span class=w> </span>ec2<span class=w> </span>describe-instances<span class=w> </span><span class=se>\</span>
+</span><span id=__span-2-2><a href=#__codelineno-2-2 id=__codelineno-2-2 name=__codelineno-2-2></a>--filters<span class=w> </span><span class=nv>Name</span><span class=o>=</span>instance-id,Values<span class=o>=</span>&lt;INSERT_INSTANCE_ID_HERE&gt;<span class=w> </span><span class=se>\</span>
+</span><span id=__span-2-3><a href=#__codelineno-2-3 id=__codelineno-2-3 name=__codelineno-2-3></a><span class=p>|</span><span class=w> </span>jq<span class=w> </span><span class=s2>".Reservations[0].Instances[0].NetworkInterfaces[0].PrivateIpAddress"</span>
+</span></code></pre></div></p> <h4 id=install-vault-agent-sidecar-injector>Install Vault Agent Sidecar Injector<a class=headerlink href=#install-vault-agent-sidecar-injector title="Permanent link">¶</a></h4> <p>Rut the following commands from a place where you have access to your Kubernetes cluster, e.g. your laptop. The Vault Agent Sidecar injector looks for CREATE and UPDATE events, then it will inject vault secret into the containers. </p> <div class="language-bash highlight"><pre><span></span><code><span id=__span-3-1><a href=#__codelineno-3-1 id=__codelineno-3-1 name=__codelineno-3-1></a>kubectl<span class=w> </span>create<span class=w> </span>ns<span class=w> </span>vault-system
+</span><span id=__span-3-2><a href=#__codelineno-3-2 id=__codelineno-3-2 name=__codelineno-3-2></a><span class=c1># install vault injector. be sure to use the IP address obtained above.</span>
+</span><span id=__span-3-3><a href=#__codelineno-3-3 id=__codelineno-3-3 name=__codelineno-3-3></a>helm<span class=w> </span>-n<span class=w> </span>vault-system<span class=w> </span>install<span class=w> </span>vault<span class=w> </span>hashicorp/vault<span class=w> </span><span class=se>\</span>
+</span><span id=__span-3-4><a href=#__codelineno-3-4 id=__codelineno-3-4 name=__codelineno-3-4></a><span class=w>    </span>--set<span class=w> </span><span class=s2>"injector.externalVaultAddr=http://&lt;PRIVATE_IP_ADDRESS&gt;:8200"</span>
+</span><span id=__span-3-5><a href=#__codelineno-3-5 id=__codelineno-3-5 name=__codelineno-3-5></a>
+</span><span id=__span-3-6><a href=#__codelineno-3-6 id=__codelineno-3-6 name=__codelineno-3-6></a><span class=nv>TOKEN_REVIEW_JWJ</span><span class=o>=</span><span class=k>$(</span>kubectl<span class=w> </span>-n<span class=w> </span>vault-system<span class=w> </span>get<span class=w> </span>secret<span class=w> </span><span class=k>$(</span>kubectl<span class=w> </span>-n<span class=w> </span>vault-system<span class=w> </span>get<span class=w> </span>secrets<span class=w> </span>--output<span class=o>=</span>json<span class=w> </span><span class=p>|</span><span class=w> </span>jq<span class=w> </span>-r<span class=w> </span><span class=s1>'.items[].metadata | select(.name|startswith("vault-token-")).name'</span><span class=k>)</span><span class=w> </span>--output<span class=o>=</span><span class=s1>'go-template={{ .data.token }}'</span><span class=w> </span><span class=p>|</span><span class=w> </span>base64<span class=w> </span>--decode<span class=k>)</span>
+</span><span id=__span-3-7><a href=#__codelineno-3-7 id=__codelineno-3-7 name=__codelineno-3-7></a><span class=nv>KUBE_HOST</span><span class=o>=</span><span class=k>$(</span>kubectl<span class=w> </span>config<span class=w> </span>view<span class=w> </span>--raw<span class=w> </span>--minify<span class=w> </span>--flatten<span class=w> </span>--output<span class=o>=</span><span class=s1>'jsonpath={.clusters[].cluster.server}'</span><span class=k>)</span>
+</span><span id=__span-3-8><a href=#__codelineno-3-8 id=__codelineno-3-8 name=__codelineno-3-8></a><span class=nv>KUBE_CA_CERT</span><span class=o>=</span><span class=k>$(</span>kubectl<span class=w> </span>config<span class=w> </span>view<span class=w> </span>--raw<span class=w> </span>--minify<span class=w> </span>--flatten<span class=w> </span>--output<span class=o>=</span><span class=s1>'jsonpath={.clusters[].cluster.certificate-authority-data}'</span><span class=w> </span><span class=p>|</span><span class=w> </span>base64<span class=w> </span>--decode<span class=k>)</span>
+</span><span id=__span-3-9><a href=#__codelineno-3-9 id=__codelineno-3-9 name=__codelineno-3-9></a><span class=nv>ISSUER</span><span class=o>=</span><span class=k>$(</span>kubectl<span class=w> </span>get<span class=w> </span>--raw<span class=w> </span>/.well-known/openid-configuration<span class=w> </span><span class=p>|</span><span class=w> </span>jq<span class=w> </span>-r<span class=w> </span>.issuer<span class=k>)</span>
+</span></code></pre></div> <p>Configure Kubernetes authentication, policy, and role for Crossplane to use in your VM:</p> <div class="language-bash highlight"><pre><span></span><code><span id=__span-4-1><a href=#__codelineno-4-1 id=__codelineno-4-1 name=__codelineno-4-1></a>vault<span class=w> </span>write<span class=w> </span>auth/kubernetes/config<span class=w> </span><span class=se>\</span>
+</span><span id=__span-4-2><a href=#__codelineno-4-2 id=__codelineno-4-2 name=__codelineno-4-2></a><span class=w>     </span><span class=nv>token_reviewer_jwt</span><span class=o>=</span><span class=s2>"</span><span class=nv>$TOKEN_REVIEW_JWT</span><span class=s2>"</span><span class=w> </span><span class=se>\</span>
+</span><span id=__span-4-3><a href=#__codelineno-4-3 id=__codelineno-4-3 name=__codelineno-4-3></a><span class=w>     </span><span class=nv>kubernetes_host</span><span class=o>=</span><span class=s2>"</span><span class=nv>$KUBE_HOST</span><span class=s2>"</span><span class=w> </span><span class=se>\</span>
+</span><span id=__span-4-4><a href=#__codelineno-4-4 id=__codelineno-4-4 name=__codelineno-4-4></a><span class=w>     </span><span class=nv>kubernetes_ca_cert</span><span class=o>=</span><span class=s2>"</span><span class=nv>$KUBE_CA_CERT</span><span class=s2>"</span><span class=w> </span><span class=se>\</span>
+</span><span id=__span-4-5><a href=#__codelineno-4-5 id=__codelineno-4-5 name=__codelineno-4-5></a><span class=w>     </span><span class=nv>issuer</span><span class=o>=</span><span class=nv>$ISSUER</span>
+</span><span id=__span-4-6><a href=#__codelineno-4-6 id=__codelineno-4-6 name=__codelineno-4-6></a>
+</span><span id=__span-4-7><a href=#__codelineno-4-7 id=__codelineno-4-7 name=__codelineno-4-7></a>vault<span class=w> </span>policy<span class=w> </span>write<span class=w> </span>crossplane<span class=w> </span>-<span class=w> </span><span class=s>&lt;&lt;EOF</span>
+</span><span id=__span-4-8><a href=#__codelineno-4-8 id=__codelineno-4-8 name=__codelineno-4-8></a><span class=s>path "secret/data/crossplane-system*" {</span>
+</span><span id=__span-4-9><a href=#__codelineno-4-9 id=__codelineno-4-9 name=__codelineno-4-9></a><span class=s>    capabilities = ["create", "read", "update", "delete"]</span>
+</span><span id=__span-4-10><a href=#__codelineno-4-10 id=__codelineno-4-10 name=__codelineno-4-10></a><span class=s>}</span>
+</span><span id=__span-4-11><a href=#__codelineno-4-11 id=__codelineno-4-11 name=__codelineno-4-11></a><span class=s>path "secret/metadata/crossplane-system*" {</span>
+</span><span id=__span-4-12><a href=#__codelineno-4-12 id=__codelineno-4-12 name=__codelineno-4-12></a><span class=s>    capabilities = ["create", "read", "update", "delete"]</span>
+</span><span id=__span-4-13><a href=#__codelineno-4-13 id=__codelineno-4-13 name=__codelineno-4-13></a><span class=s>}</span>
+</span><span id=__span-4-14><a href=#__codelineno-4-14 id=__codelineno-4-14 name=__codelineno-4-14></a><span class=s>EOF</span>
+</span><span id=__span-4-15><a href=#__codelineno-4-15 id=__codelineno-4-15 name=__codelineno-4-15></a>
+</span><span id=__span-4-16><a href=#__codelineno-4-16 id=__codelineno-4-16 name=__codelineno-4-16></a>vault<span class=w> </span>write<span class=w> </span>auth/kubernetes/role/crossplane<span class=w> </span><span class=se>\</span>
+</span><span id=__span-4-17><a href=#__codelineno-4-17 id=__codelineno-4-17 name=__codelineno-4-17></a><span class=w>    </span><span class=nv>bound_service_account_names</span><span class=o>=</span><span class=s2>"*"</span><span class=w> </span><span class=se>\</span>
+</span><span id=__span-4-18><a href=#__codelineno-4-18 id=__codelineno-4-18 name=__codelineno-4-18></a><span class=w>    </span><span class=nv>bound_service_account_namespaces</span><span class=o>=</span>crossplane-system<span class=w> </span><span class=se>\</span>
+</span><span id=__span-4-19><a href=#__codelineno-4-19 id=__codelineno-4-19 name=__codelineno-4-19></a><span class=w>    </span><span class=nv>policies</span><span class=o>=</span>crossplane<span class=w> </span><span class=se>\</span>
+</span><span id=__span-4-20><a href=#__codelineno-4-20 id=__codelineno-4-20 name=__codelineno-4-20></a><span class=w>    </span><span class=nv>ttl</span><span class=o>=</span>24h
+</span></code></pre></div> <h2 id=configure-vault>Configure Vault<a class=headerlink href=#configure-vault title="Permanent link">¶</a></h2> <p>For our test cases to work, we need to configure additional Vault policy and role. Run the following commands in your vault pod or VM.</p> <div class="language-bash highlight"><pre><span></span><code><span id=__span-5-1><a href=#__codelineno-5-1 id=__codelineno-5-1 name=__codelineno-5-1></a><span class=c1># {% raw %}</span>
+</span><span id=__span-5-2><a href=#__codelineno-5-2 id=__codelineno-5-2 name=__codelineno-5-2></a><span class=c1># create policy and role for applications to use.</span>
+</span><span id=__span-5-3><a href=#__codelineno-5-3 id=__codelineno-5-3 name=__codelineno-5-3></a><span class=nv>ACCESSOR</span><span class=o>=</span><span class=k>$(</span>vault<span class=w> </span>auth<span class=w> </span>list<span class=w> </span><span class=p>|</span><span class=w> </span>grep<span class=w> </span>kubernetes<span class=w> </span><span class=p>|</span><span class=w> </span>tr<span class=w> </span>-s<span class=w> </span><span class=s1>' '</span><span class=w> </span><span class=p>|</span><span class=w> </span>cut<span class=w> </span>-d<span class=w> </span><span class=s1>' '</span><span class=w> </span>-f3<span class=k>)</span>
+</span><span id=__span-5-4><a href=#__codelineno-5-4 id=__codelineno-5-4 name=__codelineno-5-4></a>
+</span><span id=__span-5-5><a href=#__codelineno-5-5 id=__codelineno-5-5 name=__codelineno-5-5></a>vault<span class=w> </span>policy<span class=w> </span>write<span class=w> </span>k8s-application<span class=w> </span>-<span class=w> </span><span class=s>&lt;&lt; EOF</span>
+</span><span id=__span-5-6><a href=#__codelineno-5-6 id=__codelineno-5-6 name=__codelineno-5-6></a><span class=s>path "secret/data/crossplane-system/{{identity.entity.aliases.${ACCESSOR}.metadata.service_account_namespace}}/*" {</span>
+</span><span id=__span-5-7><a href=#__codelineno-5-7 id=__codelineno-5-7 name=__codelineno-5-7></a><span class=s>  capabilities = ["read", "list"]</span>
+</span><span id=__span-5-8><a href=#__codelineno-5-8 id=__codelineno-5-8 name=__codelineno-5-8></a><span class=s>}</span>
+</span><span id=__span-5-9><a href=#__codelineno-5-9 id=__codelineno-5-9 name=__codelineno-5-9></a><span class=s>path "secret/metadata/crossplane-system/{{identity.entity.aliases.${ACCESSOR}.metadata.service_account_namespace}}/*" {</span>
+</span><span id=__span-5-10><a href=#__codelineno-5-10 id=__codelineno-5-10 name=__codelineno-5-10></a><span class=s>  capabilities = ["read", "list"]</span>
+</span><span id=__span-5-11><a href=#__codelineno-5-11 id=__codelineno-5-11 name=__codelineno-5-11></a><span class=s>}</span>
+</span><span id=__span-5-12><a href=#__codelineno-5-12 id=__codelineno-5-12 name=__codelineno-5-12></a><span class=s>EOF</span>
+</span><span id=__span-5-13><a href=#__codelineno-5-13 id=__codelineno-5-13 name=__codelineno-5-13></a>
+</span><span id=__span-5-14><a href=#__codelineno-5-14 id=__codelineno-5-14 name=__codelineno-5-14></a>vault<span class=w> </span>write<span class=w> </span>auth/kubernetes/role/k8s-application<span class=w> </span><span class=se>\</span>
+</span><span id=__span-5-15><a href=#__codelineno-5-15 id=__codelineno-5-15 name=__codelineno-5-15></a><span class=w>    </span><span class=nv>bound_service_account_names</span><span class=o>=</span><span class=s2>"*"</span><span class=w> </span><span class=se>\</span>
+</span><span id=__span-5-16><a href=#__codelineno-5-16 id=__codelineno-5-16 name=__codelineno-5-16></a><span class=w>    </span><span class=nv>bound_service_account_namespaces</span><span class=o>=</span><span class=s2>"*"</span><span class=w> </span><span class=se>\</span>
+</span><span id=__span-5-17><a href=#__codelineno-5-17 id=__codelineno-5-17 name=__codelineno-5-17></a><span class=w>    </span><span class=nv>policies</span><span class=o>=</span>k8s-application<span class=w> </span><span class=se>\</span>
+</span><span id=__span-5-18><a href=#__codelineno-5-18 id=__codelineno-5-18 name=__codelineno-5-18></a><span class=w>    </span><span class=nv>ttl</span><span class=o>=</span>1h
+</span><span id=__span-5-19><a href=#__codelineno-5-19 id=__codelineno-5-19 name=__codelineno-5-19></a>
+</span><span id=__span-5-20><a href=#__codelineno-5-20 id=__codelineno-5-20 name=__codelineno-5-20></a><span class=c1># {% endraw %}</span>
+</span></code></pre></div> <h2 id=install-and-configure-crossplane>Install and configure Crossplane<a class=headerlink href=#install-and-configure-crossplane title="Permanent link">¶</a></h2> <p>Crossplane must be configured with external secret store support. In addition, the Crossplane pod must have access to the vault token.</p> <div class="language-bash highlight"><pre><span></span><code><span id=__span-6-1><a href=#__codelineno-6-1 id=__codelineno-6-1 name=__codelineno-6-1></a>kubectl<span class=w> </span>create<span class=w> </span>ns<span class=w> </span>crossplane-system
+</span><span id=__span-6-2><a href=#__codelineno-6-2 id=__codelineno-6-2 name=__codelineno-6-2></a>helm<span class=w> </span>upgrade<span class=w> </span>--install<span class=w> </span>crossplane<span class=w> </span>crossplane-stable/crossplane<span class=w> </span>--namespace<span class=w> </span>crossplane-system<span class=w> </span><span class=se>\</span>
+</span><span id=__span-6-3><a href=#__codelineno-6-3 id=__codelineno-6-3 name=__codelineno-6-3></a><span class=w>  </span>--version<span class=w> </span><span class=m>1</span>.10.0<span class=w> </span><span class=se>\</span>
+</span><span id=__span-6-4><a href=#__codelineno-6-4 id=__codelineno-6-4 name=__codelineno-6-4></a><span class=w>  </span>--set<span class=w> </span><span class=s1>'args={--enable-external-secret-stores}'</span><span class=w> </span><span class=se>\</span>
+</span><span id=__span-6-5><a href=#__codelineno-6-5 id=__codelineno-6-5 name=__codelineno-6-5></a><span class=w>  </span>--set-string<span class=w> </span>customAnnotations.<span class=s2>"vault\.hashicorp\.com/agent-inject"</span><span class=o>=</span><span class=nb>true</span><span class=w> </span><span class=se>\</span>
+</span><span id=__span-6-6><a href=#__codelineno-6-6 id=__codelineno-6-6 name=__codelineno-6-6></a><span class=w>  </span>--set-string<span class=w> </span>customAnnotations.<span class=s2>"vault\.hashicorp\.com/agent-inject-token"</span><span class=o>=</span><span class=nb>true</span><span class=w> </span><span class=se>\</span>
+</span><span id=__span-6-7><a href=#__codelineno-6-7 id=__codelineno-6-7 name=__codelineno-6-7></a><span class=w>  </span>--set-string<span class=w> </span>customAnnotations.<span class=s2>"vault\.hashicorp\.com/role"</span><span class=o>=</span>crossplane<span class=w> </span><span class=se>\</span>
+</span><span id=__span-6-8><a href=#__codelineno-6-8 id=__codelineno-6-8 name=__codelineno-6-8></a><span class=w>  </span>--set-string<span class=w> </span>customAnnotations.<span class=s2>"vault\.hashicorp\.com/agent-run-as-user"</span><span class=o>=</span><span class=m>65532</span>
+</span></code></pre></div> <p>Once Crossplane is installed, install its AWS provider. </p> <p>Update the <a href=../../bootstrap/eksctl/crossplane/aws-provider-vault-secret.yaml>AWS provider YAML file</a> with your role ARN, then execute the following commands.</p> <div class="language-bash highlight"><pre><span></span><code><span id=__span-7-1><a href=#__codelineno-7-1 id=__codelineno-7-1 name=__codelineno-7-1></a>kubectl<span class=w> </span>apply<span class=w> </span>-f<span class=w> </span>bootstrap/eksctl/crossplane/aws-provider-vault-secret.yaml
+</span><span id=__span-7-2><a href=#__codelineno-7-2 id=__codelineno-7-2 name=__codelineno-7-2></a>kubectl<span class=w> </span>get<span class=w> </span>ProviderRevision
+</span><span id=__span-7-3><a href=#__codelineno-7-3 id=__codelineno-7-3 name=__codelineno-7-3></a><span class=c1># example output</span>
+</span><span id=__span-7-4><a href=#__codelineno-7-4 id=__codelineno-7-4 name=__codelineno-7-4></a><span class=c1># NAME                        HEALTHY   REVISION   IMAGE                             STATE    DEP-FOUND   DEP-INSTALLED   AGE</span>
+</span><span id=__span-7-5><a href=#__codelineno-7-5 id=__codelineno-7-5 name=__codelineno-7-5></a><span class=c1># provider-aws-a2e16ca2fc1a   True      1          crossplane/provider-aws:v0.29.0   Active                               23s</span>
+</span></code></pre></div> <p><code>StoreConfig</code> objects provides Crossplane and its providers information about how to connect to secret stores. These objects must be configured for external secret integrations to work.</p> <p>Update the <a href=../../bootstrap/eksctl/crossplane/store-config-vault.yaml>store config YAML file</a> with your endpoint information. If you configured vault outside of the cluster, it should be the private IP address. e.g. <code>10.0.0.1:8200</code></p> <div class="language-bash highlight"><pre><span></span><code><span id=__span-8-1><a href=#__codelineno-8-1 id=__codelineno-8-1 name=__codelineno-8-1></a>kubectl<span class=w> </span>apply<span class=w> </span>-f<span class=w> </span>bootstrap/eksctl/crossplane/store-config-vault.yaml
+</span><span id=__span-8-2><a href=#__codelineno-8-2 id=__codelineno-8-2 name=__codelineno-8-2></a>
+</span><span id=__span-8-3><a href=#__codelineno-8-3 id=__codelineno-8-3 name=__codelineno-8-3></a><span class=nb>echo</span><span class=w> </span><span class=s2>"apiVersion: aws.crossplane.io/v1beta1</span>
+</span><span id=__span-8-4><a href=#__codelineno-8-4 id=__codelineno-8-4 name=__codelineno-8-4></a><span class=s2>kind: ProviderConfig</span>
+</span><span id=__span-8-5><a href=#__codelineno-8-5 id=__codelineno-8-5 name=__codelineno-8-5></a><span class=s2>metadata:</span>
+</span><span id=__span-8-6><a href=#__codelineno-8-6 id=__codelineno-8-6 name=__codelineno-8-6></a><span class=s2>  name: application1-provider-config</span>
+</span><span id=__span-8-7><a href=#__codelineno-8-7 id=__codelineno-8-7 name=__codelineno-8-7></a><span class=s2>spec:</span>
+</span><span id=__span-8-8><a href=#__codelineno-8-8 id=__codelineno-8-8 name=__codelineno-8-8></a><span class=s2>  credentials:</span>
+</span><span id=__span-8-9><a href=#__codelineno-8-9 id=__codelineno-8-9 name=__codelineno-8-9></a><span class=s2>    source: InjectedIdentity"</span><span class=w> </span><span class=p>|</span><span class=w> </span>kubectl<span class=w> </span>apply<span class=w> </span>-f<span class=w> </span>-<span class=w> </span>
+</span></code></pre></div> <p>This creates two configurations for secrets stores: - A configuration named <code>in-cluster</code> for Crossplane (compositions). This tells Crossplane to store composition secrets in the same cluster as Kubernetes secrets. - Another configuration named <code>vault</code> for AWS provider. This tells the provider to store secrets the vault instance under the <code>/secret/crossplane-system</code> namespace. To access the vault instance, a token is created by the sidecar at <code>/vault/secrets/token</code>. </p> <h2 id=create-compositions>Create compositions<a class=headerlink href=#create-compositions title="Permanent link">¶</a></h2> <p>Apply the S3 compositions:</p> <div class="language-bash highlight"><pre><span></span><code><span id=__span-9-1><a href=#__codelineno-9-1 id=__codelineno-9-1 name=__codelineno-9-1></a>kubectl<span class=w> </span>apply<span class=w> </span>-f<span class=w> </span>compositions/aws-provider/s3
+</span></code></pre></div> <p>The composition that is of interest is <code>compositions/aws-provider/s3/multi-tenant.yaml</code>. This composition demonstrates the following: - <code>ProviderConfig</code> selection based on the claim's namespace. - Publishes bucket information to Kubernetes secrets and Vault. - Published Vault secrets are created under the claim's namespace in Vault.</p> <h2 id=test-compositions>Test compositions<a class=headerlink href=#test-compositions title="Permanent link">¶</a></h2> <p>Try creating a bucket claim in the default namespace</p> <p><div class="language-bash highlight"><pre><span></span><code><span id=__span-10-1><a href=#__codelineno-10-1 id=__codelineno-10-1 name=__codelineno-10-1></a>kubectl<span class=w> </span>apply<span class=w> </span>-f<span class=w> </span>examples/aws-provider/composite-resources/s3/multi-tenant.yaml
+</span></code></pre></div> Then inspect the events for the bucket: <div class="language-bash highlight"><pre><span></span><code><span id=__span-11-1><a href=#__codelineno-11-1 id=__codelineno-11-1 name=__codelineno-11-1></a>kubectl<span class=w> </span>describe<span class=w> </span>bucket
+</span><span id=__span-11-2><a href=#__codelineno-11-2 id=__codelineno-11-2 name=__codelineno-11-2></a><span class=c1># example events</span>
+</span><span id=__span-11-3><a href=#__codelineno-11-3 id=__codelineno-11-3 name=__codelineno-11-3></a><span class=c1># Events:</span>
+</span><span id=__span-11-4><a href=#__codelineno-11-4 id=__codelineno-11-4 name=__codelineno-11-4></a><span class=c1>#  Type     Reason                   Age               From                                 Message</span>
+</span><span id=__span-11-5><a href=#__codelineno-11-5 id=__codelineno-11-5 name=__codelineno-11-5></a><span class=c1>#  ----     ------                   ----              ----                                 -------</span>
+</span><span id=__span-11-6><a href=#__codelineno-11-6 id=__codelineno-11-6 name=__codelineno-11-6></a><span class=c1>#  Warning  CannotConnectToProvider  1s (x5 over 14s)  managed/bucket.s3.aws.crossplane.io  cannot get referenced Provider: ProviderConfig.aws.crossplane.io "default-provider-config" not found</span>
+</span></code></pre></div> In the <a href=../../examples/aws-provider/composite-resources/s3/multi-tenant.yaml>claim file</a>, we specify a provider config name. However, this is patched out to use the provider config with name <code>&lt;NAMESPACE&gt;-provider-config</code>. This is why the error message indicates provider config with name <code>default-provider-config</code> is not found. </p> <p>Since we created a provider config named <code>application1-provider-config</code>, we should be able to create a claim in namespace called application1. </p> <div class="language-bash highlight"><pre><span></span><code><span id=__span-12-1><a href=#__codelineno-12-1 id=__codelineno-12-1 name=__codelineno-12-1></a><span class=c1>#create namespace</span>
+</span><span id=__span-12-2><a href=#__codelineno-12-2 id=__codelineno-12-2 name=__codelineno-12-2></a>kubectl<span class=w> </span>create<span class=w> </span>ns<span class=w> </span>application1<span class=w> </span><span class=o>||</span><span class=w> </span><span class=nb>true</span>
+</span><span id=__span-12-3><a href=#__codelineno-12-3 id=__codelineno-12-3 name=__codelineno-12-3></a><span class=c1># create in new namespace</span>
+</span><span id=__span-12-4><a href=#__codelineno-12-4 id=__codelineno-12-4 name=__codelineno-12-4></a>kubectl<span class=w> </span>apply<span class=w> </span>-n<span class=w> </span>application1<span class=w> </span>-f<span class=w> </span>examples/aws-provider/composite-resources/s3/multi-tenant.yaml
+</span><span id=__span-12-5><a href=#__codelineno-12-5 id=__codelineno-12-5 name=__codelineno-12-5></a>
+</span><span id=__span-12-6><a href=#__codelineno-12-6 id=__codelineno-12-6 name=__codelineno-12-6></a>kubectl<span class=w> </span>-n<span class=w> </span>application1<span class=w> </span>get<span class=w> </span>objectstorage
+</span><span id=__span-12-7><a href=#__codelineno-12-7 id=__codelineno-12-7 name=__codelineno-12-7></a><span class=c1># NAME                      READY   CONNECTION-SECRET   AGE</span>
+</span><span id=__span-12-8><a href=#__codelineno-12-8 id=__codelineno-12-8 name=__codelineno-12-8></a><span class=c1># standard-object-storage   True                        22s</span>
+</span></code></pre></div> <p>Once the claim reaches the ready state, you should be able to verify. Secret creation:</p> <div class="language-bash highlight"><pre><span></span><code><span id=__span-13-1><a href=#__codelineno-13-1 id=__codelineno-13-1 name=__codelineno-13-1></a>kubectl<span class=w> </span>-n<span class=w> </span>crossplane-system<span class=w> </span>get<span class=w> </span>secret<span class=w> </span><span class=sb>`</span>kubectl<span class=w> </span>get<span class=w> </span>xobjectstorage<span class=w> </span>-o<span class=w> </span>json<span class=w> </span><span class=p>|</span><span class=w> </span>jq<span class=w> </span>-r<span class=w> </span><span class=s1>'.items[0].metadata.uid'</span><span class=sb>`</span><span class=w> </span>-o<span class=w> </span>go-template<span class=o>=</span><span class=s1>'{{range $k,$v := .data}}{{printf "%s: " $k}}{{if not $v}}{{$v}}{{else}}{{$v | base64decode}}{{end}}{{"\n"}}{{end}}'</span>
+</span><span id=__span-13-2><a href=#__codelineno-13-2 id=__codelineno-13-2 name=__codelineno-13-2></a><span class=c1># example output</span>
+</span><span id=__span-13-3><a href=#__codelineno-13-3 id=__codelineno-13-3 name=__codelineno-13-3></a><span class=c1># bucket-name: standard-object-storage-qlgvz-hz2dn</span>
+</span><span id=__span-13-4><a href=#__codelineno-13-4 id=__codelineno-13-4 name=__codelineno-13-4></a><span class=c1># region: us-west-2</span>
+</span></code></pre></div> <p>The same information should be available in Vault:</p> <div class="language-bash highlight"><pre><span></span><code><span id=__span-14-1><a href=#__codelineno-14-1 id=__codelineno-14-1 name=__codelineno-14-1></a><span class=c1># in your vault installation</span>
+</span><span id=__span-14-2><a href=#__codelineno-14-2 id=__codelineno-14-2 name=__codelineno-14-2></a>vault<span class=w> </span>kv<span class=w> </span>get<span class=w> </span>secret/crossplane-system/application1/dev/bucket
+</span><span id=__span-14-3><a href=#__codelineno-14-3 id=__codelineno-14-3 name=__codelineno-14-3></a><span class=c1># ==================== Secret Path ====================</span>
+</span><span id=__span-14-4><a href=#__codelineno-14-4 id=__codelineno-14-4 name=__codelineno-14-4></a><span class=c1># secret/data/crossplane-system/application1/dev/bucket</span>
+</span><span id=__span-14-5><a href=#__codelineno-14-5 id=__codelineno-14-5 name=__codelineno-14-5></a><span class=c1>#</span>
+</span><span id=__span-14-6><a href=#__codelineno-14-6 id=__codelineno-14-6 name=__codelineno-14-6></a><span class=c1># ======= Metadata =======</span>
+</span><span id=__span-14-7><a href=#__codelineno-14-7 id=__codelineno-14-7 name=__codelineno-14-7></a><span class=c1># Key                Value</span>
+</span><span id=__span-14-8><a href=#__codelineno-14-8 id=__codelineno-14-8 name=__codelineno-14-8></a><span class=c1># ---                -----</span>
+</span><span id=__span-14-9><a href=#__codelineno-14-9 id=__codelineno-14-9 name=__codelineno-14-9></a><span class=c1># created_time       2022-07-22T20:51:27.852598176Z</span>
+</span><span id=__span-14-10><a href=#__codelineno-14-10 id=__codelineno-14-10 name=__codelineno-14-10></a><span class=c1># custom_metadata    map[awsblueprints.io/composition-name:s3bucket-multi-tenant.awsblueprints.io awsblueprints.io/environment:dev awsblueprints.io/provider:aws secret.crossplane.io/owner-uid:0c601153-358d-45e1-8e0a-0f34991bed82]</span>
+</span><span id=__span-14-11><a href=#__codelineno-14-11 id=__codelineno-14-11 name=__codelineno-14-11></a><span class=c1># deletion_time      n/a</span>
+</span><span id=__span-14-12><a href=#__codelineno-14-12 id=__codelineno-14-12 name=__codelineno-14-12></a><span class=c1># destroyed          false</span>
+</span><span id=__span-14-13><a href=#__codelineno-14-13 id=__codelineno-14-13 name=__codelineno-14-13></a><span class=c1># version            1</span>
+</span><span id=__span-14-14><a href=#__codelineno-14-14 id=__codelineno-14-14 name=__codelineno-14-14></a><span class=c1>#</span>
+</span><span id=__span-14-15><a href=#__codelineno-14-15 id=__codelineno-14-15 name=__codelineno-14-15></a><span class=c1># ====== Data ======</span>
+</span><span id=__span-14-16><a href=#__codelineno-14-16 id=__codelineno-14-16 name=__codelineno-14-16></a><span class=c1># Key         Value</span>
+</span><span id=__span-14-17><a href=#__codelineno-14-17 id=__codelineno-14-17 name=__codelineno-14-17></a><span class=c1># ---         -----</span>
+</span><span id=__span-14-18><a href=#__codelineno-14-18 id=__codelineno-14-18 name=__codelineno-14-18></a><span class=c1># endpoint    standard-object-storage-4p2wr-lxb74</span>
+</span><span id=__span-14-19><a href=#__codelineno-14-19 id=__codelineno-14-19 name=__codelineno-14-19></a><span class=c1># region      us-west-2</span>
+</span></code></pre></div> <h2 id=test-applications>Test Applications<a class=headerlink href=#test-applications title="Permanent link">¶</a></h2> <p>Vault sidecar injector can inject secrets into pods. Create an example pod that access the secret created by the sidecar</p> <div class="language-bash highlight"><pre><span></span><code><span id=__span-15-1><a href=#__codelineno-15-1 id=__codelineno-15-1 name=__codelineno-15-1></a><span class=nb>echo</span><span class=w> </span><span class=s1>'apiVersion: v1</span>
+</span><span id=__span-15-2><a href=#__codelineno-15-2 id=__codelineno-15-2 name=__codelineno-15-2></a><span class=s1>kind: Pod</span>
+</span><span id=__span-15-3><a href=#__codelineno-15-3 id=__codelineno-15-3 name=__codelineno-15-3></a><span class=s1>metadata:</span>
+</span><span id=__span-15-4><a href=#__codelineno-15-4 id=__codelineno-15-4 name=__codelineno-15-4></a><span class=s1>  name: test-pod</span>
+</span><span id=__span-15-5><a href=#__codelineno-15-5 id=__codelineno-15-5 name=__codelineno-15-5></a><span class=s1>  annotations:</span>
+</span><span id=__span-15-6><a href=#__codelineno-15-6 id=__codelineno-15-6 name=__codelineno-15-6></a><span class=s1>    vault.hashicorp.com/agent-inject: "true"</span>
+</span><span id=__span-15-7><a href=#__codelineno-15-7 id=__codelineno-15-7 name=__codelineno-15-7></a><span class=s1>    vault.hashicorp.com/role: "k8s-application"</span>
+</span><span id=__span-15-8><a href=#__codelineno-15-8 id=__codelineno-15-8 name=__codelineno-15-8></a><span class=s1>    vault.hashicorp.com/agent-inject-secret-credentials.txt: "secret/crossplane-system/application1/dev/bucket"</span>
+</span><span id=__span-15-9><a href=#__codelineno-15-9 id=__codelineno-15-9 name=__codelineno-15-9></a><span class=s1>spec:</span>
+</span><span id=__span-15-10><a href=#__codelineno-15-10 id=__codelineno-15-10 name=__codelineno-15-10></a><span class=s1>  containers:</span>
+</span><span id=__span-15-11><a href=#__codelineno-15-11 id=__codelineno-15-11 name=__codelineno-15-11></a><span class=s1>    - name: busybox</span>
+</span><span id=__span-15-12><a href=#__codelineno-15-12 id=__codelineno-15-12 name=__codelineno-15-12></a><span class=s1>      image: busybox:1.28</span>
+</span><span id=__span-15-13><a href=#__codelineno-15-13 id=__codelineno-15-13 name=__codelineno-15-13></a><span class=s1>      command:</span>
+</span><span id=__span-15-14><a href=#__codelineno-15-14 id=__codelineno-15-14 name=__codelineno-15-14></a><span class=s1>        - sh</span>
+</span><span id=__span-15-15><a href=#__codelineno-15-15 id=__codelineno-15-15 name=__codelineno-15-15></a><span class=s1>        - -c</span>
+</span><span id=__span-15-16><a href=#__codelineno-15-16 id=__codelineno-15-16 name=__codelineno-15-16></a><span class=s1>        - echo "Hello there!" &amp;&amp; cat /vault/secrets/credentials.txt  &amp;&amp; sleep 3600'</span><span class=w> </span><span class=p>|</span><span class=w> </span>kubectl<span class=w> </span>apply<span class=w> </span>-f<span class=w> </span>-<span class=w> </span>
+</span></code></pre></div> <p>This will create an pod in the default namespace. However, the pod will not reach the ready state. Check the logs:</p> <div class="language-bash highlight"><pre><span></span><code><span id=__span-16-1><a href=#__codelineno-16-1 id=__codelineno-16-1 name=__codelineno-16-1></a>kubectl<span class=w> </span>logs<span class=w>  </span>test-pod<span class=w> </span>vault-agent-init
+</span><span id=__span-16-2><a href=#__codelineno-16-2 id=__codelineno-16-2 name=__codelineno-16-2></a><span class=c1># URL: GET http://192.168.67.77:8200/v1/secret/data/crossplane-system/application1/dev/bucket</span>
+</span><span id=__span-16-3><a href=#__codelineno-16-3 id=__codelineno-16-3 name=__codelineno-16-3></a><span class=c1># Code: 403. Errors:</span>
+</span><span id=__span-16-4><a href=#__codelineno-16-4 id=__codelineno-16-4 name=__codelineno-16-4></a>
+</span><span id=__span-16-5><a href=#__codelineno-16-5 id=__codelineno-16-5 name=__codelineno-16-5></a><span class=c1># * 1 error occurred:</span>
+</span><span id=__span-16-6><a href=#__codelineno-16-6 id=__codelineno-16-6 name=__codelineno-16-6></a><span class=c1>#   * permission denied</span>
+</span></code></pre></div> <p>This is because the pod is created in the default namespace and the Vault policy we configured earlier does not allow it to access secrets in another namespace. </p> <p>Try creating the pod in the correct namespace.</p> <p><div class="language-bash highlight"><pre><span></span><code><span id=__span-17-1><a href=#__codelineno-17-1 id=__codelineno-17-1 name=__codelineno-17-1></a><span class=nb>echo</span><span class=w> </span><span class=s1>'apiVersion: v1</span>
+</span><span id=__span-17-2><a href=#__codelineno-17-2 id=__codelineno-17-2 name=__codelineno-17-2></a><span class=s1>kind: Pod</span>
+</span><span id=__span-17-3><a href=#__codelineno-17-3 id=__codelineno-17-3 name=__codelineno-17-3></a><span class=s1>metadata:</span>
+</span><span id=__span-17-4><a href=#__codelineno-17-4 id=__codelineno-17-4 name=__codelineno-17-4></a><span class=s1>  name: test-pod</span>
+</span><span id=__span-17-5><a href=#__codelineno-17-5 id=__codelineno-17-5 name=__codelineno-17-5></a><span class=s1>  namespace: application1</span>
+</span><span id=__span-17-6><a href=#__codelineno-17-6 id=__codelineno-17-6 name=__codelineno-17-6></a><span class=s1>  annotations:</span>
+</span><span id=__span-17-7><a href=#__codelineno-17-7 id=__codelineno-17-7 name=__codelineno-17-7></a><span class=s1>    vault.hashicorp.com/agent-inject: "true"</span>
+</span><span id=__span-17-8><a href=#__codelineno-17-8 id=__codelineno-17-8 name=__codelineno-17-8></a><span class=s1>    vault.hashicorp.com/role: "k8s-application"</span>
+</span><span id=__span-17-9><a href=#__codelineno-17-9 id=__codelineno-17-9 name=__codelineno-17-9></a><span class=s1>    vault.hashicorp.com/agent-inject-secret-credentials.txt: "secret/crossplane-system/application1/dev/bucket"</span>
+</span><span id=__span-17-10><a href=#__codelineno-17-10 id=__codelineno-17-10 name=__codelineno-17-10></a><span class=s1>spec:</span>
+</span><span id=__span-17-11><a href=#__codelineno-17-11 id=__codelineno-17-11 name=__codelineno-17-11></a><span class=s1>  containers:</span>
+</span><span id=__span-17-12><a href=#__codelineno-17-12 id=__codelineno-17-12 name=__codelineno-17-12></a><span class=s1>    - name: busybox</span>
+</span><span id=__span-17-13><a href=#__codelineno-17-13 id=__codelineno-17-13 name=__codelineno-17-13></a><span class=s1>      image: busybox:1.28</span>
+</span><span id=__span-17-14><a href=#__codelineno-17-14 id=__codelineno-17-14 name=__codelineno-17-14></a><span class=s1>      command:</span>
+</span><span id=__span-17-15><a href=#__codelineno-17-15 id=__codelineno-17-15 name=__codelineno-17-15></a><span class=s1>        - sh</span>
+</span><span id=__span-17-16><a href=#__codelineno-17-16 id=__codelineno-17-16 name=__codelineno-17-16></a><span class=s1>        - -c</span>
+</span><span id=__span-17-17><a href=#__codelineno-17-17 id=__codelineno-17-17 name=__codelineno-17-17></a><span class=s1>        - echo "Hello there!" &amp;&amp; cat /vault/secrets/credentials.txt  &amp;&amp; sleep 3600'</span><span class=w> </span><span class=p>|</span><span class=w> </span>kubectl<span class=w> </span>apply<span class=w> </span>-f<span class=w> </span>-<span class=w> </span>
+</span></code></pre></div> The pod should reach ready state. </p> <div class="language-bash highlight"><pre><span></span><code><span id=__span-18-1><a href=#__codelineno-18-1 id=__codelineno-18-1 name=__codelineno-18-1></a>kubectl<span class=w> </span>-n<span class=w> </span>application1<span class=w> </span>logs<span class=w> </span>test-pod<span class=w> </span>busybox
+</span><span id=__span-18-2><a href=#__codelineno-18-2 id=__codelineno-18-2 name=__codelineno-18-2></a><span class=c1># Hello there!</span>
+</span><span id=__span-18-3><a href=#__codelineno-18-3 id=__codelineno-18-3 name=__codelineno-18-3></a><span class=c1># data: map[endpoint:standard-object-storage-qlgvz-hz2dn region:us-west-2]</span>
+</span><span id=__span-18-4><a href=#__codelineno-18-4 id=__codelineno-18-4 name=__codelineno-18-4></a><span class=c1># metadata: map[created_time:2022-07-21T21:27:38.82988124Z custom_metadata:map[awsblueprints.io/composition-name:s3bucket-multi-tenant.awsblueprints.io awsblueprints.io/environment:dev awsblueprints.io/provider:aws secret.crossplane.io/owner-uid:5089919f-e80f-4889-80f4-c8e3cacd8fb7] deletion_time: destroyed:false version:1]</span>
+</span></code></pre></div> </article> </div> <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script> <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script> </div> <button class="md-top md-icon" data-md-component=top hidden type=button> <svg viewbox="0 0 24 24" xmlns=http://www.w3.org/2000/svg><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"></path></svg> Back to top </button> </main> <footer class=md-footer> <div class="md-footer-meta md-typeset"> <div class="md-footer-meta__inner md-grid"> <div class=md-copyright> <div class=md-copyright__highlight> Copyright © Amazon 2024 </div> Made with <a href=https://squidfunk.github.io/mkdocs-material/ rel=noopener target=_blank> Material for MkDocs </a> </div> <div class=md-social> <a class=md-social__link href=https://github.com/awslabs/crossplane-on-eks rel=noopener target=_blank title=github.com> <svg viewbox="0 0 480 512" xmlns=http://www.w3.org/2000/svg><!-- Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1zM480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2zm-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3zm-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1z"></path></svg> </a> </div> </div> </div> </footer> </div> <div class=md-dialog data-md-component=dialog> <div class="md-dialog__inner md-typeset"></div> </div> <script id=__config type=application/json>{"base": "../..", "features": ["header.autohide", "navigation.tabs.sticky", "navigation.instant", "navigation.sections", "navigation.top", "search.highlight", "search.share", "search.suggest", "content.code.annotate", "content.tooltips", "content.tabs.link", "content.code.copy"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script> <script src=../../assets/javascripts/bundle.a7c05c9e.min.js></script> <script src=https://cdn.jsdelivr.net/npm/@glidejs/glide></script> <script type=text/javascript>const lightbox = GLightbox({"touchNavigation": false, "loop": false});</script></body> </html>
