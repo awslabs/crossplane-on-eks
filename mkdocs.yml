@@ -1,5 +1,5 @@
 site_name: Amazon Crossplane Blueprints
-docs_dir: docs/
+docs_dir: docs
 copyright: Copyright &copy; Amazon 2024
 site_author: AWS
 site_url: https://awslabs.github.io/crossplane-on-eks/
@@ -13,8 +13,20 @@ theme:
   font:
     text: ember
   palette:
-    primary: orange
-    accent: orange
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+      primary: orange
+      accent: orange
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+      primary: orange
+      accent: orange
   icon:
     repo: fontawesome/brands/github
     admonition:
@@ -31,13 +43,32 @@ theme:
       example: octicons/beaker-16
       quote: octicons/quote-16
   features:
+    - header.autohide
     - navigation.tabs.sticky
+    - navigation.instant
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - search.share
+    - search.suggest
+    - content.code.annotate
+    - content.tooltips
+    - content.tabs.link
+    - content.code.copy
   highlightjs: true
   hljs_languages:
     - yaml
     - json
+    - bash
 
 plugins:
+  - glightbox
+  - minify:
+      minify_html: true
+  - social:
+      cards: true
+      cards_layout_options:
+        font_family: Roboto
   - include-markdown
   - search:
       lang:
@@ -47,6 +78,9 @@ plugins:
 extra:
   version:
     provider: mike
+  social:
+    - icon: fontawesome/brands/github-alt
+      link: https://github.com/awslabs/crossplane-on-eks
 
 markdown_extensions:
   - attr_list
@@ -63,5 +97,13 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
   - toc:
       permalink: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/@glidejs/glide

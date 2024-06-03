@@ -11,6 +11,16 @@ prometheus:
       podMetricsEndpoints:
         - port: "metrics"
       selector: {}
+  additionalServiceMonitors:
+    - name: "argocd"
+      namespaceSelector:
+        matchNames:
+          - "argocd"
+      endpoints:
+        - port: "metrics"
+      selector:
+        matchLabels:
+          prometheus.io/scrape: "true"
 grafana:
   service:
     type: "LoadBalancer"
@@ -54,5 +64,13 @@ grafana:
         datasource: prometheusdatasource
       argocd:
         gnetId: 14584
+        revision: 1
+        datasource: prometheusdatasource
+      eks:
+        gnetId: 14623
+        revision: 1
+        datasource: prometheusdatasource
+      ekscontrolplane:
+        gnetId: 21192
         revision: 1
         datasource: prometheusdatasource

@@ -125,6 +125,7 @@ vault write auth/kubernetes/role/crossplane \
 For our test cases to work, we need to configure additional Vault policy and role. Run the following commands in your vault pod or VM.
 
 ```bash
+# {% raw %}
 # create policy and role for applications to use.
 ACCESSOR=$(vault auth list | grep kubernetes | tr -s ' ' | cut -d ' ' -f3)
 
@@ -142,6 +143,8 @@ vault write auth/kubernetes/role/k8s-application \
     bound_service_account_namespaces="*" \
     policies=k8s-application \
     ttl=1h
+    
+# {% endraw %}
 ```
 
 ## Install and configure Crossplane
