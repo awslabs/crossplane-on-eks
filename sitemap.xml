@@ -2,47 +2,47 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://awslabs.github.io/crossplane-on-eks/</loc>
-         <lastmod>2024-06-03</lastmod>
+         <lastmod>2024-06-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/crossplane-on-eks/faq/</loc>
-         <lastmod>2024-06-03</lastmod>
+         <lastmod>2024-06-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/crossplane-on-eks/getting-started/</loc>
-         <lastmod>2024-06-03</lastmod>
+         <lastmod>2024-06-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/crossplane-on-eks/_partials/destroy/</loc>
-         <lastmod>2024-06-03</lastmod>
+         <lastmod>2024-06-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/crossplane-on-eks/patterns/debugging/</loc>
-         <lastmod>2024-06-03</lastmod>
+         <lastmod>2024-06-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/crossplane-on-eks/patterns/nested-compositions/</loc>
-         <lastmod>2024-06-03</lastmod>
+         <lastmod>2024-06-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/crossplane-on-eks/patterns/patching-101/</loc>
-         <lastmod>2024-06-03</lastmod>
+         <lastmod>2024-06-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/crossplane-on-eks/patterns/rds-day-2/</loc>
-         <lastmod>2024-06-03</lastmod>
+         <lastmod>2024-06-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/crossplane-on-eks/patterns/vault-integration/</loc>
-         <lastmod>2024-06-03</lastmod>
+         <lastmod>2024-06-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
