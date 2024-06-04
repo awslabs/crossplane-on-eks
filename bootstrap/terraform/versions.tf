@@ -23,7 +23,7 @@ terraform {
     }
   }
 
-  # ##  Used for end-to-end testing on project; update to suit your needs
+  # ## Used for end-to-end testing on project; update to suit your needs
   # backend "s3" {
   #   bucket = "terraform-crossplane-on-eks-github-actions-state"
   #   region = "us-east-1"

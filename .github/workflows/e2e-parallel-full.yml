@@ -1,0 +1,120 @@
+name: e2e-parallel-full
+
+on:
+  workflow_dispatch:
+    inputs:
+      TFDestroy:
+        description: 'Destroy TF Automatically (false/true) - Default: true'
+        required: true
+        default: 'true'
+
+concurrency: e2e-parallel-full
+
+env:
+  BUCKET_NAME: terraform-crossplane-on-eks-github-actions-state
+
+permissions:
+  contents: read
+
+jobs:
+  prereq-cleanup:
+    name: Prerequisite Cleanup
+    runs-on: ubuntu-latest
+    # These permissions are needed to interact with GitHub's OIDC Token endpoint.
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+
+      - name: Auth AWS
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        with:
+          role-to-assume: ${{ secrets.ROLE_TO_ASSUME }}
+          aws-region: us-east-1
+          role-duration-seconds: 3600
+          role-session-name: GithubActions-Session
+
+      - name: Ensure load balancers and sgs are removed
+        run: |
+          pip3 install boto3
+          python3 .github/scripts/e2e-delete-sgs.py
+          python3 .github/scripts/e2e-delete-lbs.py
+
+  deploy:
+    name: Run e2e test
+    runs-on: ubuntu-latest
+    needs: prereq-cleanup
+
+    # These permissions are needed to interact with GitHub's OIDC Token endpoint.
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - example_path: bootstrap/terraform
+        #   - example_path: bootstrap/terraform-fully-private
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+
+      - name: Setup backend
+        # Un-comment remote backend for use in workflow
+        run: sed -i "s/# //g" ${{ matrix.example_path }}/versions.tf
+
+      - name: Auth AWS
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        with:
+          role-to-assume: ${{ secrets.ROLE_TO_ASSUME }}
+          aws-region: us-east-1
+          role-duration-seconds: 3600
+          role-session-name: GithubActions-Session
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.4
+
+      - name: Terraform Apply
+        id: apply
+        working-directory: ${{ matrix.example_path }}
+        run: |
+          terraform init -upgrade=true
+          terraform apply -target="module.vpc" -no-color -input=false -auto-approve
+          terraform apply -target="module.eks" -no-color -input=false -auto-approve
+          terraform apply -target="module.eks_blueprints_addons" -no-color -input=false -auto-approve
+          terraform apply -target="module.crossplane" -no-color -input=false -auto-approve
+          terraform apply -target="module.gatekeeper" -no-color -input=false -auto-approve
+          terraform apply -no-color -input=false -auto-approve
+
+      - name: Terraform Destroy
+        if: github.event.inputs.TFDestroy == 'true' && (steps.apply.outcome == 'success' || steps.apply.outcome == 'failure')
+        working-directory: ${{ matrix.example_path }}
+        run: |
+          terraform init -upgrade=true
+          terraform destroy -target="module.crossplane" -no-color -auto-approve
+          terraform destroy -target="module.gatekeeper" -no-color -auto-approve
+          terraform destroy -target="module.eks_blueprints_addons" -no-color -auto-approve
+          terraform destroy -target="module.eks" -no-color -auto-approve
+          terraform destroy -target="module.vpc" -no-color -auto-approve
+          terraform destroy -no-color -auto-approve
+
+      - name: Fail if TF apply failed
+        if: steps.apply.outcome == 'failure'
+        run: |
+          echo "Terraform Apply step failed...Please check the logs of the Terraform Apply step."
+          echo "Failing the job to avoid false positives."
+          exit 1
