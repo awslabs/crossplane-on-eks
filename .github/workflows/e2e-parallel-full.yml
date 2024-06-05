@@ -46,6 +46,7 @@ jobs:
           pip3 install boto3
           python3 .github/scripts/e2e-delete-sgs.py
           python3 .github/scripts/e2e-delete-lbs.py
+          python3 .github/scripts/e2e-delete-log-groups.py
 
   deploy:
     name: Run e2e test
@@ -93,14 +94,9 @@ jobs:
         working-directory: ${{ matrix.example_path }}
         run: |
           terraform init -upgrade=true
-          terraform apply -target="module.vpc" -no-color -input=false -auto-approve
-          terraform apply -target="module.eks" -no-color -input=false -auto-approve
-          terraform apply -target="module.eks_blueprints_addons" -no-color -input=false -auto-approve
-          terraform apply -target="module.crossplane" -no-color -input=false -auto-approve
-          terraform apply -target="module.gatekeeper" -no-color -input=false -auto-approve
-          terraform apply -no-color -input=false -auto-approve
+          terraform apply -no-color -auto-approve
 
-      - name: Terraform Destroy
+      - name: Terraform Destroy Addons
         if: github.event.inputs.TFDestroy == 'true' && (steps.apply.outcome == 'success' || steps.apply.outcome == 'failure')
         working-directory: ${{ matrix.example_path }}
         run: |
@@ -109,6 +105,16 @@ jobs:
           terraform destroy -target="module.gatekeeper" -no-color -auto-approve
           terraform destroy -target="module.eks_blueprints_addons" -no-color -auto-approve
           terraform destroy -target="module.eks" -no-color -auto-approve
+          
+      - name: Ensure load balancers and sgs are removed
+        run: |
+          pip3 install boto3
+          python3 .github/scripts/e2e-delete-sgs.py
+          python3 .github/scripts/e2e-delete-lbs.py
+          python3 .github/scripts/e2e-delete-log-groups.py
+
+      - name: Terraform Destroy Resources
+        run: |
           terraform destroy -target="module.vpc" -no-color -auto-approve
           terraform destroy -no-color -auto-approve
 

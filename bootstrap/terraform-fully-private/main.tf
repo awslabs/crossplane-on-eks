@@ -89,10 +89,11 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.0"
 
-  cluster_name                   = local.name
-  cluster_version                = local.cluster_version
-  cluster_endpoint_public_access = true
-  kms_key_enable_default_policy  = true
+  cluster_name                    = local.name
+  cluster_version                 = local.cluster_version
+  cluster_endpoint_public_access  = false
+  cluster_endpoint_private_access = true
+  kms_key_enable_default_policy   = true
 
   # Give the Terraform identity admin access to the cluster
   # which will allow resources to be deployed into the cluster
@@ -159,18 +160,39 @@ module "eks_blueprints_addons" {
         crossplane_aws_provider_enable        = local.aws_provider.enable
         crossplane_upjet_aws_provider_enable  = local.upjet_aws_provider.enable
         crossplane_kubernetes_provider_enable = local.kubernetes_provider.enable
+        ecr_aws_account_id                    = var.ecr_aws_account_id
+        ecr_aws_region                        = var.ecr_aws_region
     })]
   }
 
-  enable_metrics_server               = true
+  enable_metrics_server = true
+  metrics_server = {
+    values = [
+      templatefile("${path.module}/values/metrics-server.yaml", {
+        ecr_aws_account_id = var.ecr_aws_account_id
+        ecr_aws_region     = var.ecr_aws_region
+    })]
+  }
+
   enable_aws_load_balancer_controller = true
+  aws_load_balancer_controller = {
+    values = [
+      templatefile("${path.module}/values/aws-load-balancer-controller.yaml", {
+        ecr_aws_account_id = var.ecr_aws_account_id
+        ecr_aws_region     = var.ecr_aws_region
+    })]
+  }
 
   enable_kube_prometheus_stack = true
   kube_prometheus_stack = {
     wait          = true
     wait_for_jobs = true
     timeout       = "600"
-    values        = [file("${path.module}/values/prometheus.yaml")]
+    values = [
+      templatefile("${path.module}/values/prometheus.yaml", {
+        ecr_aws_account_id = var.ecr_aws_account_id
+        ecr_aws_region     = var.ecr_aws_region
+    })]
   }
 
   depends_on = [module.eks]
@@ -192,6 +214,11 @@ module "gatekeeper" {
   repository       = "https://open-policy-agent.github.io/gatekeeper/charts"
   wait             = true
   timeout          = "600"
+  values = [
+    templatefile("${path.module}/values/gatekeeper.yaml", {
+      ecr_aws_account_id = var.ecr_aws_account_id
+      ecr_aws_region     = var.ecr_aws_region
+  })]
 
   depends_on = [module.eks_blueprints_addons]
 }
@@ -212,8 +239,11 @@ module "crossplane" {
   repository       = "https://charts.crossplane.io/stable/"
   wait             = true
   timeout          = "600"
-  values           = [file("${path.module}/values/crossplane.yaml")]
-
+  values = [
+    templatefile("${path.module}/values/crossplane.yaml", {
+      ecr_aws_account_id = var.ecr_aws_account_id
+      ecr_aws_region     = var.ecr_aws_region
+  })]
   depends_on = [module.eks_blueprints_addons]
 }
 
@@ -326,9 +356,11 @@ resource "kubectl_manifest" "upjet_aws_runtime_config" {
 resource "kubectl_manifest" "upjet_aws_provider" {
   for_each = local.upjet_aws_provider.enable ? toset(local.upjet_aws_provider.families) : toset([])
   yaml_body = templatefile("${path.module}/providers/upjet-aws/provider.yaml", {
-    family         = each.key
-    version        = local.upjet_aws_provider.version
-    runtime-config = local.upjet_aws_provider.runtime_config
+    family             = each.key
+    version            = local.upjet_aws_provider.version
+    runtime-config     = local.upjet_aws_provider.runtime_config
+    ecr_aws_account_id = var.ecr_aws_account_id
+    ecr_aws_region     = var.ecr_aws_region
   })
   wait = true
 
@@ -556,23 +588,57 @@ module "vpc" {
 
   manage_default_vpc = true
 
-  name = local.vpc_name
+  name = local.name
   cidr = local.vpc_cidr
 
   azs             = local.azs
-  public_subnets  = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k)]
-  private_subnets = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 10)]
+  private_subnets = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 4, k)]
 
-  enable_nat_gateway = true
-  single_nat_gateway = true
-
-  public_subnet_tags = {
-    "kubernetes.io/role/elb" = 1
-  }
+  enable_nat_gateway = false
 
   private_subnet_tags = {
     "kubernetes.io/role/internal-elb" = 1
   }
+
+  tags = local.tags
+}
+
+module "vpc_endpoints" {
+  source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
+  version = "~> 5.1"
+
+  vpc_id = module.vpc.vpc_id
+
+  # Security group
+  create_security_group      = true
+  security_group_name_prefix = "${local.name}-vpc-endpoints-"
+  security_group_description = "VPC endpoint security group"
+  security_group_rules = {
+    ingress_https = {
+      description = "HTTPS from VPC"
+      cidr_blocks = [module.vpc.vpc_cidr_block]
+    }
+  }
+
+  endpoints = merge({
+    s3 = {
+      service         = "s3"
+      service_type    = "Gateway"
+      route_table_ids = module.vpc.private_route_table_ids
+      tags = {
+        Name = "${local.name}-s3"
+      }
+    }
+    },
+    { for service in toset(["autoscaling", "ecr.api", "ecr.dkr", "ec2", "ec2messages", "elasticloadbalancing", "sts", "kms", "logs", "ssm", "ssmmessages"]) :
+      replace(service, ".", "_") =>
+      {
+        service             = service
+        subnet_ids          = module.vpc.private_subnets
+        private_dns_enabled = true
+        tags                = { Name = "${local.name}-${service}" }
+      }
+  })
 
   tags = local.tags
 }
