@@ -10,7 +10,7 @@ variable "region" {
 variable "name" {
   description = "EKS Cluster Name and the VPC name"
   type        = string
-  default     = "crossplane-blueprints-fully-private"
+  default     = "crossplane-blueprints"
 }
 
 variable "cluster_version" {
@@ -50,14 +50,14 @@ variable "enable_helm_provider" {
 }
 
 variable "ecr_aws_account_id" {
-  type        = bool
+  type        = string
   description = "ECR repository AWS Account ID"
-  default     = false
+  default     = ""
 }
 
 variable "ecr_aws_region" {
-  type        = bool
+  type        = string
   description = "ECR repository AWS Region"
-  default     = false
+  default     = ""
 }
 
