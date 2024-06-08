@@ -53,6 +53,15 @@ locals {
   vpc_cidr = "10.0.0.0/16"
   azs      = slice(data.aws_availability_zones.available.names, 0, 3)
 
+  security_group_rules = {
+    description = "Allow inbound traffic from CIDR Block to EKS Cluster"
+    protocol    = "tcp"
+    from_port   = 443
+    to_port     = 443
+    type        = "ingress"
+    cidr_blocks = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+  }
+
   tags = {
     Blueprint  = local.name
     GithubRepo = "github.com/awslabs/crossplane-on-eks"
@@ -102,6 +111,17 @@ module "eks" {
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
 
+  cluster_security_group_additional_rules = {
+    for k, v in local.security_group_rules : k => {
+      protocol    = v.protocol
+      from_port   = v.from_port
+      to_port     = v.to_port
+      type        = v.type
+      cidr_blocks = v.cidr_blocks
+      description = v.description
+    }
+  }
+
   cluster_addons = {
     aws-ebs-csi-driver = {
       most_recent              = true
@@ -114,7 +134,8 @@ module "eks" {
       most_recent = true
     }
     vpc-cni = {
-      most_recent = true
+      before_compute = true # Ensure the addon is configured before compute resources are created
+      most_recent    = true
     }
   }
 
@@ -152,9 +173,6 @@ module "eks_blueprints_addons" {
   argocd = {
     namespace     = "argocd"
     chart_version = "7.1.0" # ArgoCD v2.11.2
-    wait          = true
-    wait_for_jobs = true
-    timeout       = "600"
     values = [
       templatefile("${path.module}/values/argocd.yaml", {
         crossplane_aws_provider_enable        = local.aws_provider.enable
@@ -185,9 +203,6 @@ module "eks_blueprints_addons" {
 
   enable_kube_prometheus_stack = true
   kube_prometheus_stack = {
-    wait          = true
-    wait_for_jobs = true
-    timeout       = "600"
     values = [
       templatefile("${path.module}/values/prometheus.yaml", {
         ecr_aws_account_id = var.ecr_aws_account_id
@@ -354,7 +369,7 @@ resource "kubectl_manifest" "upjet_aws_runtime_config" {
 }
 
 resource "kubectl_manifest" "upjet_provider_family_aws" {
-
+  count = local.upjet_aws_provider.enable == true ? 1 : 0
   yaml_body = templatefile("${path.module}/providers/upjet-aws/provider-family-aws.yaml", {
     version            = local.upjet_aws_provider.version
     runtime-config     = local.upjet_aws_provider.runtime_config
@@ -661,5 +676,5 @@ module "vpc_endpoints" {
 
   tags = local.tags
 
-  depends_on = [vpc]
+  depends_on = [module.vpc]
 }

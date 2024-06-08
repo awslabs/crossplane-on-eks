@@ -113,7 +113,10 @@ module "eks" {
       most_recent = true
     }
     vpc-cni = {
-      most_recent = true
+      # VPC CNI addon should be deployed before compute to ensure
+      # the addon is configured before data plane compute resources are created
+      before_compute = true
+      most_recent    = true
     }
   }
 
