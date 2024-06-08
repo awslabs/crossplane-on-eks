@@ -3,6 +3,6 @@ kind: Provider
 metadata:
   name: ${helm-provider-name}
 spec:
-  package: xpkg.upbound.io/crossplane-contrib/provider-helm:${version}
+  package: ${ecr_aws_account_id}.dkr.ecr.${ecr_aws_region}.amazonaws.com/crossplane-contrib/provider-helm:${version}
   runtimeConfigRef:
     name: ${runtime-config}

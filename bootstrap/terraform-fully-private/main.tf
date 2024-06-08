@@ -353,6 +353,19 @@ resource "kubectl_manifest" "upjet_aws_runtime_config" {
   depends_on = [module.crossplane]
 }
 
+resource "kubectl_manifest" "upjet_provider_family_aws" {
+
+  yaml_body = templatefile("${path.module}/providers/upjet-aws/provider-family-aws.yaml", {
+    version            = local.upjet_aws_provider.version
+    runtime-config     = local.upjet_aws_provider.runtime_config
+    ecr_aws_account_id = var.ecr_aws_account_id
+    ecr_aws_region     = var.ecr_aws_region
+  })
+  wait = true
+
+  depends_on = [kubectl_manifest.upjet_aws_runtime_config]
+}
+
 resource "kubectl_manifest" "upjet_aws_provider" {
   for_each = local.upjet_aws_provider.enable ? toset(local.upjet_aws_provider.families) : toset([])
   yaml_body = templatefile("${path.module}/providers/upjet-aws/provider.yaml", {
@@ -424,9 +437,11 @@ resource "kubectl_manifest" "aws_runtime_config" {
 resource "kubectl_manifest" "aws_provider" {
   count = local.aws_provider.enable == true ? 1 : 0
   yaml_body = templatefile("${path.module}/providers/aws/provider.yaml", {
-    aws-provider-name = local.aws_provider.name
-    version           = local.aws_provider.version
-    runtime-config    = local.aws_provider.runtime_config
+    aws-provider-name  = local.aws_provider.name
+    version            = local.aws_provider.version
+    runtime-config     = local.aws_provider.runtime_config
+    ecr_aws_account_id = var.ecr_aws_account_id
+    ecr_aws_region     = var.ecr_aws_region
   })
   wait = true
 
@@ -492,6 +507,8 @@ resource "kubectl_manifest" "kubernetes_provider" {
     version                  = local.kubernetes_provider.version
     kubernetes-provider-name = local.kubernetes_provider.name
     runtime-config           = local.kubernetes_provider.runtime_config
+    ecr_aws_account_id       = var.ecr_aws_account_id
+    ecr_aws_region           = var.ecr_aws_region
   })
   wait = true
 
@@ -556,6 +573,8 @@ resource "kubectl_manifest" "helm_provider" {
     version            = local.helm_provider.version
     helm-provider-name = local.helm_provider.name
     runtime-config     = local.helm_provider.runtime_config
+    ecr_aws_account_id = var.ecr_aws_account_id
+    ecr_aws_region     = var.ecr_aws_region
   })
   wait = true
 
@@ -641,4 +660,6 @@ module "vpc_endpoints" {
   })
 
   tags = local.tags
+
+  depends_on = [vpc]
 }

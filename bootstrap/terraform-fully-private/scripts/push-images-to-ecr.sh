@@ -6,7 +6,9 @@ AWS_ACCOUNT_ID=''
 # Choose to use docker or podman. Syntax is the same.
 #PROGRAM=podman
 PROGRAM=docker 
+
 ${PROGRAM} pull docker.io/openpolicyagent/gatekeeper-crds:v3.16.3
+${PROGRAM} pull docker.io/openpolicyagent/gatekeeper:v3.16.3
 ${PROGRAM} pull quay.io/argoproj/argocd:v2.11.2
 ${PROGRAM} pull ghcr.io/dexidp/dex:v2.38.0
 ${PROGRAM} pull redis:7.2.4-alpine
@@ -31,6 +33,7 @@ ${PROGRAM} pull quay.io/prometheus-operator/prometheus-config-reloader:v0.66.0
 ${PROGRAM} pull docker.io/grafana/grafana:10.0.2
 ${PROGRAM} pull docker.io/grafana/grafana-image-renderer:latest
 ${PROGRAM} pull docker.io/curlimages/curl:7.85.0
+${PROGRAM} pull docker.io/curlimages/curl:7.83.1
 ${PROGRAM} pull docker.io/library/busybox:1.31.1
 ${PROGRAM} pull quay.io/kiwigrid/k8s-sidecar:1.24.6
 ${PROGRAM} pull xpkg.upbound.io/crossplane/crossplane:v1.16.0
@@ -79,6 +82,7 @@ ${PROGRAM} tag quay.io/prometheus-operator/prometheus-config-reloader:v0.66.0 ${
 ${PROGRAM} tag docker.io/grafana/grafana:10.0.2 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/grafana/grafana:10.0.2
 ${PROGRAM} tag docker.io/grafana/grafana-image-renderer:latest ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/grafana/grafana-image-renderer:latest
 ${PROGRAM} tag docker.io/curlimages/curl:7.85.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/grafana/curl:7.85.0
+${PROGRAM} tag docker.io/curlimages/curl:7.83.1 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/openpolicyagent/curl:7.83.1
 ${PROGRAM} tag docker.io/library/busybox:1.31.1 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/grafana/busybox:1.31.1
 ${PROGRAM} tag quay.io/kiwigrid/k8s-sidecar:1.24.6 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/grafana/k8s-sidecar:1.24.6
 ${PROGRAM} tag xpkg.upbound.io/crossplane/crossplane:v1.16.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/crossplane/crossplane:v1.16.0
