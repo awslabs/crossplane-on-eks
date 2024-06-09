@@ -39,23 +39,23 @@ ${PROGRAM} pull quay.io/kiwigrid/k8s-sidecar:1.24.6
 ${PROGRAM} pull xpkg.upbound.io/crossplane/crossplane:v1.16.0
 ${PROGRAM} pull xpkg.upbound.io/crossplane-contrib/provider-helm:v0.13.0
 ${PROGRAM} pull xpkg.upbound.io/crossplane-contrib/provider-kubernetes:v0.13.0
-${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-apigateway:v1.5.0
-${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-cloudwatch:v1.5.0
-${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-cloudwatchlogs:v1.5.0
-${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-dynamodb:v1.5.0
-${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-ec2:v1.5.0
-${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-eks:v1.5.0
-${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-elasticache:v1.5.0
-${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-iam:v1.5.0
-${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-kms:v1.5.0
-${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-lambda:v1.5.0
-${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-rds:v1.5.0
-${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-s3:v1.5.0
-${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-sns:v1.5.0
-${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-sqs:v1.5.0
-${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-vpc:v1.5.0
-${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-cloudfront:v1.5.0
-${PROGRAM} pull xpkg.upbound.io/upbound/provider-family-aws:v1.5.0
+${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-apigateway:v1.6.0
+${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-cloudwatch:v1.6.0
+${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-cloudwatchlogs:v1.6.0
+${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-dynamodb:v1.6.0
+${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-ec2:v1.6.0
+${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-eks:v1.6.0
+${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-elasticache:v1.6.0
+${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-iam:v1.6.0
+${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-kms:v1.6.0
+${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-lambda:v1.6.0
+${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-rds:v1.6.0
+${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-s3:v1.6.0
+${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-sns:v1.6.0
+${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-sqs:v1.6.0
+${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-vpc:v1.6.0
+${PROGRAM} pull xpkg.upbound.io/upbound/provider-aws-cloudfront:v1.6.0
+${PROGRAM} pull xpkg.upbound.io/upbound/provider-family-aws:v1.6.0
 
 ${PROGRAM} tag docker.io/openpolicyagent/gatekeeper-crds:v3.16.3 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/openpolicyagent/gatekeeper-crds:v3.16.3
 ${PROGRAM} tag quay.io/argoproj/argocd:v2.11.2 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/argocd:v2.11.2
@@ -88,22 +88,22 @@ ${PROGRAM} tag quay.io/kiwigrid/k8s-sidecar:1.24.6 ${AWS_ACCOUNT_ID}.dkr.ecr.${A
 ${PROGRAM} tag xpkg.upbound.io/crossplane/crossplane:v1.16.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/crossplane/crossplane:v1.16.0
 ${PROGRAM} tag xpkg.upbound.io/crossplane-contrib/provider-helm:v0.13.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/crossplane-contrib/provider-helm:v0.13.0
 ${PROGRAM} tag xpkg.upbound.io/crossplane-contrib/provider-kubernetes:v0.13.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/crossplane-contrib/provider-kubernetes:v0.13.0
-${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-apigateway:v1.5.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-apigateway:v1.5.0
-${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-cloudwatch:v1.5.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-cloudwatch:v1.5.0
-${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-cloudwatchlogs:v1.5.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-cloudwatchlogs:v1.5.0
-${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-dynamodb:v1.5.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-dynamodb:v1.5.0
-${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-ec2:v1.5.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-ec2:v1.5.0
-${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-eks:v1.5.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-eks:v1.5.0
-${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-elasticache:v1.5.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-elasticache:v1.5.0
-${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-iam:v1.5.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-iam:v1.5.0
-${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-kms:v1.5.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-kms:v1.5.0
-${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-lambda:v1.5.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-lambda:v1.5.0
-${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-rds:v1.5.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-rds:v1.5.0
-${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-s3:v1.5.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-s3:v1.5.0
-${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-sns:v1.5.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-sns:v1.5.0
-${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-sqs:v1.5.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-sqs:v1.5.0
-${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-vpc:v1.5.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-vpc:v1.5.0
-${PROGRAM} tag xpkg.upbound.io/upbound/provider-family-aws:v1.5.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-family-aws:v1.5.0
+${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-apigateway:v1.6.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-apigateway:v1.6.0
+${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-cloudwatch:v1.6.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-cloudwatch:v1.6.0
+${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-cloudwatchlogs:v1.6.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-cloudwatchlogs:v1.6.0
+${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-dynamodb:v1.6.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-dynamodb:v1.6.0
+${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-ec2:v1.6.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-ec2:v1.6.0
+${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-eks:v1.6.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-eks:v1.6.0
+${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-elasticache:v1.6.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-elasticache:v1.6.0
+${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-iam:v1.6.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-iam:v1.6.0
+${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-kms:v1.6.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-kms:v1.6.0
+${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-lambda:v1.6.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-lambda:v1.6.0
+${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-rds:v1.6.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-rds:v1.6.0
+${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-s3:v1.6.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-s3:v1.6.0
+${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-sns:v1.6.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-sns:v1.6.0
+${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-sqs:v1.6.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-sqs:v1.6.0
+${PROGRAM} tag xpkg.upbound.io/upbound/provider-aws-vpc:v1.6.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-vpc:v1.6.0
+${PROGRAM} tag xpkg.upbound.io/upbound/provider-family-aws:v1.6.0 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-family-aws:v1.6.0
 
 aws ecr get-login-password --region ${AWS_REGION} | ${PROGRAM} login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
 
@@ -136,19 +136,19 @@ ${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/grafana/k8
 ${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/crossplane/crossplane:v1.16.0
 ${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/crossplane-contrib/provider-helm:v0.13.0
 ${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/crossplane-contrib/provider-kubernetes:v0.13.0
-${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-apigateway:v1.5.0
-${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-cloudwatch:v1.5.0
-${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-cloudwatchlogs:v1.5.0
-${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-dynamodb:v1.5.0
-${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-ec2:v1.5.0
-${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-eks:v1.5.0
-${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-elasticache:v1.5.0
-${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-iam:v1.5.0
-${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-kms:v1.5.0
-${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-lambda:v1.5.0
-${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-rds:v1.5.0
-${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-s3:v1.5.0
-${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-sns:v1.5.0
-${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-sqs:v1.5.0
-${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-vpc:v1.5.0
-${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-family-aws:v1.5.0
+${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-apigateway:v1.6.0
+${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-cloudwatch:v1.6.0
+${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-cloudwatchlogs:v1.6.0
+${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-dynamodb:v1.6.0
+${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-ec2:v1.6.0
+${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-eks:v1.6.0
+${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-elasticache:v1.6.0
+${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-iam:v1.6.0
+${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-kms:v1.6.0
+${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-lambda:v1.6.0
+${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-rds:v1.6.0
+${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-s3:v1.6.0
+${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-sns:v1.6.0
+${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-sqs:v1.6.0
+${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-aws-vpc:v1.6.0
+${PROGRAM} push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/upbound/provider-family-aws:v1.6.0

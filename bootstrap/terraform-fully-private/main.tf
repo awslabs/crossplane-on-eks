@@ -303,7 +303,7 @@ locals {
 
   upjet_aws_provider = {
     enable               = var.enable_upjet_aws_provider # defaults to true
-    version              = "v1.5.0"
+    version              = "v1.6.0"
     runtime_config       = "upjet-aws-runtime-config"
     provider_config_name = "aws-provider-config" #this is the providerConfigName used in all the examples in this repo
     families = [
