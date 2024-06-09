@@ -7,5 +7,6 @@ metadata:
 spec:
   package: ${ecr_aws_account_id}.dkr.ecr.${ecr_aws_region}.amazonaws.com/upbound/provider-aws-${family}:${version}
   skipDependencyResolution: true
+  packagePullPolicy: Always
   runtimeConfigRef:
     name: ${runtime-config}

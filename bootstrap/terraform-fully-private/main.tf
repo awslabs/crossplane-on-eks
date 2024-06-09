@@ -60,8 +60,24 @@ locals {
       from_port   = 443
       to_port     = 443
       type        = "ingress"
-      cidr_blocks = ["192.168.0.0/16", "172.16.0.0/12", "10.0.0.0/8"]
+      cidr_blocks = ["10.0.0.0/8"]
     },
+    {
+      description = "Fully private EKS Cluster"
+      protocol    = "tcp"
+      from_port   = 443
+      to_port     = 443
+      type        = "ingress"
+      cidr_blocks = ["172.16.0.0/12"]
+    },
+    {
+      description = "Fully private EKS Cluster"
+      protocol    = "tcp"
+      from_port   = 443
+      to_port     = 443
+      type        = "ingress"
+      cidr_blocks = ["192.168.0.0/16"]
+    }
   ]
 
   tags = {

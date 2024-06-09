@@ -2,8 +2,9 @@
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
-  name: provider-upjet-aws
+  name: provider-upjet-aws-family
 spec:
   package: ${ecr_aws_account_id}.dkr.ecr.${ecr_aws_region}.amazonaws.com/upbound/provider-family-aws:${version}
+  packagePullPolicy: Always
   runtimeConfigRef:
     name: ${runtime-config}
