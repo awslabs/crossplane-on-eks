@@ -121,9 +121,10 @@ module "eks" {
       to_port     = rule.to_port
       type        = rule.type
       cidr_blocks = rule.cidr_blocks
-      description = "${rule.description}-allow-port-${rule.from_port}-${rule.to_port}-from-${cidr_blocks}"
+      description = "${rule.description} - Allow port ${rule.from_port} to ${rule.to_port} from ${join(", ", rule.cidr_blocks)}"
     }
   }
+
 
   cluster_addons = {
     aws-ebs-csi-driver = {
