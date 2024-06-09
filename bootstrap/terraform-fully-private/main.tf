@@ -53,14 +53,32 @@ locals {
   vpc_cidr = "10.0.0.0/16"
   azs      = slice(data.aws_availability_zones.available.names, 0, 3)
 
-  security_group_rules = {
-    description = "Allow inbound traffic from CIDR Block to EKS Cluster"
-    protocol    = "tcp"
-    from_port   = 443
-    to_port     = 443
-    type        = "ingress"
-    cidr_blocks = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
-  }
+  eks_security_group_rules = [
+    {
+      description = "Fully private EKS Cluster"
+      protocol    = "tcp"
+      from_port   = 443
+      to_port     = 443
+      type        = "ingress"
+      cidr_blocks = ["10.0.0.0/8"]
+    },
+    {
+      description = "Fully private EKS Cluster"
+      protocol    = "tcp"
+      from_port   = 443
+      to_port     = 443
+      type        = "ingress"
+      cidr_blocks = ["172.16.0.0/12"]
+    },
+    {
+      description = "Fully private EKS Cluster"
+      protocol    = "tcp"
+      from_port   = 443
+      to_port     = 443
+      type        = "ingress"
+      cidr_blocks = ["192.168.0.0/16"]
+    }
+  ]
 
   tags = {
     Blueprint  = local.name
@@ -112,13 +130,14 @@ module "eks" {
   subnet_ids = module.vpc.private_subnets
 
   cluster_security_group_additional_rules = {
-    for k, v in local.security_group_rules : k => {
-      protocol    = v.protocol
-      from_port   = v.from_port
-      to_port     = v.to_port
-      type        = v.type
-      cidr_blocks = v.cidr_blocks
-      description = v.description
+    for rule in local.eks_security_group_rules :
+    "${rule.description}-allow-port-${rule.from_port}-${rule.to_port}-from-${join("-", rule.cidr_blocks)}" => {
+      protocol    = rule.protocol
+      from_port   = rule.from_port
+      to_port     = rule.to_port
+      type        = rule.type
+      cidr_blocks = rule.cidr_blocks
+      description = "${rule.description}-allow-port-${rule.from_port}-${rule.to_port}-from-${cidr_blocks}"
     }
   }
 
