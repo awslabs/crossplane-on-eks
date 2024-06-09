@@ -60,24 +60,8 @@ locals {
       from_port   = 443
       to_port     = 443
       type        = "ingress"
-      cidr_blocks = ["10.0.0.0/8"]
+      cidr_blocks = ["192.168.0.0/16", "172.16.0.0/12", "10.0.0.0/8"]
     },
-    {
-      description = "Fully private EKS Cluster"
-      protocol    = "tcp"
-      from_port   = 443
-      to_port     = 443
-      type        = "ingress"
-      cidr_blocks = ["172.16.0.0/12"]
-    },
-    {
-      description = "Fully private EKS Cluster"
-      protocol    = "tcp"
-      from_port   = 443
-      to_port     = 443
-      type        = "ingress"
-      cidr_blocks = ["192.168.0.0/16"]
-    }
   ]
 
   tags = {
@@ -229,7 +213,12 @@ module "eks_blueprints_addons" {
     })]
   }
 
-  depends_on = [module.eks]
+  depends_on = [module.eks.cluster_addons]
+}
+
+resource "time_sleep" "addons_wait_60_seconds" {
+  create_duration = "60s"
+  depends_on      = [module.eks_blueprints_addons]
 }
 
 #---------------------------------------------------------------
@@ -246,15 +235,13 @@ module "gatekeeper" {
   chart            = "gatekeeper"
   chart_version    = "3.16.3"
   repository       = "https://open-policy-agent.github.io/gatekeeper/charts"
-  wait             = true
-  timeout          = "600"
   values = [
     templatefile("${path.module}/values/gatekeeper.yaml", {
       ecr_aws_account_id = var.ecr_aws_account_id
       ecr_aws_region     = var.ecr_aws_region
   })]
 
-  depends_on = [module.eks_blueprints_addons]
+  depends_on = [time_sleep.addons_wait_60_seconds]
 }
 
 #---------------------------------------------------------------
@@ -271,14 +258,14 @@ module "crossplane" {
   chart            = "crossplane"
   chart_version    = "1.16.0"
   repository       = "https://charts.crossplane.io/stable/"
-  wait             = true
   timeout          = "600"
   values = [
     templatefile("${path.module}/values/crossplane.yaml", {
       ecr_aws_account_id = var.ecr_aws_account_id
       ecr_aws_region     = var.ecr_aws_region
   })]
-  depends_on = [module.eks_blueprints_addons]
+
+  depends_on = [time_sleep.addons_wait_60_seconds]
 }
 
 resource "kubectl_manifest" "environmentconfig" {
@@ -395,7 +382,6 @@ resource "kubectl_manifest" "upjet_provider_family_aws" {
     ecr_aws_account_id = var.ecr_aws_account_id
     ecr_aws_region     = var.ecr_aws_region
   })
-  wait = true
 
   depends_on = [kubectl_manifest.upjet_aws_runtime_config]
 }
@@ -409,7 +395,6 @@ resource "kubectl_manifest" "upjet_aws_provider" {
     ecr_aws_account_id = var.ecr_aws_account_id
     ecr_aws_region     = var.ecr_aws_region
   })
-  wait = true
 
   depends_on = [kubectl_manifest.upjet_aws_runtime_config, module.crossplane]
 }
@@ -477,7 +462,6 @@ resource "kubectl_manifest" "aws_provider" {
     ecr_aws_account_id = var.ecr_aws_account_id
     ecr_aws_region     = var.ecr_aws_region
   })
-  wait = true
 
   depends_on = [kubectl_manifest.aws_runtime_config, module.crossplane]
 }
@@ -519,7 +503,6 @@ resource "kubectl_manifest" "kubernetes_provider_clusterolebinding" {
     cluster-role = local.kubernetes_provider.cluster_role
     sa-name      = kubernetes_service_account_v1.kubernetes_runtime[0].metadata[0].name
   })
-  wait = true
 
   depends_on = [kubernetes_service_account_v1.kubernetes_runtime, module.crossplane]
 }
@@ -530,7 +513,6 @@ resource "kubectl_manifest" "kubernetes_runtime_config" {
     sa-name        = kubernetes_service_account_v1.kubernetes_runtime[0].metadata[0].name
     runtime-config = local.kubernetes_provider.runtime_config
   })
-  wait = true
 
   depends_on = [kubectl_manifest.kubernetes_provider_clusterolebinding, module.crossplane]
 }
@@ -544,7 +526,6 @@ resource "kubectl_manifest" "kubernetes_provider" {
     ecr_aws_account_id       = var.ecr_aws_account_id
     ecr_aws_region           = var.ecr_aws_region
   })
-  wait = true
 
   depends_on = [module.crossplane, kubectl_manifest.kubernetes_runtime_config]
 }
@@ -585,7 +566,6 @@ resource "kubectl_manifest" "helm_runtime_clusterolebinding" {
     cluster-role = local.helm_provider.cluster_role
     sa-name      = kubernetes_service_account_v1.helm_runtime[0].metadata[0].name
   })
-  wait = true
 
   depends_on = [kubernetes_service_account_v1.helm_runtime, module.crossplane]
 }
@@ -596,7 +576,6 @@ resource "kubectl_manifest" "helm_runtime_config" {
     sa-name        = kubernetes_service_account_v1.helm_runtime[0].metadata[0].name
     runtime-config = local.helm_provider.runtime_config
   })
-  wait = true
 
   depends_on = [kubectl_manifest.helm_runtime_clusterolebinding, module.crossplane]
 }
@@ -610,7 +589,6 @@ resource "kubectl_manifest" "helm_provider" {
     ecr_aws_account_id = var.ecr_aws_account_id
     ecr_aws_region     = var.ecr_aws_region
   })
-  wait = true
 
   depends_on = [kubectl_manifest.helm_runtime_config, module.crossplane]
 }
