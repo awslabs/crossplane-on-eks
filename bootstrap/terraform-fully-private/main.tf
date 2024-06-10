@@ -53,6 +53,8 @@ locals {
   vpc_cidr = "10.0.0.0/16"
   azs      = slice(data.aws_availability_zones.available.names, 0, 3)
 
+  # Ensure to adapt these security group rules based on your network configuration and security requirements
+  # for maintaining a fully private EKS Cluster environment.
   eks_security_group_rules = [
     {
       description = "Fully private EKS Cluster - Allow port 443 to 443 from 10.0.0.0/8"
