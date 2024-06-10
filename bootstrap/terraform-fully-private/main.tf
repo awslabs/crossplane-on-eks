@@ -55,7 +55,7 @@ locals {
 
   eks_security_group_rules = [
     {
-      description = "Fully private EKS Cluster"
+      description = "Fully private EKS Cluster - Allow port 443 to 443 from 10.0.0.0/8"
       protocol    = "tcp"
       from_port   = 443
       to_port     = 443
@@ -63,7 +63,7 @@ locals {
       cidr_blocks = ["10.0.0.0/8"]
     },
     {
-      description = "Fully private EKS Cluster"
+      description = "Fully private EKS Cluster - Allow port 443 to 443 from 172.16.0.0/12"
       protocol    = "tcp"
       from_port   = 443
       to_port     = 443
@@ -71,7 +71,7 @@ locals {
       cidr_blocks = ["172.16.0.0/12"]
     },
     {
-      description = "Fully private EKS Cluster"
+      description = "Fully private EKS Cluster - Allow port 443 to 443 from 192.168.0.0/16"
       protocol    = "tcp"
       from_port   = 443
       to_port     = 443
@@ -130,14 +130,14 @@ module "eks" {
   subnet_ids = module.vpc.private_subnets
 
   cluster_security_group_additional_rules = {
-    for rule in local.eks_security_group_rules :
-    "${rule.description}-allow-port-${rule.from_port}-${rule.to_port}-from-${join("-", rule.cidr_blocks)}" => {
-      protocol    = rule.protocol
-      from_port   = rule.from_port
-      to_port     = rule.to_port
-      type        = rule.type
-      cidr_blocks = rule.cidr_blocks
-      description = "${rule.description} - Allow port ${rule.from_port} to ${rule.to_port} from ${join(", ", rule.cidr_blocks)}"
+    for k, v in local.eks_security_group_rules :
+    k => {
+      protocol    = try(v.protocol)
+      from_port   = try(v.from_port)
+      to_port     = try(v.to_port)
+      type        = try(v.type)
+      cidr_blocks = try(v.cidr_blocks)
+      description = try(v.description)
     }
   }
 
@@ -403,7 +403,7 @@ resource "kubectl_manifest" "upjet_provider_family_aws" {
 }
 
 # Wait for the Upbound AWS Family Provider to be fully created.
-resource "time_sleep" "upjet_wait_60_seconds" {
+resource "time_sleep" "upjet_family_wait_60_seconds" {
   count           = local.upjet_aws_provider.enable == true ? 1 : 0
   create_duration = "60s"
 
@@ -420,7 +420,7 @@ resource "kubectl_manifest" "upjet_aws_provider" {
     ecr_aws_region     = var.ecr_aws_region
   })
 
-  depends_on = [time_sleep.upjet_wait_60_seconds, module.crossplane]
+  depends_on = [time_sleep.upjet_family_wait_60_seconds, module.crossplane]
 }
 
 # Wait for the Upbound AWS Provider CRDs to be fully created before initiating upjet_aws_provider_config
