@@ -113,9 +113,7 @@ module "eks" {
       most_recent = true
     }
     vpc-cni = {
-      # VPC CNI addon should be deployed before compute to ensure
-      # the addon is configured before data plane compute resources are created
-      before_compute = true
+      before_compute = true # Ensure the addon is configured before compute resources are created
       most_recent    = true
     }
   }
@@ -154,9 +152,6 @@ module "eks_blueprints_addons" {
   argocd = {
     namespace     = "argocd"
     chart_version = "7.1.0" # ArgoCD v2.11.2
-    wait          = true
-    wait_for_jobs = true
-    timeout       = "600"
     values = [
       templatefile("${path.module}/values/argocd.yaml", {
         crossplane_aws_provider_enable        = local.aws_provider.enable
@@ -176,7 +171,12 @@ module "eks_blueprints_addons" {
     values        = [file("${path.module}/values/prometheus.yaml")]
   }
 
-  depends_on = [module.eks]
+  depends_on = [module.eks.cluster_addons]
+}
+
+resource "time_sleep" "addons_wait_60_seconds" {
+  create_duration = "60s"
+  depends_on      = [module.eks_blueprints_addons]
 }
 
 #---------------------------------------------------------------
@@ -193,10 +193,8 @@ module "gatekeeper" {
   chart            = "gatekeeper"
   chart_version    = "3.16.3"
   repository       = "https://open-policy-agent.github.io/gatekeeper/charts"
-  wait             = true
-  timeout          = "600"
 
-  depends_on = [module.eks_blueprints_addons]
+  depends_on = [time_sleep.addons_wait_60_seconds]
 }
 
 #---------------------------------------------------------------
@@ -213,11 +211,10 @@ module "crossplane" {
   chart            = "crossplane"
   chart_version    = "1.16.0"
   repository       = "https://charts.crossplane.io/stable/"
-  wait             = true
   timeout          = "600"
   values           = [file("${path.module}/values/crossplane.yaml")]
 
-  depends_on = [module.eks_blueprints_addons]
+  depends_on = [time_sleep.addons_wait_60_seconds]
 }
 
 resource "kubectl_manifest" "environmentconfig" {
@@ -238,7 +235,7 @@ locals {
 
   upjet_aws_provider = {
     enable               = var.enable_upjet_aws_provider # defaults to true
-    version              = "v1.5.0"
+    version              = "v1.6.0"
     runtime_config       = "upjet-aws-runtime-config"
     provider_config_name = "aws-provider-config" #this is the providerConfigName used in all the examples in this repo
     families = [
@@ -333,7 +330,6 @@ resource "kubectl_manifest" "upjet_aws_provider" {
     version        = local.upjet_aws_provider.version
     runtime-config = local.upjet_aws_provider.runtime_config
   })
-  wait = true
 
   depends_on = [kubectl_manifest.upjet_aws_runtime_config, module.crossplane]
 }
@@ -441,7 +437,6 @@ resource "kubectl_manifest" "kubernetes_provider_clusterolebinding" {
     cluster-role = local.kubernetes_provider.cluster_role
     sa-name      = kubernetes_service_account_v1.kubernetes_runtime[0].metadata[0].name
   })
-  wait = true
 
   depends_on = [kubernetes_service_account_v1.kubernetes_runtime, module.crossplane]
 }
@@ -452,7 +447,6 @@ resource "kubectl_manifest" "kubernetes_runtime_config" {
     sa-name        = kubernetes_service_account_v1.kubernetes_runtime[0].metadata[0].name
     runtime-config = local.kubernetes_provider.runtime_config
   })
-  wait = true
 
   depends_on = [kubectl_manifest.kubernetes_provider_clusterolebinding, module.crossplane]
 }
@@ -464,7 +458,6 @@ resource "kubectl_manifest" "kubernetes_provider" {
     kubernetes-provider-name = local.kubernetes_provider.name
     runtime-config           = local.kubernetes_provider.runtime_config
   })
-  wait = true
 
   depends_on = [module.crossplane, kubectl_manifest.kubernetes_runtime_config]
 }
@@ -505,7 +498,6 @@ resource "kubectl_manifest" "helm_runtime_clusterolebinding" {
     cluster-role = local.helm_provider.cluster_role
     sa-name      = kubernetes_service_account_v1.helm_runtime[0].metadata[0].name
   })
-  wait = true
 
   depends_on = [kubernetes_service_account_v1.helm_runtime, module.crossplane]
 }
@@ -516,7 +508,6 @@ resource "kubectl_manifest" "helm_runtime_config" {
     sa-name        = kubernetes_service_account_v1.helm_runtime[0].metadata[0].name
     runtime-config = local.helm_provider.runtime_config
   })
-  wait = true
 
   depends_on = [kubectl_manifest.helm_runtime_clusterolebinding, module.crossplane]
 }
@@ -528,7 +519,6 @@ resource "kubectl_manifest" "helm_provider" {
     helm-provider-name = local.helm_provider.name
     runtime-config     = local.helm_provider.runtime_config
   })
-  wait = true
 
   depends_on = [kubectl_manifest.helm_runtime_config, module.crossplane]
 }

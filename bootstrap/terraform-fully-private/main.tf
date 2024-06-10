@@ -141,7 +141,6 @@ module "eks" {
     }
   }
 
-
   cluster_addons = {
     aws-ebs-csi-driver = {
       most_recent              = true
@@ -400,13 +399,13 @@ resource "kubectl_manifest" "upjet_provider_family_aws" {
     ecr_aws_region     = var.ecr_aws_region
   })
 
-  depends_on = [kubectl_manifest.upjet_aws_runtime_config]
+  depends_on = [kubectl_manifest.upjet_aws_runtime_config, module.crossplane]
 }
 
 # Wait for the Upbound AWS Family Provider to be fully created.
-resource "time_sleep" "upjet_family_wait_120_seconds" {
+resource "time_sleep" "upjet_wait_60_seconds" {
   count           = local.upjet_aws_provider.enable == true ? 1 : 0
-  create_duration = "120s"
+  create_duration = "60s"
 
   depends_on = [kubectl_manifest.upjet_provider_family_aws, module.crossplane]
 }
@@ -421,7 +420,7 @@ resource "kubectl_manifest" "upjet_aws_provider" {
     ecr_aws_region     = var.ecr_aws_region
   })
 
-  depends_on = [time_sleep.upjet_family_wait_120_seconds, module.crossplane]
+  depends_on = [time_sleep.upjet_wait_60_seconds, module.crossplane]
 }
 
 # Wait for the Upbound AWS Provider CRDs to be fully created before initiating upjet_aws_provider_config

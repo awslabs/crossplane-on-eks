@@ -1,8 +1,7 @@
 # EKS Cluster bootstrap with Terraform for Crossplane
 
 This example deploys the following components
-- Creates a new sample VPC, Two Private Subnets and Two Public Subnets
-- Creates Internet gateway for Public Subnets and NAT Gateway for Private Subnets
+- Creates a new sample VPC with Two Private Subnets and the required VPC Endpoints
 - Creates EKS Cluster Control plane with one managed node group
 - Crossplane Add-on to EKS Cluster
 - Upbound AWS Provider for Crossplane
@@ -17,15 +16,9 @@ graph TD;
     subgraph AWS Cloud
     id1(VPC)-->Private-Subnet1;
     id1(VPC)-->Private-Subnet2;
-    id1(VPC)-->Public-Subnet1;
-    id1(VPC)-->Public-Subnet2;
-    Public-Subnet1-->InternetGateway
-    Public-Subnet2-->InternetGateway
-    Public-Subnet3-->InternetGateway
-    Public-Subnet3-->Single-NATGateway
     Private-Subnet1-->EKS{{"EKS #9829;"}}
-    Private-Subnet2-->EKS
-    Private-Subnet3-->EKS
+    Private-Subnet2-->EKS{{"EKS #9829;"}}
+    Private-Subnet3-->EKS{{"EKS #9829;"}}
     EKS==>ManagedNodeGroup;
     ManagedNodeGroup-->|enable_crossplane=true|id2([Crossplane]);
     subgraph Kubernetes Add-ons
