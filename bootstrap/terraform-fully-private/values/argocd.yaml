@@ -139,7 +139,6 @@ configs:
           end
 
           return health_status
-      %{ if crossplane_upjet_aws_provider_enable }
       "*.aws.upbound.io/*":
         health.lua: |
           health_status = {
@@ -147,6 +146,35 @@ configs:
             message = "Provisioning ..."
           }
 
+          local function contains (table, val)
+            for i, v in ipairs(table) do
+              if v == val then
+                return true
+              end
+            end
+            return false
+          end
+
+          local has_no_status = {
+            "ProviderConfig",
+            "ProviderConfigUsage"
+          }
+
+          if obj.status == nil or next(obj.status) == nil and contains(has_no_status, obj.kind) then
+            health_status.status = "Healthy"
+            health_status.message = "Resource is up-to-date."
+            return health_status
+          end
+
+          if obj.status == nil or next(obj.status) == nil or obj.status.conditions == nil then
+            if obj.kind == "ProviderConfig" and obj.status.users ~= nil then
+              health_status.status = "Healthy"
+              health_status.message = "Resource is in use."
+              return health_status
+            end
+            return health_status
+          end
+
           if obj.status == nil or obj.status.conditions == nil then
             return health_status
           end
@@ -178,8 +206,6 @@ configs:
           end
 
           return health_status
-      %{endif}
-      %{ if crossplane_aws_provider_enable }
       "*.aws.crossplane.io/*":
         health.lua: |
           health_status = {
@@ -187,6 +213,39 @@ configs:
             message = "Provisioning ..."
           }
 
+          local function contains (table, val)
+            for i, v in ipairs(table) do
+              if v == val then
+                return true
+              end
+            end
+            return false
+          end
+
+          local has_no_status = {
+            "Composition",
+            "CompositionRevision",
+            "DeploymentRuntimeConfig",
+            "ControllerConfig",
+            "ProviderConfig",
+            "ProviderConfigUsage"
+          }
+          
+          if obj.status == nil or next(obj.status) == nil and contains(has_no_status, obj.kind) then
+              health_status.status = "Healthy"
+              health_status.message = "Resource is up-to-date."
+            return health_status
+          end
+
+          if obj.status == nil or next(obj.status) == nil or obj.status.conditions == nil then
+            if obj.kind == "ProviderConfig" and obj.status.users ~= nil then
+              health_status.status = "Healthy"
+              health_status.message = "Resource is in use."
+              return health_status
+            end
+            return health_status
+          end
+
           if obj.status == nil or obj.status.conditions == nil then
             return health_status
           end
@@ -218,8 +277,6 @@ configs:
           end
 
           return health_status
-      %{endif}
-      %{ if crossplane_kubernetes_provider_enable }
       "kubernetes.crossplane.io/*":
         health.lua: |
           health_status = {
@@ -227,6 +284,39 @@ configs:
             message = "Provisioning ..."
           }
 
+          local function contains (table, val)
+            for i, v in ipairs(table) do
+              if v == val then
+                return true
+              end
+            end
+            return false
+          end
+
+          local has_no_status = {
+            "Composition",
+            "CompositionRevision",
+            "DeploymentRuntimeConfig",
+            "ControllerConfig",
+            "ProviderConfig",
+            "ProviderConfigUsage"
+          }
+
+          if obj.status == nil or next(obj.status) == nil and contains(has_no_status, obj.kind) then
+              health_status.status = "Healthy"
+              health_status.message = "Resource is up-to-date."
+            return health_status
+          end
+
+          if obj.status == nil or next(obj.status) == nil or obj.status.conditions == nil then
+            if obj.kind == "ProviderConfig" and obj.status.users ~= nil then
+              health_status.status = "Healthy"
+              health_status.message = "Resource is in use."
+              return health_status
+            end
+            return health_status
+          end
+
           if obj.status == nil or obj.status.conditions == nil then
             return health_status
           end
@@ -258,4 +348,74 @@ configs:
           end
 
           return health_status
-      %{endif}
+      "helm.crossplane.io/*":
+        health.lua: |
+          health_status = {
+            status = "Progressing",
+            message = "Provisioning ..."
+          }
+
+          local function contains (table, val)
+            for i, v in ipairs(table) do
+              if v == val then
+                return true
+              end
+            end
+            return false
+          end
+
+          local has_no_status = {
+            "Composition",
+            "CompositionRevision",
+            "DeploymentRuntimeConfig",
+            "ControllerConfig",
+            "ProviderConfig",
+            "ProviderConfigUsage"
+          }
+
+          if obj.status == nil or next(obj.status) == nil and contains(has_no_status, obj.kind) then
+              health_status.status = "Healthy"
+              health_status.message = "Resource is up-to-date."
+            return health_status
+          end
+
+          if obj.status == nil or next(obj.status) == nil or obj.status.conditions == nil then
+            if obj.kind == "ProviderConfig" and obj.status.users ~= nil then
+              health_status.status = "Healthy"
+              health_status.message = "Resource is in use."
+              return health_status
+            end
+            return health_status
+          end
+
+          if obj.status == nil or obj.status.conditions == nil then
+            return health_status
+          end
+
+          for i, condition in ipairs(obj.status.conditions) do
+            if condition.type == "LastAsyncOperation" then
+              if condition.status == "False" then
+                health_status.status = "Degraded"
+                health_status.message = condition.message
+                return health_status
+              end
+            end
+
+            if condition.type == "Synced" then
+              if condition.status == "False" then
+                health_status.status = "Degraded"
+                health_status.message = condition.message
+                return health_status
+              end
+            end
+
+            if condition.type == "Ready" then
+              if condition.status == "True" then
+                health_status.status = "Healthy"
+                health_status.message = "Resource is up-to-date."
+                return health_status
+              end
+            end
+          end
+
+          return health_status

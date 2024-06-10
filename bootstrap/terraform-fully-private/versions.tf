@@ -27,6 +27,6 @@ terraform {
   # backend "s3" {
   #   bucket = "terraform-crossplane-on-eks-github-actions-state"
   #   region = "us-east-1"
-  #   key    = "e2e/bootstrap/terraform/terraform.tfstate"
+  #   key    = "e2e/bootstrap/terraform-fully-private/terraform.tfstate"
   # }
 }
