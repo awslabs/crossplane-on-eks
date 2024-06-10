@@ -273,7 +273,7 @@ module "crossplane" {
   namespace        = "crossplane-system"
   create_namespace = true
   chart            = "crossplane"
-  chart_version    = "1.16.0"
+  chart_version    = "1.15.0"
   repository       = "https://charts.crossplane.io/stable/"
   timeout          = "600"
   values = [
