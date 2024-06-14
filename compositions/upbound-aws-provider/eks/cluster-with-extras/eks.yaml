@@ -1,0 +1,1188 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xeks.awsblueprints.io
+  labels:
+    provider: aws
+spec:
+  compositeTypeRef:
+    apiVersion: awsblueprints.io/v1alpha1
+    kind: XEks
+  patchSets:
+    - name: common-parameters-global
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.deletionPolicy
+          toFieldPath: spec.deletionPolicy
+    - name: common-parameters-regional
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.deletionPolicy
+          toFieldPath: spec.deletionPolicy
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.region
+          toFieldPath: spec.forProvider.region
+  resources:
+    - name: clusterRole
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: Role
+        metadata:
+          labels:
+            role: cluster
+        spec:
+          forProvider:
+            assumeRolePolicy: |
+              {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Service": "eks.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRole"
+                  }
+                ]
+              }
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-global
+        - fromFieldPath: "status.atProvider.arn"
+          toFieldPath: "status.eks.clusterRoleArn"
+          type: ToCompositeFieldPath
+        - fromFieldPath: status.atProvider.arn
+          policy:
+            fromFieldPath: Required
+          toFieldPath: status.eks.accountId
+          transforms:
+            - string:
+                regexp:
+                  group: 1
+                  match: arn:aws:iam::(\d+):.*
+                type: Regexp
+              type: string
+          type: ToCompositeFieldPath
+
+    - name: clusterRolePolicyAttachment
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: RolePolicyAttachment
+        spec:
+          forProvider:
+            policyArn: arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+            roleSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: cluster
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-global
+
+    - name: clusterEncriptionKey
+      base:
+        apiVersion: kms.aws.upbound.io/v1beta1
+        kind: Key
+        spec:
+          forProvider:
+            region: ""
+            description: "KMS key used to encrypt the EKS cluster"
+            customerMasterKeySpec: SYMMETRIC_DEFAULT
+            enableKeyRotation: true
+            policy: ""
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-regional
+        - combine:
+            strategy: string
+            string:
+              fmt: |
+                {
+                  "Version": "2012-10-17",
+                  "Id": "key-default-1",
+                  "Statement": [
+                    {
+                      "Sid": "Enable IAM User Permissions",
+                      "Effect": "Allow",
+                      "Principal": {
+                        "AWS": "arn:aws:iam::%s:root"
+                      },
+                      "Action": "kms:*",
+                      "Resource": "*"
+                    },
+                    {
+                      "Sid": "Allow access for Key Administrators",
+                      "Effect": "Allow",
+                      "Principal": {
+                        "AWS": [
+                          "%s"
+                        ]
+                      },
+                      "Action": [
+                        "kms:Create*",
+                        "kms:Describe*",
+                        "kms:Enable*",
+                        "kms:List*",
+                        "kms:Put*",
+                        "kms:Update*",
+                        "kms:Revoke*",
+                        "kms:Disable*",
+                        "kms:Get*",
+                        "kms:Delete*",
+                        "kms:ScheduleKeyDeletion",
+                        "kms:CancelKeyDeletion"
+                      ],
+                      "Resource": "*"
+                    },
+                    {
+                      "Sid": "Allow use of the key",
+                      "Effect": "Allow",
+                      "Principal": {
+                        "AWS": "%s"
+                      },
+                      "Action": [
+                        "kms:Encrypt",
+                        "kms:Decrypt",
+                        "kms:ReEncrypt*",
+                        "kms:GenerateDataKey*",
+                        "kms:DescribeKey"
+                      ],
+                      "Resource": "*"
+                    }
+                  ]
+                }
+            variables:
+              - fromFieldPath: status.eks.accountId
+              - fromFieldPath: spec.iam.clusterAdminRoleArn
+              - fromFieldPath: status.eks.clusterRoleArn
+          policy:
+            fromFieldPath: Required
+          toFieldPath: spec.forProvider.policy
+          type: CombineFromComposite
+        - fromFieldPath: status.atProvider.arn
+          toFieldPath: status.eks.clusterKeyArn
+          type: ToCompositeFieldPath
+
+    - name: clusterEncriptionKeyAlias
+      base:
+        apiVersion: kms.aws.upbound.io/v1beta1
+        kind: Alias
+        spec:
+          forProvider:
+            region: ""
+            targetKeyId: ""
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-regional
+        - fromFieldPath: status.eks.clusterKeyArn
+          toFieldPath: spec.forProvider.targetKeyId
+          type: FromCompositeFieldPath
+
+    - name: kubernetesCluster
+      base:
+        apiVersion: eks.aws.upbound.io/v1beta1
+        kind: Cluster
+        spec:
+          forProvider:
+            enabledClusterLogTypes: []
+            encryptionConfig:
+              - resources:
+                  - secrets
+                provider:
+                  - keyArn: ""
+            region: ""
+            roleArnSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: cluster
+            vpcConfig:
+              - endpointPrivateAccess: false
+                endpointPublicAccess: true
+                subnetIds: []
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-regional
+        - fromFieldPath: "spec.version"
+          toFieldPath: "spec.forProvider.version"
+        - fromFieldPath: "spec.authenticationMode"
+          toFieldPath: "spec.forProvider.accessConfig[0].authenticationMode"
+        - fromFieldPath: "spec.bootstrapClusterCreatorAdminPermissions"
+          toFieldPath: "spec.forProvider.accessConfig[0].bootstrapClusterCreatorAdminPermissions"
+        - fromFieldPath: "spec.enabledClusterLogTypes"
+          toFieldPath: "spec.forProvider.enabledClusterLogTypes"
+        - fromFieldPath: "spec.endpointPrivateAccess"
+          toFieldPath: "spec.forProvider.vpcConfig[0].endpointPrivateAccess"
+        - fromFieldPath: "spec.endpointPublicAccess"
+          toFieldPath: "spec.forProvider.vpcConfig[0].endpointPublicAccess"
+        - fromFieldPath: "spec.subnets"
+          toFieldPath: "spec.forProvider.vpcConfig[0].subnetIds"
+          policy:
+            fromFieldPath: Required
+        - fromFieldPath: status.atProvider.identity[0].oidc[0].issuer
+          policy:
+            fromFieldPath: Optional
+          toFieldPath: status.eks.oidc
+          type: ToCompositeFieldPath
+        - fromFieldPath: status.atProvider.identity[0].oidc[0].issuer
+          policy:
+            fromFieldPath: Optional
+          toFieldPath: status.eks.oidcUri
+          transforms:
+            - string:
+                trim: https://
+                type: TrimPrefix
+              type: string
+          type: ToCompositeFieldPath
+        - fromFieldPath: status.atProvider.vpcConfig[0].clusterSecurityGroupId
+          policy:
+            fromFieldPath: Optional
+          toFieldPath: status.eks.clusterSecurityGroupId
+          type: ToCompositeFieldPath
+        - fromFieldPath: "status.eks.clusterKeyArn"
+          policy:
+            fromFieldPath: Required
+          toFieldPath: spec.forProvider.encryptionConfig[0].provider[0].keyArn
+          type: FromCompositeFieldPath
+
+    - name: clusterSecurityGroupImport
+      base:
+        apiVersion: ec2.aws.upbound.io/v1beta1
+        kind: SecurityGroup
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-regional
+        - fromFieldPath: status.eks.clusterSecurityGroupId
+          policy:
+            fromFieldPath: Required
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.id
+          toFieldPath: spec.forProvider.tags[eks.aws.platform.upbound.io/discovery]
+
+    - name: kubernetesClusterAuth
+      base:
+        apiVersion: eks.aws.upbound.io/v1beta1
+        kind: ClusterAuth
+        spec:
+          forProvider:
+            refreshPeriod: "2m0s"
+            clusterNameSelector:
+              matchControllerRef: true
+      connectionDetails:
+        - fromConnectionSecretKey: kubeconfig
+          name: kubeconfig
+          type: FromConnectionSecretKey
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-regional
+        - fromFieldPath: "spec.id"
+          toFieldPath: "spec.writeConnectionSecretToRef.namespace"
+          type: FromCompositeFieldPath
+        - fromFieldPath: "metadata.uid"
+          toFieldPath: "spec.writeConnectionSecretToRef.name"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-ekscluster"
+                type: Format
+          type: FromCompositeFieldPath
+
+    - name: nodegroupRole
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: Role
+        metadata:
+          labels:
+            role: nodegroup
+        spec:
+          forProvider:
+            assumeRolePolicy: |
+              {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Principal": {
+                            "Service": [
+                                "ec2.amazonaws.com"
+                            ]
+                        },
+                        "Action": [
+                            "sts:AssumeRole"
+                        ]
+                    }
+                ]
+              }
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-global
+        - fromFieldPath: "status.atProvider.arn"
+          toFieldPath: "status.eks.nodeGroupRoleArn"
+          type: ToCompositeFieldPath
+
+    - name: nodegroupWorkerNodePolicyAttachment
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: RolePolicyAttachment
+        spec:
+          forProvider:
+            policyArn: arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+            roleSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: nodegroup
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-global
+
+    - name: nodegroupCniPolicyAttachment
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: RolePolicyAttachment
+        spec:
+          forProvider:
+            policyArn: arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+            roleSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: nodegroup
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-global
+
+    - name: ebsCsiRolePolicyAttachment
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: RolePolicyAttachment
+        spec:
+          forProvider:
+            policyArn: arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy
+            roleSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: nodegroup
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-global
+
+    - name: containerRegistryRolePolicyAttachment
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: RolePolicyAttachment
+        spec:
+          forProvider:
+            policyArn: arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+            roleSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: nodegroup
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-global
+
+    - name: nodegroup
+      base:
+        apiVersion: eks.aws.upbound.io/v1beta1
+        kind: NodeGroup
+        spec:
+          forProvider:
+            region: ""
+            clusterNameSelector:
+              matchControllerRef: true
+            nodeRoleArnSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: nodegroup
+            scalingConfig:
+              - desiredSize: 3
+                minSize: 1
+                maxSize: 6
+            subnetIds: []
+          providerConfigRef:
+            name: ""
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-regional
+        - fromFieldPath: "spec.subnets"
+          toFieldPath: "spec.forProvider.subnetIds"
+          policy:
+            fromFieldPath: Required
+        - fromFieldPath: status.atProvider.clusterName
+          policy:
+            fromFieldPath: Optional
+          toFieldPath: status.eks.clusterName
+          type: ToCompositeFieldPath
+
+    - name: ebsCsiAddonRole
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: Role
+        metadata:
+          labels:
+            role: ebsCsiAddon
+        spec:
+          forProvider:
+            assumeRolePolicy: ""
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-global
+        - combine:
+            strategy: string
+            string:
+              fmt: |
+                {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Federated": "%s"
+                            },
+                            "Action": "sts:AssumeRoleWithWebIdentity",
+                            "Condition": {
+                                "StringEquals": {
+                                    "%s:sub": "system:serviceaccount:kube-system:ebs-csi-controller-sa",
+                                    "%s:aud": "sts.amazonaws.com"
+                                }
+                            }
+                        }
+                    ]
+                }
+            variables:
+              - fromFieldPath: status.eks.oidcArn
+              - fromFieldPath: status.eks.oidcUri
+              - fromFieldPath: status.eks.oidcUri
+          policy:
+            fromFieldPath: Required
+          toFieldPath: spec.forProvider.assumeRolePolicy
+          type: CombineFromComposite
+
+    - name: ebsCsiAddonRolePolicyAttachment
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: RolePolicyAttachment
+        spec:
+          forProvider:
+            policyArn: arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy
+            roleSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: ebsCsiAddon
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-global
+
+    - name: ebsCsiAddon
+      base:
+        apiVersion: eks.aws.upbound.io/v1beta1
+        kind: Addon
+        spec:
+          forProvider:
+            addonName: aws-ebs-csi-driver
+            clusterNameSelector:
+              matchControllerRef: true
+            serviceAccountRoleArnSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: ebsCsiAddon
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-regional
+        - fromFieldPath: status.eks.clusterName
+          policy:
+            fromFieldPath: Required
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+          transforms:
+            - string:
+                fmt: "%s:aws-ebs-csi-driver"
+                type: Format
+              type: string
+          type: FromCompositeFieldPath
+
+    - name: cniAddon
+      base:
+        apiVersion: eks.aws.upbound.io/v1beta1
+        kind: Addon
+        spec:
+          forProvider:
+            addonName: vpc-cni
+            clusterNameSelector:
+              matchControllerRef: true
+            preserve: false
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-regional
+        - fromFieldPath: status.eks.clusterName
+          policy:
+            fromFieldPath: Required
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+          transforms:
+            - string:
+                fmt: "%s:vpc-cni"
+                type: Format
+              type: string
+          type: FromCompositeFieldPath
+
+    - name: corednsAddon
+      base:
+        apiVersion: eks.aws.upbound.io/v1beta1
+        kind: Addon
+        spec:
+          forProvider:
+            addonName: coredns
+            clusterNameSelector:
+              matchControllerRef: true
+            preserve: false
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-regional
+        - fromFieldPath: status.eks.clusterName
+          policy:
+            fromFieldPath: Required
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+          transforms:
+            - string:
+                fmt: "%s:coredns"
+                type: Format
+              type: string
+          type: FromCompositeFieldPath
+
+    - name: kubeProxyAddon
+      base:
+        apiVersion: eks.aws.upbound.io/v1beta1
+        kind: Addon
+        spec:
+          forProvider:
+            addonName: kube-proxy
+            clusterNameSelector:
+              matchControllerRef: true
+            preserve: false
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-regional
+        - fromFieldPath: status.eks.clusterName
+          policy:
+            fromFieldPath: Required
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+          transforms:
+            - string:
+                fmt: "%s:kube-proxy"
+                type: Format
+              type: string
+          type: FromCompositeFieldPath
+
+    - name: podIdentityAgentAddon
+      base:
+        apiVersion: eks.aws.upbound.io/v1beta1
+        kind: Addon
+        spec:
+          forProvider:
+            addonName: eks-pod-identity-agent
+            clusterNameSelector:
+              matchControllerRef: true
+            preserve: false
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-regional
+        - fromFieldPath: status.eks.clusterName
+          policy:
+            fromFieldPath: Required
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+          transforms:
+            - string:
+                fmt: "%s:eks-pod-identity-agent"
+                type: Format
+              type: string
+          type: FromCompositeFieldPath
+
+    - name: csiSnapshotControllerAddon
+      base:
+        apiVersion: eks.aws.upbound.io/v1beta1
+        kind: Addon
+        spec:
+          forProvider:
+            addonName: snapshot-controller
+            clusterNameSelector:
+              matchControllerRef: true
+            preserve: false
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-regional
+        - fromFieldPath: status.eks.clusterName
+          policy:
+            fromFieldPath: Required
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+          transforms:
+            - string:
+                fmt: "%s:snapshot-controller"
+                type: Format
+              type: string
+          type: FromCompositeFieldPath
+
+    - name: s3MountpointAddon
+      base:
+        apiVersion: eks.aws.upbound.io/v1beta1
+        kind: Addon
+        spec:
+          forProvider:
+            addonName: aws-mountpoint-s3-csi-driver
+            clusterNameSelector:
+              matchControllerRef: true
+            preserve: false
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-regional
+        - fromFieldPath: status.eks.clusterName
+          policy:
+            fromFieldPath: Required
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+          transforms:
+            - string:
+                fmt: "%s:aws-mountpoint-s3-csi-driver"
+                type: Format
+              type: string
+          type: FromCompositeFieldPath
+
+    - name: efsCsiAddon
+      base:
+        apiVersion: eks.aws.upbound.io/v1beta1
+        kind: Addon
+        spec:
+          forProvider:
+            addonName: aws-efs-csi-driver
+            clusterNameSelector:
+              matchControllerRef: true
+            preserve: false
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-regional
+        - fromFieldPath: status.eks.clusterName
+          policy:
+            fromFieldPath: Required
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+          transforms:
+            - string:
+                fmt: "%s:aws-efs-csi-driver"
+                type: Format
+              type: string
+          type: FromCompositeFieldPath
+
+    - name: oidcProvider
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: OpenIDConnectProvider
+        spec:
+          forProvider:
+            clientIdList:
+              - sts.amazonaws.com
+            thumbprintList:
+              - 9e99a48a9960b14926bb7f3b02e22da2b0ab7280
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-global
+        - fromFieldPath: status.eks.oidc
+          policy:
+            fromFieldPath: Required
+          toFieldPath: spec.forProvider.url
+          type: FromCompositeFieldPath
+        - fromFieldPath: status.atProvider.arn
+          policy:
+            fromFieldPath: Optional
+          toFieldPath: status.eks.oidcArn
+          type: ToCompositeFieldPath
+
+    - name: providerConfigHelm
+      base:
+        apiVersion: helm.crossplane.io/v1beta1
+        kind: ProviderConfig
+        spec:
+          credentials:
+            source: Secret
+            secretRef:
+              name: ""
+              namespace: ""
+              key: kubeconfig
+      patches:
+        - fromFieldPath: spec.id
+          toFieldPath: spec.credentials.secretRef.namespace
+        - fromFieldPath: spec.id
+          toFieldPath: metadata.name
+          type: FromCompositeFieldPath
+        - fromFieldPath: metadata.uid
+          toFieldPath: spec.credentials.secretRef.name
+          transforms:
+            - string:
+                fmt: "%s-ekscluster"
+                type: Format
+              type: string
+          type: FromCompositeFieldPath
+      readinessChecks:
+        - type: None
+
+    - name: providerConfigKubernetes
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: ProviderConfig
+        spec:
+          credentials:
+            secretRef:
+              key: kubeconfig
+            source: Secret
+      patches:
+        - fromFieldPath: spec.id
+          toFieldPath: metadata.name
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.id
+          toFieldPath: spec.credentials.secretRef.namespace
+        - fromFieldPath: metadata.uid
+          toFieldPath: spec.credentials.secretRef.name
+          transforms:
+            - string:
+                fmt: "%s-ekscluster"
+                type: Format
+              type: string
+          type: FromCompositeFieldPath
+      readinessChecks:
+        - type: None
+
+    - name: awsAuth
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha2
+        kind: Object
+        spec:
+          deletionPolicy: Orphan
+          forProvider:
+            manifest:
+              apiVersion: v1
+              kind: ConfigMap
+              metadata:
+                name: aws-auth
+                namespace: kube-system
+      patches:
+        - fromFieldPath: spec.id
+          toFieldPath: spec.providerConfigRef.name
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.id
+          toFieldPath: metadata.name
+          transforms:
+            - string:
+                fmt: "%s-aws-auth"
+                type: Format
+              type: string
+          type: FromCompositeFieldPath
+        - combine:
+            strategy: string
+            string:
+              fmt: |
+                - groups:
+                  - system:bootstrappers
+                  - system:nodes
+                  rolearn: %s
+                  username: system:node:{{EC2PrivateDNSName}}
+                - groups:
+                  - system:masters
+                  rolearn: %s
+                  username: adminrole
+            variables:
+              - fromFieldPath: status.eks.nodeGroupRoleArn
+              - fromFieldPath: spec.iam.clusterAdminRoleArn
+          policy:
+            fromFieldPath: Required
+          toFieldPath: spec.forProvider.manifest.data.mapRoles
+          type: CombineFromComposite
+        - combine:
+            strategy: string
+            string:
+              fmt: |
+                - groups:
+                  - system:masters
+                  userarn: %s
+                  username: adminuser
+            variables:
+              - fromFieldPath: spec.iam.clusterAdminUserArn
+          policy:
+            fromFieldPath: Optional
+          toFieldPath: spec.forProvider.manifest.data.mapUsers
+          type: CombineFromComposite
+
+    - name: awsLoadBalancerControllerAddonPolicy
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: Policy
+        metadata:
+          labels:
+            policy: awsLoadBalancerControllerAddon
+        spec:
+          forProvider:
+            policy: |
+              {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                      {
+                          "Effect": "Allow",
+                          "Action": [
+                              "iam:CreateServiceLinkedRole"
+                          ],
+                          "Resource": "*",
+                          "Condition": {
+                              "StringEquals": {
+                                  "iam:AWSServiceName": "elasticloadbalancing.amazonaws.com"
+                              }
+                          }
+                      },
+                      {
+                          "Effect": "Allow",
+                          "Action": [
+                              "ec2:DescribeAccountAttributes",
+                              "ec2:DescribeAddresses",
+                              "ec2:DescribeAvailabilityZones",
+                              "ec2:DescribeInternetGateways",
+                              "ec2:DescribeVpcs",
+                              "ec2:DescribeVpcPeeringConnections",
+                              "ec2:DescribeSubnets",
+                              "ec2:DescribeSecurityGroups",
+                              "ec2:DescribeInstances",
+                              "ec2:DescribeNetworkInterfaces",
+                              "ec2:DescribeTags",
+                              "ec2:GetCoipPoolUsage",
+                              "ec2:DescribeCoipPools",
+                              "elasticloadbalancing:DescribeLoadBalancers",
+                              "elasticloadbalancing:DescribeLoadBalancerAttributes",
+                              "elasticloadbalancing:DescribeListeners",
+                              "elasticloadbalancing:DescribeListenerCertificates",
+                              "elasticloadbalancing:DescribeSSLPolicies",
+                              "elasticloadbalancing:DescribeRules",
+                              "elasticloadbalancing:DescribeTargetGroups",
+                              "elasticloadbalancing:DescribeTargetGroupAttributes",
+                              "elasticloadbalancing:DescribeTargetHealth",
+                              "elasticloadbalancing:DescribeTags",
+                              "elasticloadbalancing:DescribeTrustStores"
+                          ],
+                          "Resource": "*"
+                      },
+                      {
+                          "Effect": "Allow",
+                          "Action": [
+                              "cognito-idp:DescribeUserPoolClient",
+                              "acm:ListCertificates",
+                              "acm:DescribeCertificate",
+                              "iam:ListServerCertificates",
+                              "iam:GetServerCertificate",
+                              "waf-regional:GetWebACL",
+                              "waf-regional:GetWebACLForResource",
+                              "waf-regional:AssociateWebACL",
+                              "waf-regional:DisassociateWebACL",
+                              "wafv2:GetWebACL",
+                              "wafv2:GetWebACLForResource",
+                              "wafv2:AssociateWebACL",
+                              "wafv2:DisassociateWebACL",
+                              "shield:GetSubscriptionState",
+                              "shield:DescribeProtection",
+                              "shield:CreateProtection",
+                              "shield:DeleteProtection"
+                          ],
+                          "Resource": "*"
+                      },
+                      {
+                          "Effect": "Allow",
+                          "Action": [
+                              "ec2:AuthorizeSecurityGroupIngress",
+                              "ec2:RevokeSecurityGroupIngress"
+                          ],
+                          "Resource": "*"
+                      },
+                      {
+                          "Effect": "Allow",
+                          "Action": [
+                              "ec2:CreateSecurityGroup"
+                          ],
+                          "Resource": "*"
+                      },
+                      {
+                          "Effect": "Allow",
+                          "Action": [
+                              "ec2:CreateTags"
+                          ],
+                          "Resource": "arn:aws:ec2:*:*:security-group/*",
+                          "Condition": {
+                              "StringEquals": {
+                                  "ec2:CreateAction": "CreateSecurityGroup"
+                              },
+                              "Null": {
+                                  "aws:RequestTag/elbv2.k8s.aws/cluster": "false"
+                              }
+                          }
+                      },
+                      {
+                          "Effect": "Allow",
+                          "Action": [
+                              "ec2:CreateTags",
+                              "ec2:DeleteTags"
+                          ],
+                          "Resource": "arn:aws:ec2:*:*:security-group/*",
+                          "Condition": {
+                              "Null": {
+                                  "aws:RequestTag/elbv2.k8s.aws/cluster": "true",
+                                  "aws:ResourceTag/elbv2.k8s.aws/cluster": "false"
+                              }
+                          }
+                      },
+                      {
+                          "Effect": "Allow",
+                          "Action": [
+                              "ec2:AuthorizeSecurityGroupIngress",
+                              "ec2:RevokeSecurityGroupIngress",
+                              "ec2:DeleteSecurityGroup"
+                          ],
+                          "Resource": "*",
+                          "Condition": {
+                              "Null": {
+                                  "aws:ResourceTag/elbv2.k8s.aws/cluster": "false"
+                              }
+                          }
+                      },
+                      {
+                          "Effect": "Allow",
+                          "Action": [
+                              "elasticloadbalancing:CreateLoadBalancer",
+                              "elasticloadbalancing:CreateTargetGroup"
+                          ],
+                          "Resource": "*",
+                          "Condition": {
+                              "Null": {
+                                  "aws:RequestTag/elbv2.k8s.aws/cluster": "false"
+                              }
+                          }
+                      },
+                      {
+                          "Effect": "Allow",
+                          "Action": [
+                              "elasticloadbalancing:CreateListener",
+                              "elasticloadbalancing:DeleteListener",
+                              "elasticloadbalancing:CreateRule",
+                              "elasticloadbalancing:DeleteRule"
+                          ],
+                          "Resource": "*"
+                      },
+                      {
+                          "Effect": "Allow",
+                          "Action": [
+                              "elasticloadbalancing:AddTags",
+                              "elasticloadbalancing:RemoveTags"
+                          ],
+                          "Resource": [
+                              "arn:aws:elasticloadbalancing:*:*:targetgroup/*/*",
+                              "arn:aws:elasticloadbalancing:*:*:loadbalancer/net/*/*",
+                              "arn:aws:elasticloadbalancing:*:*:loadbalancer/app/*/*"
+                          ],
+                          "Condition": {
+                              "Null": {
+                                  "aws:RequestTag/elbv2.k8s.aws/cluster": "true",
+                                  "aws:ResourceTag/elbv2.k8s.aws/cluster": "false"
+                              }
+                          }
+                      },
+                      {
+                          "Effect": "Allow",
+                          "Action": [
+                              "elasticloadbalancing:AddTags",
+                              "elasticloadbalancing:RemoveTags"
+                          ],
+                          "Resource": [
+                              "arn:aws:elasticloadbalancing:*:*:listener/net/*/*/*",
+                              "arn:aws:elasticloadbalancing:*:*:listener/app/*/*/*",
+                              "arn:aws:elasticloadbalancing:*:*:listener-rule/net/*/*/*",
+                              "arn:aws:elasticloadbalancing:*:*:listener-rule/app/*/*/*"
+                          ]
+                      },
+                      {
+                          "Effect": "Allow",
+                          "Action": [
+                              "elasticloadbalancing:ModifyLoadBalancerAttributes",
+                              "elasticloadbalancing:SetIpAddressType",
+                              "elasticloadbalancing:SetSecurityGroups",
+                              "elasticloadbalancing:SetSubnets",
+                              "elasticloadbalancing:DeleteLoadBalancer",
+                              "elasticloadbalancing:ModifyTargetGroup",
+                              "elasticloadbalancing:ModifyTargetGroupAttributes",
+                              "elasticloadbalancing:DeleteTargetGroup"
+                          ],
+                          "Resource": "*",
+                          "Condition": {
+                              "Null": {
+                                  "aws:ResourceTag/elbv2.k8s.aws/cluster": "false"
+                              }
+                          }
+                      },
+                      {
+                          "Effect": "Allow",
+                          "Action": [
+                              "elasticloadbalancing:AddTags"
+                          ],
+                          "Resource": [
+                              "arn:aws:elasticloadbalancing:*:*:targetgroup/*/*",
+                              "arn:aws:elasticloadbalancing:*:*:loadbalancer/net/*/*",
+                              "arn:aws:elasticloadbalancing:*:*:loadbalancer/app/*/*"
+                          ],
+                          "Condition": {
+                              "StringEquals": {
+                                  "elasticloadbalancing:CreateAction": [
+                                      "CreateTargetGroup",
+                                      "CreateLoadBalancer"
+                                  ]
+                              },
+                              "Null": {
+                                  "aws:RequestTag/elbv2.k8s.aws/cluster": "false"
+                              }
+                          }
+                      },
+                      {
+                          "Effect": "Allow",
+                          "Action": [
+                              "elasticloadbalancing:RegisterTargets",
+                              "elasticloadbalancing:DeregisterTargets"
+                          ],
+                          "Resource": "arn:aws:elasticloadbalancing:*:*:targetgroup/*/*"
+                      },
+                      {
+                          "Effect": "Allow",
+                          "Action": [
+                              "elasticloadbalancing:SetWebAcl",
+                              "elasticloadbalancing:ModifyListener",
+                              "elasticloadbalancing:AddListenerCertificates",
+                              "elasticloadbalancing:RemoveListenerCertificates",
+                              "elasticloadbalancing:ModifyRule"
+                          ],
+                          "Resource": "*"
+                      }
+                  ]
+              }
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-global
+
+    - name: awsLoadBalancerControllerAddonRole
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: Role
+        metadata:
+          labels:
+            role: awsLoadBalancerControllerAddon
+        spec:
+          forProvider:
+            assumeRolePolicy: ""
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-global
+        - fromFieldPath: "status.atProvider.arn"
+          toFieldPath: "status.eks.awsLoadBalancerControllerAddonRoleArn"
+          type: ToCompositeFieldPath
+        - combine:
+            strategy: string
+            string:
+              fmt: |
+                {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Federated": "%s"
+                            },
+                            "Action": "sts:AssumeRoleWithWebIdentity",
+                            "Condition": {
+                                "StringEquals": {
+                                    "%s:sub": "system:serviceaccount:kube-system:aws-load-balancer-controller-sa",
+                                    "%s:aud": "sts.amazonaws.com"
+                                }
+                            }
+                        }
+                    ]
+                }
+            variables:
+              - fromFieldPath: status.eks.oidcArn
+              - fromFieldPath: status.eks.oidcUri
+              - fromFieldPath: status.eks.oidcUri
+          policy:
+            fromFieldPath: Required
+          toFieldPath: spec.forProvider.assumeRolePolicy
+          type: CombineFromComposite
+
+    - name: awsLoadBalancerControllerAddonRolePolicyAttachment
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: RolePolicyAttachment
+        spec:
+          forProvider:
+            policyArnSelector:
+              matchControllerRef: true
+              matchLabels:
+                policy: awsLoadBalancerControllerAddon
+            roleSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: awsLoadBalancerControllerAddon
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-global
+
+    - name: awsLoadBalancerControllerAddonServiceAccount
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha2
+        kind: Object
+        spec:
+          deletionPolicy: Orphan
+          forProvider:
+            manifest:
+              apiVersion: v1
+              kind: ServiceAccount
+              metadata:
+                name: aws-load-balancer-controller-sa
+                namespace: kube-system
+      patches:
+        - fromFieldPath: spec.id
+          toFieldPath: spec.providerConfigRef.name
+          type: FromCompositeFieldPath
+        - fromFieldPath: status.eks.awsLoadBalancerControllerAddonRoleArn
+          toFieldPath: spec.forProvider.manifest.metadata.annotations[eks.amazonaws.com/role-arn]
+          type: FromCompositeFieldPath
+          policy:
+            fromFieldPath: Required
+
+    - name: awsLoadBalancerControllerAddon
+      base:
+        apiVersion: helm.crossplane.io/v1beta1
+        kind: Release
+        metadata:
+          annotations:
+            crossplane.io/external-name: aws-load-balancer-controller
+        spec:
+          forProvider:
+            chart:
+              name: aws-load-balancer-controller
+              repository: https://aws.github.io/eks-charts
+              version: 1.7.1
+            namespace: kube-system
+            set:
+              - name: clusterName
+                value: ""
+              - name: serviceAccount.create
+                value: "false"
+              - name: serviceAccount.name
+                value: aws-load-balancer-controller-sa
+            values:
+              image:
+                pullPolicy: IfNotPresent
+      patches:
+        - fromFieldPath: spec.id
+          toFieldPath: spec.providerConfigRef.name
+          type: FromCompositeFieldPath
+        - fromFieldPath: status.eks.clusterName
+          toFieldPath: spec.forProvider.set[0].value
+          type: FromCompositeFieldPath
