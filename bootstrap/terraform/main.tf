@@ -113,7 +113,8 @@ module "eks" {
       most_recent = true
     }
     vpc-cni = {
-      most_recent = true
+      before_compute = true # Ensure the addon is configured before compute resources are created
+      most_recent    = true
     }
   }
 
@@ -130,6 +131,8 @@ module "eks" {
   }
 
   tags = local.tags
+
+  depends_on = [module.vpc]
 }
 
 #---------------------------------------------------------------
@@ -149,9 +152,6 @@ module "eks_blueprints_addons" {
   argocd = {
     namespace     = "argocd"
     chart_version = "7.1.0" # ArgoCD v2.11.2
-    wait          = true
-    wait_for_jobs = true
-    timeout       = "600"
     values = [
       templatefile("${path.module}/values/argocd.yaml", {
         crossplane_aws_provider_enable        = local.aws_provider.enable
@@ -165,13 +165,16 @@ module "eks_blueprints_addons" {
 
   enable_kube_prometheus_stack = true
   kube_prometheus_stack = {
-    wait          = true
-    wait_for_jobs = true
-    timeout       = "600"
-    values        = [file("${path.module}/values/prometheus.yaml")]
+    timeout = "600"
+    values  = [file("${path.module}/values/prometheus.yaml")]
   }
 
-  depends_on = [module.eks.eks_managed_node_groups]
+  depends_on = [module.eks.cluster_addons]
+}
+
+resource "time_sleep" "addons_wait_60_seconds" {
+  create_duration = "60s"
+  depends_on      = [module.eks_blueprints_addons]
 }
 
 #---------------------------------------------------------------
@@ -188,10 +191,8 @@ module "gatekeeper" {
   chart            = "gatekeeper"
   chart_version    = "3.16.3"
   repository       = "https://open-policy-agent.github.io/gatekeeper/charts"
-  wait             = true
-  timeout          = "600"
 
-  depends_on = [module.eks_blueprints_addons]
+  depends_on = [time_sleep.addons_wait_60_seconds]
 }
 
 #---------------------------------------------------------------
@@ -208,11 +209,10 @@ module "crossplane" {
   chart            = "crossplane"
   chart_version    = "1.16.0"
   repository       = "https://charts.crossplane.io/stable/"
-  wait             = true
   timeout          = "600"
   values           = [file("${path.module}/values/crossplane.yaml")]
 
-  depends_on = [module.eks_blueprints_addons]
+  depends_on = [time_sleep.addons_wait_60_seconds]
 }
 
 resource "kubectl_manifest" "environmentconfig" {
@@ -233,7 +233,7 @@ locals {
 
   upjet_aws_provider = {
     enable               = var.enable_upjet_aws_provider # defaults to true
-    version              = "v1.5.0"
+    version              = "v1.6.0"
     runtime_config       = "upjet-aws-runtime-config"
     provider_config_name = "aws-provider-config" #this is the providerConfigName used in all the examples in this repo
     families = [
@@ -307,6 +307,8 @@ module "upjet_irsa_aws" {
   }
 
   tags = local.tags
+
+  depends_on = [module.crossplane]
 }
 
 resource "kubectl_manifest" "upjet_aws_runtime_config" {
@@ -326,9 +328,8 @@ resource "kubectl_manifest" "upjet_aws_provider" {
     version        = local.upjet_aws_provider.version
     runtime-config = local.upjet_aws_provider.runtime_config
   })
-  wait = true
 
-  depends_on = [kubectl_manifest.upjet_aws_runtime_config]
+  depends_on = [kubectl_manifest.upjet_aws_runtime_config, module.crossplane]
 }
 
 # Wait for the Upbound AWS Provider CRDs to be fully created before initiating upjet_aws_provider_config
@@ -336,7 +337,7 @@ resource "time_sleep" "upjet_wait_60_seconds" {
   count           = local.upjet_aws_provider.enable == true ? 1 : 0
   create_duration = "60s"
 
-  depends_on = [kubectl_manifest.upjet_aws_provider]
+  depends_on = [kubectl_manifest.upjet_aws_provider, module.crossplane]
 }
 
 resource "kubectl_manifest" "upjet_aws_provider_config" {
@@ -345,7 +346,7 @@ resource "kubectl_manifest" "upjet_aws_provider_config" {
     provider-config-name = local.upjet_aws_provider.provider_config_name
   })
 
-  depends_on = [kubectl_manifest.upjet_aws_provider, time_sleep.upjet_wait_60_seconds]
+  depends_on = [kubectl_manifest.upjet_aws_provider, time_sleep.upjet_wait_60_seconds, module.crossplane]
 }
 
 #---------------------------------------------------------------
@@ -371,6 +372,8 @@ module "irsa_aws_provider" {
   }
 
   tags = local.tags
+
+  depends_on = [module.crossplane]
 }
 
 resource "kubectl_manifest" "aws_runtime_config" {
@@ -390,9 +393,8 @@ resource "kubectl_manifest" "aws_provider" {
     version           = local.aws_provider.version
     runtime-config    = local.aws_provider.runtime_config
   })
-  wait = true
 
-  depends_on = [kubectl_manifest.aws_runtime_config]
+  depends_on = [kubectl_manifest.aws_runtime_config, module.crossplane]
 }
 
 # Wait for the Upbound AWS Provider CRDs to be fully created before initiating aws_provider_config
@@ -400,7 +402,7 @@ resource "time_sleep" "aws_wait_60_seconds" {
   count           = local.aws_provider.enable == true ? 1 : 0
   create_duration = "60s"
 
-  depends_on = [kubectl_manifest.aws_provider]
+  depends_on = [kubectl_manifest.aws_provider, module.crossplane]
 }
 
 resource "kubectl_manifest" "aws_provider_config" {
@@ -409,7 +411,7 @@ resource "kubectl_manifest" "aws_provider_config" {
     provider-config-name = local.aws_provider.provider_config_name
   })
 
-  depends_on = [kubectl_manifest.aws_provider, time_sleep.aws_wait_60_seconds]
+  depends_on = [kubectl_manifest.aws_provider, time_sleep.aws_wait_60_seconds, module.crossplane]
 }
 
 #---------------------------------------------------------------
@@ -432,9 +434,8 @@ resource "kubectl_manifest" "kubernetes_provider_clusterolebinding" {
     cluster-role = local.kubernetes_provider.cluster_role
     sa-name      = kubernetes_service_account_v1.kubernetes_runtime[0].metadata[0].name
   })
-  wait = true
 
-  depends_on = [module.crossplane]
+  depends_on = [kubernetes_service_account_v1.kubernetes_runtime, module.crossplane]
 }
 
 resource "kubectl_manifest" "kubernetes_runtime_config" {
@@ -443,9 +444,8 @@ resource "kubectl_manifest" "kubernetes_runtime_config" {
     sa-name        = kubernetes_service_account_v1.kubernetes_runtime[0].metadata[0].name
     runtime-config = local.kubernetes_provider.runtime_config
   })
-  wait = true
 
-  depends_on = [module.crossplane]
+  depends_on = [kubectl_manifest.kubernetes_provider_clusterolebinding, module.crossplane]
 }
 
 resource "kubectl_manifest" "kubernetes_provider" {
@@ -455,16 +455,15 @@ resource "kubectl_manifest" "kubernetes_provider" {
     kubernetes-provider-name = local.kubernetes_provider.name
     runtime-config           = local.kubernetes_provider.runtime_config
   })
-  wait = true
 
-  depends_on = [kubectl_manifest.kubernetes_runtime_config]
+  depends_on = [module.crossplane, kubectl_manifest.kubernetes_runtime_config]
 }
 
 # Wait for the AWS Provider CRDs to be fully created before initiating provider_config deployment
 resource "time_sleep" "wait_60_seconds_kubernetes" {
   create_duration = "60s"
 
-  depends_on = [kubectl_manifest.kubernetes_provider]
+  depends_on = [module.crossplane, kubectl_manifest.kubernetes_provider]
 }
 
 resource "kubectl_manifest" "kubernetes_provider_config" {
@@ -473,7 +472,7 @@ resource "kubectl_manifest" "kubernetes_provider_config" {
     provider-config-name = local.kubernetes_provider.provider_config_name
   })
 
-  depends_on = [kubectl_manifest.kubernetes_provider, time_sleep.wait_60_seconds_kubernetes]
+  depends_on = [module.crossplane, kubectl_manifest.kubernetes_provider, time_sleep.wait_60_seconds_kubernetes]
 }
 
 #---------------------------------------------------------------
@@ -496,9 +495,8 @@ resource "kubectl_manifest" "helm_runtime_clusterolebinding" {
     cluster-role = local.helm_provider.cluster_role
     sa-name      = kubernetes_service_account_v1.helm_runtime[0].metadata[0].name
   })
-  wait = true
 
-  depends_on = [module.crossplane]
+  depends_on = [kubernetes_service_account_v1.helm_runtime, module.crossplane]
 }
 
 resource "kubectl_manifest" "helm_runtime_config" {
@@ -507,9 +505,8 @@ resource "kubectl_manifest" "helm_runtime_config" {
     sa-name        = kubernetes_service_account_v1.helm_runtime[0].metadata[0].name
     runtime-config = local.helm_provider.runtime_config
   })
-  wait = true
 
-  depends_on = [module.crossplane]
+  depends_on = [kubectl_manifest.helm_runtime_clusterolebinding, module.crossplane]
 }
 
 resource "kubectl_manifest" "helm_provider" {
@@ -519,16 +516,15 @@ resource "kubectl_manifest" "helm_provider" {
     helm-provider-name = local.helm_provider.name
     runtime-config     = local.helm_provider.runtime_config
   })
-  wait = true
 
-  depends_on = [kubectl_manifest.helm_runtime_config]
+  depends_on = [kubectl_manifest.helm_runtime_config, module.crossplane]
 }
 
 # Wait for the AWS Provider CRDs to be fully created before initiating provider_config deployment
 resource "time_sleep" "wait_60_seconds_helm" {
   create_duration = "60s"
 
-  depends_on = [kubectl_manifest.helm_provider]
+  depends_on = [kubectl_manifest.helm_provider, module.crossplane]
 }
 
 resource "kubectl_manifest" "helm_provider_config" {
@@ -537,7 +533,7 @@ resource "kubectl_manifest" "helm_provider_config" {
     provider-config-name = local.helm_provider.provider_config_name
   })
 
-  depends_on = [kubectl_manifest.helm_provider, time_sleep.wait_60_seconds_helm]
+  depends_on = [kubectl_manifest.helm_provider, time_sleep.wait_60_seconds_helm, module.crossplane]
 }
 
 #---------------------------------------------------------------
@@ -547,6 +543,8 @@ resource "kubectl_manifest" "helm_provider_config" {
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "~> 5.0"
+
+  manage_default_vpc = true
 
   name = local.vpc_name
   cidr = local.vpc_cidr
