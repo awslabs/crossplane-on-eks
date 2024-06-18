@@ -165,10 +165,8 @@ module "eks_blueprints_addons" {
 
   enable_kube_prometheus_stack = true
   kube_prometheus_stack = {
-    wait          = true
-    wait_for_jobs = true
-    timeout       = "600"
-    values        = [file("${path.module}/values/prometheus.yaml")]
+    timeout = "600"
+    values  = [file("${path.module}/values/prometheus.yaml")]
   }
 
   depends_on = [module.eks.cluster_addons]
@@ -395,7 +393,6 @@ resource "kubectl_manifest" "aws_provider" {
     version           = local.aws_provider.version
     runtime-config    = local.aws_provider.runtime_config
   })
-  wait = true
 
   depends_on = [kubectl_manifest.aws_runtime_config, module.crossplane]
 }
