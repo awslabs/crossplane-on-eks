@@ -110,6 +110,7 @@ configs:
           end
 
           return health_status
+      %{ if crossplane_upjet_aws_provider_enable }
       "*.aws.upbound.io/*":
         health.lua: |
           health_status = {
@@ -177,6 +178,8 @@ configs:
           end
 
           return health_status
+      %{endif}
+      %{ if crossplane_aws_provider_enable }
       "*.aws.crossplane.io/*":
         health.lua: |
           health_status = {
@@ -248,6 +251,8 @@ configs:
           end
 
           return health_status
+      %{endif}
+      %{ if crossplane_kubernetes_provider_enable }
       "kubernetes.crossplane.io/*":
         health.lua: |
           health_status = {
@@ -390,3 +395,4 @@ configs:
           end
 
           return health_status
+      %{endif}
