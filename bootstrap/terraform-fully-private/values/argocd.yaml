@@ -1,8 +1,37 @@
+global:
+  image:
+    repository: "${ecr_aws_account_id}.dkr.ecr.${ecr_aws_region}.amazonaws.com/argocd"
+    pullPolicy: IfNotPresent
+  # Uncomment and set the values below if you need to configure proxy settings
+  # env:
+  #   - name: http_proxy
+  #     value: ""
+  #   - name: https_proxy
+  #     value: ""
+  #   - name: no_proxy
+  #     value: ""
+  #   - name: HTTP_PROXY
+  #     value: ""
+  #   - name: HTTPS_PROXY
+  #     value: ""
+  #   - name: NO_PROXY
+  #     value: ""
+
 dex:
   enabled: false # Disable dex since we are not using
+  image:
+    repository: "${ecr_aws_account_id}.dkr.ecr.${ecr_aws_region}.amazonaws.com/dex"
+    pullPolicy: IfNotPresent
 
 redis-ha:
   enabled: true
+  image:
+    repository: "${ecr_aws_account_id}.dkr.ecr.${ecr_aws_region}.amazonaws.com/redis"
+    pullPolicy: IfNotPresent
+  haproxy:
+    image:
+      repository: "${ecr_aws_account_id}.dkr.ecr.${ecr_aws_region}.amazonaws.com/haproxy"
+      pullPolicy: IfNotPresent
 
 controller:
   replicas: 1 # Additional replicas will cause sharding of managed clusters across number of replicas.
@@ -58,6 +87,8 @@ server:
         prometheus.io/scrape: true
   service:
     type: "LoadBalancer"
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-scheme: "internal"
 
 configs:
   params:
