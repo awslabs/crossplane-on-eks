@@ -6,3 +6,6 @@ data:
   awsAccountID: "${awsAccountID}"
   eksOIDC: ${eksOIDC}
   vpcID: ${vpcID}
+  region: ${region}
+  clusterName: ${clusterName}
+ 

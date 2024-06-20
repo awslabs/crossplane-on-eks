@@ -4,46 +4,36 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: xserverlessapp.awsblueprints.io
-  annotations:
-    argocd.argoproj.io/sync-wave: "-10"
+  name: xs3podidentity.awsblueprints.io
 spec:
+  claimNames:
+    kind: S3PodIdentity
+    plural: s3prodidentity
   group: awsblueprints.io
   names:
-    kind: XServerlessApp
-    plural: xserverlessapp
-  claimNames:
-    kind: ServerlessApp
-    plural: serverlessapps
-  defaultCompositionRef:
-    name: xsqslambdas3.awsblueprints.io
+    kind: XS3PodIdentity
+    plural: xs3podidentity
   versions:
     - name: v1alpha1
       served: true
       referenceable: true
       schema:
         openAPIV3Schema:
+          description: S3PODIDENTITY is the Schema for the s3podidentity API
           properties:
             spec:
+              description: S3PODIDENTITYSpec defines the desired state of S3PODIDENTITY
               properties:
-                imageName:
-                  type: string
-                bucketName:
-                  type: string
-                bucketKey:
-                  type: string
-                handler:
-                  type: string
-                memorySize:
-                  type: integer
-                envVariables:
-                  type: object
-                  additionalProperties:
+                policyArns:
+                  items:
                     type: string
+                  type: array
                 resourceConfig:
                   description: ResourceConfig defines general properties of this AWS
                     resource.
                   properties:
+                    region:
+                      type: string                  
                     deletionPolicy:
                       description: Defaults to Delete
                       enum:
@@ -56,35 +46,26 @@ spec:
                       type: string
                     providerConfigName:
                       type: string
-                    region:
-                      type: string
+                    tags:
+                      additionalProperties:
+                        type: string
+                      type: object
                   required:
-                  - region
+                  - providerConfigName
                   type: object
               required:
               - resourceConfig
               type: object
             status:
+              description:  defines the observed state of S3 PodIdentity
               properties:
-                printerRoleName:
-                  type: string
-                processorRoleName:
-                  type: string
-                processorFuncName:
-                  type: string
-                sourceQueueArn:
-                  type: string
-                bucketName:
+                serviceAccountName:
                   type: string
                 bucketArn:
                   type: string
-                kmsKeyArn:
+                roleName:
                   type: string
-                keyName:
-                  type: string
-                accountNumber:
+                roleArn:
                   type: string
               type: object
-          required:
-          - spec
           type: object

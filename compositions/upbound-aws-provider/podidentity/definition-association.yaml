@@ -1,0 +1,57 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xpodidentityassociations.awsblueprints.io
+spec:
+  claimNames:
+    kind: PodIdentityAssociation
+    plural: podidentityassociations
+  group: awsblueprints.io
+  names:
+    kind: XPodIdentityAssociation
+    plural: xpodidentityassociations
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          description: PodIdentityAssociation is the Schema for the podidentity role API
+          properties:
+            spec:
+              description: PodIdentityAssociation spec defines the desired state of PodIdentityAssociation
+              properties:
+                region:
+                  type: string
+                clusterName:
+                  type: string
+                roleArn:
+                  type: string
+                serviceAccountName:
+                  type: string
+                resourceConfig:
+                  description: ResourceConfig defines general properties of this AWS
+                    resource.
+                  properties:
+                    providerConfigName:
+                      type: string
+                  required:
+                  - providerConfigName
+                  type: object
+              required:
+              - resourceConfig
+              - region
+              - clusterName
+              - serviceAccountName
+              - roleArn
+              type: object
+            status:
+              description: PODIDENTITYROLE Status defines the observed state of IRSA
+              properties:
+                roleArn:
+                  type: string
+              type: object
+          type: object
