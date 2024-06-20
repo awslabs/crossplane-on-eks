@@ -87,8 +87,12 @@ spec:
         - type: FromCompositeFieldPath
           fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
           toFieldPath: spec.forProvider.manifest.metadata.namespace
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.labels[crossplane.io/claim-name]
+          toFieldPath: spec.forProvider.manifest.metadata.name
         - type: ToCompositeFieldPath
-          fromFieldPath: metadata.annotations[crossplane.io/external-name]
+          #fromFieldPath: metadata.annotations[crossplane.io/external-name]
+          fromFieldPath: metadata.labels[crossplane.io/claim-name]
           toFieldPath: status.serviceAccountName
           
           
