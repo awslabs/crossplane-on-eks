@@ -10,10 +10,10 @@ spec:
   project: default
   source:
     path: examples/upbound-aws-provider/composite-resources/s3-podidentity/helm-chart/
-    repoURL: https://github.com/awslabs/crossplane-on-eks.git
-    targetRevision: HEAD
+    repoURL: https://github.com/satishbpatil/crossplane-on-eks.git
+    targetRevision: podidentity
     helm:
       values: |- 
-        s3irsa:
+        s3podidentity:
           enabled: true
   syncPolicy: {}
