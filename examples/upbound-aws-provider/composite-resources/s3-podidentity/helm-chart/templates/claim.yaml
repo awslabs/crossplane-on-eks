@@ -1,4 +1,4 @@
-{{- if .Values.s3irsa.enabled }}
+{{- if .Values.s3podidentity.enabled }}
 apiVersion: awsblueprints.io/v1alpha1
 kind: S3PodIdentity
 metadata:
