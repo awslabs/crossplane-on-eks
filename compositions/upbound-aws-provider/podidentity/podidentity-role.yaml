@@ -4,7 +4,7 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: podidentityrole.awsblueprints.io
+  name: xpodidentityrole.awsblueprints.io
 spec:
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
