@@ -4,7 +4,7 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: xs3podidentity.awsblueprints.io
+  name: xs3podidentities.awsblueprints.io
 spec:
   claimNames:
     kind: S3PodIdentity
@@ -12,7 +12,7 @@ spec:
   group: awsblueprints.io
   names:
     kind: XS3PodIdentity
-    plural: xs3podidentity
+    plural: xs3podidentities
   versions:
     - name: v1alpha1
       served: true
