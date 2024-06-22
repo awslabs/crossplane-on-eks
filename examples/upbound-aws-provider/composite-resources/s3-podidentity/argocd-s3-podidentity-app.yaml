@@ -16,4 +16,6 @@ spec:
       values: |- 
         s3podidentity:
           enabled: true
-  syncPolicy: {}
+  syncPolicy:
+    automated:
+      prune: true

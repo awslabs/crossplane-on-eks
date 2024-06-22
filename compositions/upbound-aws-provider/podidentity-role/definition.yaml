@@ -11,7 +11,7 @@ spec:
     plural: podidentityroles
   group: awsblueprints.io
   names:
-    kind: XPodIdentityRole
+    kind: xPodIdentityRole
     plural: xpodidentityroles
   versions:
     - name: v1alpha1
@@ -19,10 +19,10 @@ spec:
       referenceable: true
       schema:
         openAPIV3Schema:
-          description: PODIDENTITYROLE is the Schema for the podidentity role API
+          description: Schema for the podidentity role API
           properties:
             spec:
-              description: PODIDENTITYROLE spec defines the desired state of PODIDENTITY ROLE
+              description: defines the desired state of PodIdentityRole
               properties:
                 managedPolicyArns:
                   items:
@@ -48,7 +48,7 @@ spec:
               - resourceConfig
               type: object
             status:
-              description: PODIDENTITYROLE Status defines the observed state of IRSA
+              description:  Status defines the observed state of PodIdentityRole
               properties:
                 roleArn:
                   type: string

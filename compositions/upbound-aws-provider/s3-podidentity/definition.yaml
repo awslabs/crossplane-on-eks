@@ -7,11 +7,11 @@ metadata:
   name: xs3podidentities.awsblueprints.io
 spec:
   claimNames:
-    kind: S3PodIdentity
-    plural: s3prodidentity
+    kind: S3PodIdentityclaim
+    plural: s3prodidentityclaims
   group: awsblueprints.io
   names:
-    kind: XS3PodIdentity
+    kind: xS3PodIdentity
     plural: xs3podidentities
   versions:
     - name: v1alpha1

@@ -1,6 +1,6 @@
 {{- if .Values.s3podidentity.enabled }}
 apiVersion: awsblueprints.io/v1alpha1
-kind: S3PodIdentity
+kind: S3PodIdentityclaim
 metadata:
   name: {{ include "s3-podidentity-app.name" . }}
   labels:

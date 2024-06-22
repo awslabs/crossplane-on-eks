@@ -11,7 +11,7 @@ spec:
     plural: podidentityassociations
   group: awsblueprints.io
   names:
-    kind: XPodIdentityAssociation
+    kind: xPodIdentityAssociation
     plural: xpodidentityassociations
   versions:
     - name: v1alpha1

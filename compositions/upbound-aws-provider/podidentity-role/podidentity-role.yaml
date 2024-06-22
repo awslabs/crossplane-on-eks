@@ -4,11 +4,11 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: xpodidentityrole.awsblueprints.io
+  name: xpodidentityrole-composition
 spec:
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
-    kind: XPodIdentityRole
+    kind: xPodIdentityRole
   patchSets:
     - name: common-fields-composition
       patches:
