@@ -17,5 +17,5 @@ spec:
         s3podidentity:
           enabled: true
   syncPolicy:
-    automated:
-      prune: true
+    automated: {}
+      
