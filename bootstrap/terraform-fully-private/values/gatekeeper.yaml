@@ -1,6 +1,6 @@
 image:
-  repository: "${ecr_aws_account_id}.dkr.ecr.${ecr_aws_region}.amazonaws.com/openpolicyagent/gatekeeper"
-  crdRepository: "${ecr_aws_account_id}.dkr.ecr.${ecr_aws_region}.amazonaws.com/openpolicyagent/gatekeeper-crds"
+  repository: "${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com/openpolicyagent/gatekeeper"
+  crdRepository: "${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com/openpolicyagent/gatekeeper-crds"
 
 preInstall:
   crdRepository:
@@ -10,17 +10,17 @@ preInstall:
 postUpgrade:
   labelNamespace:
     image:
-      repository: "${ecr_aws_account_id}.dkr.ecr.${ecr_aws_region}.amazonaws.com/openpolicyagent/gatekeeper-crds"
+      repository: "${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com/openpolicyagent/gatekeeper-crds"
 
 postInstall:
   labelNamespace:
     image:
-      repository: "${ecr_aws_account_id}.dkr.ecr.${ecr_aws_region}.amazonaws.com/openpolicyagent/gatekeeper-crds"
+      repository: "${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com/openpolicyagent/gatekeeper-crds"
   probeWebhook:
     image:
-      repository: "${ecr_aws_account_id}.dkr.ecr.${ecr_aws_region}.amazonaws.com/openpolicyagent/curl"
+      repository: "${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com/openpolicyagent/curl"
 
 preUninstall:
   deleteWebhookConfigurations:
     image:
-      repository: "${ecr_aws_account_id}.dkr.ecr.${ecr_aws_region}.amazonaws.com/openpolicyagent/gatekeeper-crds"
+      repository: "${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com/openpolicyagent/gatekeeper-crds"

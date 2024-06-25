@@ -46,6 +46,9 @@ locals {
   name   = var.name
   region = var.region
 
+  ecr_account_id  = var.ecr_account_id != "" ? var.ecr_account_id : data.aws_caller_identity.current.account_id
+  ecr_region      = var.ecr_region != "" ? var.ecr_region : local.region
+  
   cluster_version = var.cluster_version
   cluster_name    = local.name
 
@@ -199,8 +202,8 @@ module "eks_blueprints_addons" {
         crossplane_aws_provider_enable        = local.aws_provider.enable
         crossplane_upjet_aws_provider_enable  = local.upjet_aws_provider.enable
         crossplane_kubernetes_provider_enable = local.kubernetes_provider.enable
-        ecr_aws_account_id                    = var.ecr_aws_account_id
-        ecr_aws_region                        = var.ecr_aws_region
+        ecr_account_id                        = local.ecr_account_id
+        ecr_region                            = local.ecr_region
     })]
   }
 
@@ -208,8 +211,8 @@ module "eks_blueprints_addons" {
   metrics_server = {
     values = [
       templatefile("${path.module}/values/metrics-server.yaml", {
-        ecr_aws_account_id = var.ecr_aws_account_id
-        ecr_aws_region     = var.ecr_aws_region
+        ecr_account_id = local.ecr_account_id
+        ecr_region     = local.ecr_region
     })]
   }
 
@@ -217,8 +220,8 @@ module "eks_blueprints_addons" {
   aws_load_balancer_controller = {
     values = [
       templatefile("${path.module}/values/aws-load-balancer-controller.yaml", {
-        ecr_aws_account_id = var.ecr_aws_account_id
-        ecr_aws_region     = var.ecr_aws_region
+        ecr_account_id = local.ecr_account_id
+        ecr_region     = local.ecr_region
     })]
   }
 
@@ -226,8 +229,8 @@ module "eks_blueprints_addons" {
   kube_prometheus_stack = {
     values = [
       templatefile("${path.module}/values/prometheus.yaml", {
-        ecr_aws_account_id = var.ecr_aws_account_id
-        ecr_aws_region     = var.ecr_aws_region
+        ecr_account_id = local.ecr_account_id
+        ecr_region     = local.ecr_region
     })]
   }
 
@@ -255,8 +258,8 @@ module "gatekeeper" {
   repository       = "https://open-policy-agent.github.io/gatekeeper/charts"
   values = [
     templatefile("${path.module}/values/gatekeeper.yaml", {
-      ecr_aws_account_id = var.ecr_aws_account_id
-      ecr_aws_region     = var.ecr_aws_region
+      ecr_account_id = local.ecr_account_id
+      ecr_region     = local.ecr_region
   })]
 
   depends_on = [time_sleep.addons_wait_60_seconds]
@@ -279,8 +282,8 @@ module "crossplane" {
   timeout          = "600"
   values = [
     templatefile("${path.module}/values/crossplane.yaml", {
-      ecr_aws_account_id = var.ecr_aws_account_id
-      ecr_aws_region     = var.ecr_aws_region
+      ecr_account_id = local.ecr_account_id
+      ecr_region     = local.ecr_region
   })]
 
   depends_on = [time_sleep.addons_wait_60_seconds]
@@ -397,8 +400,8 @@ resource "kubectl_manifest" "upjet_provider_family_aws" {
   yaml_body = templatefile("${path.module}/providers/upjet-aws/provider-family-aws.yaml", {
     version            = local.upjet_aws_provider.version
     runtime-config     = local.upjet_aws_provider.runtime_config
-    ecr_aws_account_id = var.ecr_aws_account_id
-    ecr_aws_region     = var.ecr_aws_region
+    ecr_account_id     = local.ecr_account_id
+    ecr_region         = local.ecr_region
   })
 
   depends_on = [kubectl_manifest.upjet_aws_runtime_config, module.crossplane]
@@ -418,8 +421,8 @@ resource "kubectl_manifest" "upjet_aws_provider" {
     family             = each.key
     version            = local.upjet_aws_provider.version
     runtime-config     = local.upjet_aws_provider.runtime_config
-    ecr_aws_account_id = var.ecr_aws_account_id
-    ecr_aws_region     = var.ecr_aws_region
+    ecr_account_id     = local.ecr_account_id
+    ecr_region         = local.ecr_region
   })
 
   depends_on = [time_sleep.upjet_family_wait_60_seconds, module.crossplane]
@@ -485,8 +488,8 @@ resource "kubectl_manifest" "aws_provider" {
     aws-provider-name  = local.aws_provider.name
     version            = local.aws_provider.version
     runtime-config     = local.aws_provider.runtime_config
-    ecr_aws_account_id = var.ecr_aws_account_id
-    ecr_aws_region     = var.ecr_aws_region
+    ecr_account_id     = local.ecr_account_id
+    ecr_region         = local.ecr_region
   })
 
   depends_on = [kubectl_manifest.aws_runtime_config, module.crossplane]
@@ -549,8 +552,8 @@ resource "kubectl_manifest" "kubernetes_provider" {
     version                  = local.kubernetes_provider.version
     kubernetes-provider-name = local.kubernetes_provider.name
     runtime-config           = local.kubernetes_provider.runtime_config
-    ecr_aws_account_id       = var.ecr_aws_account_id
-    ecr_aws_region           = var.ecr_aws_region
+    ecr_account_id           = local.ecr_account_id
+    ecr_region               = local.ecr_region
   })
 
   depends_on = [module.crossplane, kubectl_manifest.kubernetes_runtime_config]
@@ -612,8 +615,8 @@ resource "kubectl_manifest" "helm_provider" {
     version            = local.helm_provider.version
     helm-provider-name = local.helm_provider.name
     runtime-config     = local.helm_provider.runtime_config
-    ecr_aws_account_id = var.ecr_aws_account_id
-    ecr_aws_region     = var.ecr_aws_region
+    ecr_account_id     = local.ecr_account_id
+    ecr_region         = local.ecr_region
   })
 
   depends_on = [kubectl_manifest.helm_runtime_config, module.crossplane]

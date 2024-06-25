@@ -1,5 +1,5 @@
 image:
-  repository: "${ecr_aws_account_id}.dkr.ecr.${ecr_aws_region}.amazonaws.com/crossplane/crossplane"
+  repository: "${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com/crossplane/crossplane"
 
 args:
   - "--enable-environment-configs"

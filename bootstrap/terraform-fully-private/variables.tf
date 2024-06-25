@@ -49,13 +49,13 @@ variable "enable_helm_provider" {
   default     = true
 }
 
-variable "ecr_aws_account_id" {
+variable "ecr_account_id" {
   type        = string
   description = "ECR repository AWS Account ID"
   default     = ""
 }
 
-variable "ecr_aws_region" {
+variable "ecr_region" {
   type        = string
   description = "ECR repository AWS Region"
   default     = ""

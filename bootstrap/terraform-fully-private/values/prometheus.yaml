@@ -1,5 +1,5 @@
 global:
-  imageRegistry: "${ecr_aws_account_id}.dkr.ecr.${ecr_aws_region}.amazonaws.com"
+  imageRegistry: "${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com"
 prometheus:
   service:
     type: "LoadBalancer"
@@ -25,17 +25,17 @@ prometheus:
           prometheus.io/scrape: "true"
 grafana:
   global:
-    imageRegistry: "${ecr_aws_account_id}.dkr.ecr.${ecr_aws_region}.amazonaws.com"
+    imageRegistry: "${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com"
   downloadDashboardsImage:
-    repository: ${ecr_aws_account_id}.dkr.ecr.${ecr_aws_region}.amazonaws.com/grafana/curl
+    repository: ${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com/grafana/curl
   image:
-    repository: ${ecr_aws_account_id}.dkr.ecr.${ecr_aws_region}.amazonaws.com/grafana/grafana
+    repository: ${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com/grafana/grafana
   imageRenderer:
     image:
-      repository: ${ecr_aws_account_id}.dkr.ecr.${ecr_aws_region}.amazonaws.com/grafana/grafana-image-renderer
+      repository: ${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com/grafana/grafana-image-renderer
   sidecar:
     image:
-      repository: ${ecr_aws_account_id}.dkr.ecr.${ecr_aws_region}.amazonaws.com/grafana/k8s-sidecar
+      repository: ${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com/grafana/k8s-sidecar
   service:
     type: "LoadBalancer"
     annotations:
