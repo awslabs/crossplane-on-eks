@@ -117,28 +117,28 @@ spec:
                     }
                   ]
                 }
-    - name: podidentity-association
-      base:
-        apiVersion: eks.aws.upbound.io/v1beta1
-        kind: PodIdentityAssociation
-      patches:
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.providerConfigName
-          toFieldPath: spec.providerConfigRef.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.region
-          toFieldPath: spec.forProvider.region
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
-          toFieldPath: spec.forProvider.namespace           
+    # - name: podidentity-association
+    #   base:
+    #     apiVersion: eks.aws.upbound.io/v1beta1
+    #     kind: PodIdentityAssociation
+    #   patches:
+    #     - type: FromCompositeFieldPath
+    #       fromFieldPath: spec.resourceConfig.providerConfigName
+    #       toFieldPath: spec.providerConfigRef.name
+    #     - type: FromCompositeFieldPath
+    #       fromFieldPath: spec.resourceConfig.region
+    #       toFieldPath: spec.forProvider.region
+    #     - type: FromCompositeFieldPath
+    #       fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+    #       toFieldPath: spec.forProvider.namespace           
           
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.roleArn
-          toFieldPath: spec.forProvider.roleArn
-        - type: FromEnvironmentFieldPath
-          fromFieldPath: clusterName
-          toFieldPath: spec.forProvider.clusterName      
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.serviceAccountName
-          toFieldPath: spec.forProvider.serviceAccount
+    #     - type: FromCompositeFieldPath
+    #       fromFieldPath: status.roleArn
+    #       toFieldPath: spec.forProvider.roleArn
+    #     - type: FromEnvironmentFieldPath
+    #       fromFieldPath: clusterName
+    #       toFieldPath: spec.forProvider.clusterName      
+    #     - type: FromCompositeFieldPath
+    #       fromFieldPath: status.serviceAccountName
+    #       toFieldPath: spec.forProvider.serviceAccount
  
