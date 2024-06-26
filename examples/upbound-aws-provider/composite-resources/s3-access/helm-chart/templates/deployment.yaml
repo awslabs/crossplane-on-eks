@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "s3-access-app.name" . }}
+  name: {{ include "s3-podidentity-app.name" . }}
   labels:
-    app.kubernetes.io/name: {{ include "s3-access-app.name" . }}
-    helm.sh/chart: {{ include "s3-access-app.chart" . }}
+    app.kubernetes.io/name: {{ include "s3-podidentity-app.name" . }}
+    helm.sh/chart: {{ include "s3-podidentity-app.chart" . }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "s3-access-app.name" . }}
+      app.kubernetes.io/name: {{ include "s3-podidentity-app.name" . }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ include "s3-access-app.name" . }}
+        app.kubernetes.io/name: {{ include "s3-podidentity-app.name" . }}
     spec:
-      serviceAccountName: {{ include "s3-access-app.name" . }}
+      serviceAccountName: {{ include "s3-podidentity-app.name" . }}
       containers:
       - name: aws-cli
         image: amazon/aws-cli:latest
@@ -37,6 +37,6 @@ spec:
         - name: BUCKET_NAME
           valueFrom:
             secretKeyRef:
-              name: {{ include "s3-access-app.name" . }}
+              name: {{ include "s3-podidentity-app.name" . }}
               key: bucketName
       restartPolicy: Always

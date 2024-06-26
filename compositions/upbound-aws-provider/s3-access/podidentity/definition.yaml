@@ -1,0 +1,71 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xs3podidentities.awsblueprints.io
+spec:
+  claimNames:
+    kind: S3PodIdentityclaim
+    plural: s3prodidentityclaims
+  group: awsblueprints.io
+  names:
+    kind: xS3PodIdentity
+    plural: xs3podidentities
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          description: S3PODIDENTITY is the Schema for the s3podidentity API
+          properties:
+            spec:
+              description: S3PODIDENTITYSpec defines the desired state of S3PODIDENTITY
+              properties:
+                policyArns:
+                  items:
+                    type: string
+                  type: array
+                resourceConfig:
+                  description: ResourceConfig defines general properties of this AWS
+                    resource.
+                  properties:
+                    region:
+                      type: string                  
+                    deletionPolicy:
+                      description: Defaults to Delete
+                      enum:
+                      - Delete
+                      - Orphan
+                      type: string
+                    name:
+                      description: Set the name of this resource in AWS to the value
+                        provided by this field.
+                      type: string
+                    providerConfigName:
+                      type: string
+                    tags:
+                      additionalProperties:
+                        type: string
+                      type: object
+                  required:
+                  - providerConfigName
+                  type: object
+              required:
+              - resourceConfig
+              type: object
+            status:
+              description:  defines the observed state of S3 PodIdentity
+              properties:
+                serviceAccountName:
+                  type: string
+                bucketArn:
+                  type: string
+                roleName:
+                  type: string
+                roleArn:
+                  type: string
+              type: object
+          type: object
