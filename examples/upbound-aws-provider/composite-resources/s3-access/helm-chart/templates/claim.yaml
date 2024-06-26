@@ -1,6 +1,6 @@
 {{- if .Values.s3access.enabled }}
 apiVersion: awsblueprints.io/v1alpha1
-{{- if .Values.s3access.access | default "irsa" .eq "irsa" }}
+{{- if  eq (.Values.s3access.access | default "irsa")  "irsa" }}
 kind: S3IRSA
 {{- else }}
 kind: S3PodIdentityclaim
