@@ -6,3 +6,4 @@ resources:
  - ../../../../compositions/upbound-aws-provider/s3-access/
  - ../../../../compositions/upbound-aws-provider/iam-policy/
  - ../../../../compositions/upbound-aws-provider/irsa/
+
