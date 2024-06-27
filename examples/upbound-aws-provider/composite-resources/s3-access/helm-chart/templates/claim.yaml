@@ -1,0 +1,25 @@
+{{- if .Values.s3access.enabled }}
+apiVersion: awsblueprints.io/v1alpha1
+{{- if  eq (.Values.s3access.access | default "irsa")  "irsa" }}
+kind: S3IRSA
+{{- else }}
+kind: S3PodIdentityclaim
+{{- end }}
+metadata:
+  name: {{ include "s3-access-app.name" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "s3-access-app.name" . }}
+    helm.sh/chart: {{ include "s3-access-app.chart" . }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+spec:
+  writeConnectionSecretToRef:
+    name: {{ include "s3-access-app.name" . }}
+  resourceConfig:
+    providerConfigName: aws-provider-config
+    #region: us-east-1
+    {{- with .Values.s3access.tags }}
+    tags:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+{{- end }}

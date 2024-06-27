@@ -116,6 +116,9 @@ module "eks" {
       before_compute = true # Ensure the addon is configured before compute resources are created
       most_recent    = true
     }
+    eks-pod-identity-agent = {
+      most_recent = true
+    }    
   }
 
   # for production cluster, add a node group for add-ons that should not be inerrupted such as coredns
@@ -220,6 +223,8 @@ resource "kubectl_manifest" "environmentconfig" {
     awsAccountID = data.aws_caller_identity.current.account_id
     eksOIDC      = module.eks.oidc_provider
     vpcID        = module.vpc.vpc_id
+    region       = local.region
+    clusterName  = local.name
   })
 
   depends_on = [module.crossplane]
@@ -250,7 +255,8 @@ locals {
       "vpc",
       "apigateway",
       "cloudwatch",
-      "cloudwatchlogs"
+      "cloudwatchlogs",
+      "eks"
     ]
   }
 

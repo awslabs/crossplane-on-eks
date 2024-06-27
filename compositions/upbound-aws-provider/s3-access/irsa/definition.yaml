@@ -4,42 +4,30 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: xserverlessapp.awsblueprints.io
-  annotations:
-    argocd.argoproj.io/sync-wave: "-10"
+  name: xs3irsas.awsblueprints.io
 spec:
+  claimNames:
+    kind: S3IRSA
+    plural: s3irsas
   group: awsblueprints.io
   names:
-    kind: XServerlessApp
-    plural: xserverlessapp
-  claimNames:
-    kind: ServerlessApp
-    plural: serverlessapps
-  defaultCompositionRef:
-    name: xsqslambdas3.awsblueprints.io
+    kind: XS3IRSA
+    plural: xs3irsas
   versions:
     - name: v1alpha1
       served: true
       referenceable: true
       schema:
         openAPIV3Schema:
+          description: S3IRSA is the Schema for the s3irsas API
           properties:
             spec:
+              description: S3IRSASpec defines the desired state of S3IRSA
               properties:
-                imageName:
-                  type: string
-                bucketName:
-                  type: string
-                bucketKey:
-                  type: string
-                handler:
-                  type: string
-                memorySize:
-                  type: integer
-                envVariables:
-                  type: object
-                  additionalProperties:
+                policyArns:
+                  items:
                     type: string
+                  type: array
                 resourceConfig:
                   description: ResourceConfig defines general properties of this AWS
                     resource.
@@ -58,33 +46,25 @@ spec:
                       type: string
                     region:
                       type: string
+                    tags:
+                      additionalProperties:
+                        type: string
+                      type: object
                   required:
+                  - providerConfigName
                   - region
                   type: object
+                serviceAccountName:
+                  type: string
               required:
               - resourceConfig
               type: object
             status:
+              description: S3IRSAStatus defines the observed state of S3IRSA
               properties:
-                printerRoleName:
-                  type: string
-                processorRoleName:
-                  type: string
-                processorFuncName:
-                  type: string
-                sourceQueueArn:
-                  type: string
-                bucketName:
-                  type: string
                 bucketArn:
                   type: string
-                kmsKeyArn:
-                  type: string
-                keyName:
-                  type: string
-                accountNumber:
+                roleName:
                   type: string
               type: object
-          required:
-          - spec
           type: object
