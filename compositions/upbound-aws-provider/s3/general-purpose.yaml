@@ -76,13 +76,13 @@ spec:
         kind: BucketPublicAccessBlock
         spec:
           deletionPolicy: Delete
-          blockPublicAcls: true
-          blockPublicPolicy: true
-          ignorePublicAcls: true
-          restrictPublicBuckets: true
           forProvider:
             bucketSelector:
               matchControllerRef: true
+            blockPublicAcls: true
+            blockPublicPolicy: true
+            ignorePublicAcls: true
+            restrictPublicBuckets: true
       patches:
         - fromFieldPath: spec.resourceConfig.region
           toFieldPath: spec.forProvider.region

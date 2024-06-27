@@ -16,7 +16,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: postgres-root-user-password
-  namespace: default
+  namespace: crossplane-system
 data:
   password: bXlzZWNyZXRQYXNzd29yZDEh # mysecretPassword1!
 ---

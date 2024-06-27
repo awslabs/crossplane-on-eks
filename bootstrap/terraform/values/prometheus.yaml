@@ -1,0 +1,76 @@
+prometheus:
+  service:
+    type: "LoadBalancer"
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+  additionalPodMonitors:
+    - name: "crossplane"
+      namespaceSelector:
+        matchNames:
+          - "crossplane-system"
+      podMetricsEndpoints:
+        - port: "metrics"
+      selector: {}
+  additionalServiceMonitors:
+    - name: "argocd"
+      namespaceSelector:
+        matchNames:
+          - "argocd"
+      endpoints:
+        - port: "metrics"
+      selector:
+        matchLabels:
+          prometheus.io/scrape: "true"
+grafana:
+  service:
+    type: "LoadBalancer"
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "1Gi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          access: proxy
+          url: http://kube-prometheus-stack-prometheus.kube-prometheus-stack:9090/
+          isDefault: false
+          uid: prometheusdatasource
+      deleteDatasources:
+        - name: Prometheus
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: "default"
+          orgId: 1
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/default
+  dashboards:
+    default:
+      crossplane:
+        gnetId: 21169
+        revision: 1
+        datasource: prometheusdatasource
+      argocd:
+        gnetId: 14584
+        revision: 1
+        datasource: prometheusdatasource
+      eks:
+        gnetId: 14623
+        revision: 1
+        datasource: prometheusdatasource
+      ekscontrolplane:
+        gnetId: 21192
+        revision: 1
+        datasource: prometheusdatasource

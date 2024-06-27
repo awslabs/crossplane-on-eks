@@ -8,7 +8,14 @@
 #     1. RDS Postgres Instance with auto generated password
 #     2. RDS subnet group
 #     3. EC2 Security group
-
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-root-user-password
+  namespace: crossplane-system
+data:
+  password: bXlzZWNyZXRQYXNzd29yZDEh # mysecretPassword1!
+---
 apiVersion: awsblueprints.io/v1alpha1
 kind: RelationalDatabase
 metadata:

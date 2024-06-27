@@ -3,7 +3,6 @@ kind: DeploymentRuntimeConfig
 metadata:
   name: ${runtime-config}
 spec:
-spec:
   deploymentTemplate:
     spec:
       replicas: 1

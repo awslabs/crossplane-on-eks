@@ -59,9 +59,9 @@ spec:
                             type: string
                           type:
                             enum:
-                            - B #binary
-                            - N #number
-                            - S #string
+                            - "B" #binary
+                            - "N" #number
+                            - "S" #string
                             type: string
                         required:
                         - name
@@ -102,11 +102,7 @@ spec:
                         required:
                           - hashKey
                           - name
-                          - rangeKey
-                          - readCapacity
-                          - writeCapacity
                           - projectionType
-                          - nonKeyAttributes
                       type: array
                     localSecondaryIndex:
                       items:
