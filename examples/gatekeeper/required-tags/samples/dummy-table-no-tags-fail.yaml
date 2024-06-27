@@ -1,20 +1,17 @@
-apiVersion: dynamodb.aws.crossplane.io/v1alpha1
+apiVersion: dynamodb.aws.upbound.io/v1beta1
 kind: Table
 metadata:
+  annotations:
+    meta.upbound.io/example-id: dynamodb/v1beta1/globaltable
   name: dummy-table
 spec:
-  deletionPolicy: Delete
-  forProvider:
-    region: eu-west-2
-    attributeDefinitions:
-      - attributeName: id
-        attributeType: S
-    keySchema:
-      - attributeName: id
-        keyType: HASH
-    billingMode: PROVISIONED
-    provisionedThroughput:
-      readCapacityUnits: 1
-      writeCapacityUnits: 1
   providerConfigRef:
     name: aws-provider-config
+  forProvider:
+    attribute:
+      - name: myAttribute
+        type: S
+    hashKey: myAttribute
+    readCapacity: 1
+    writeCapacity: 1
+    region: eu-west-2
