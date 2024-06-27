@@ -4,7 +4,7 @@
 
 s3access:
   enabled: true
-  access: podidentity
+  access: irsa
   tags:
     owner: devops
     environment: production
