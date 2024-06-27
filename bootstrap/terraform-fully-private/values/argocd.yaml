@@ -1,6 +1,6 @@
 global:
   image:
-    repository: "${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com/argocd"
+    repository: "${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com/quay/argoproj/argocd"
     pullPolicy: IfNotPresent
   # Uncomment and set the values below if you need to configure proxy settings
   # env:
@@ -20,17 +20,17 @@ global:
 dex:
   enabled: false # Disable dex since we are not using
   image:
-    repository: "${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com/dex"
+    repository: "${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com/docker-hub/dexidp/dex"
     pullPolicy: IfNotPresent
 
 redis-ha:
   enabled: true
   image:
-    repository: "${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com/redis"
+    repository: "${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com/docker-hub/library/redis"
     pullPolicy: IfNotPresent
   haproxy:
     image:
-      repository: "${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com/haproxy"
+      repository: "${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com/docker-hub/library/haproxy"
       pullPolicy: IfNotPresent
 
 controller:

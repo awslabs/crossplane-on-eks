@@ -123,7 +123,7 @@ module "eks" {
 
   cluster_name                    = local.name
   cluster_version                 = local.cluster_version
-  cluster_endpoint_public_access  = false
+  cluster_endpoint_public_access  = true
   cluster_endpoint_private_access = true
   kms_key_enable_default_policy   = true
 
@@ -234,7 +234,7 @@ module "eks_blueprints_addons" {
     })]
   }
 
-  depends_on = [module.eks.cluster_addons]
+  depends_on = [module.eks.cluster_addons, aws_ecr_repository.ecr_repo["quay/prometheus-operator/prometheus-config-reloader"] ] 
 }
 
 resource "time_sleep" "addons_wait_60_seconds" {
@@ -277,7 +277,7 @@ module "crossplane" {
   namespace        = "crossplane-system"
   create_namespace = true
   chart            = "crossplane"
-  chart_version    = "1.15.0"
+  chart_version    = "1.16.0"
   repository       = "https://charts.crossplane.io/stable/"
   timeout          = "600"
   values = [

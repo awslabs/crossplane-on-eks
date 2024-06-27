@@ -16,6 +16,7 @@ graph TD;
     subgraph AWS Cloud
     id1(VPC)-->Private-Subnet1;
     id1(VPC)-->Private-Subnet2;
+    id1(VPC)-->Private-Subnet3;
     Private-Subnet1-->EKS{{"EKS #9829;"}}
     Private-Subnet2-->EKS{{"EKS #9829;"}}
     Private-Subnet3-->EKS{{"EKS #9829;"}}
@@ -47,7 +48,7 @@ and executing terraform apply again.
 1. Make sure you have upgraded to the latest version of AWS CLI. Make sure your AWS credentials are properly configured as well.
 
 ### Deployment Steps
-#### Step1: Clone the repo using the command below
+#### Step0: Clone the repo using the command below
 
 ```shell script
 git clone https://github.com/aws-samples/crossplane-aws-blueprints.git
@@ -56,6 +57,22 @@ git clone https://github.com/aws-samples/crossplane-aws-blueprints.git
 > [!IMPORTANT]  
 > The examples in this repository make use of one of the Crossplane AWS providers. 
 For that reason `upbound_aws_provider.enable` is set to `true` and `aws_provider.enable` is set to `false`. If you use the examples for `aws_provider`, adjust the terraform [main.tf](https://github.com/awslabs/crossplane-on-eks/blob/main/bootstrap/terraform/main.tf) in order install only the necessary CRDs to the Kubernetes cluster.
+
+#### Step1: ECR settings
+Replace `your-docker-username` and `your-docker-password` with your actual Docker credentials and run the following command to create an aws secretmanager secret:
+```
+aws secretsmanager create-secret --name ecr-pullthroughcache/docker --description "Docker credentials" --secret-string '{"username":"your-docker-username","accessToken":"your-docker-password"}'
+```
+Note: You can change the default `us-east-1` region in the following scripts before executing them.
+
+Create Crossplane private ECR repos, you can change the default `us-east-1` region in the script before executing: 
+```
+./scripts/create-crossplane-ecr-repos.sh
+```
+Pull, tag, and push Crossplane images to private ECR:
+```
+./scripts/push-images-to-ecr.sh
+```
 
 #### Step2: Run Terraform INIT
 Initialize a working directory with configuration files
@@ -81,6 +98,11 @@ terraform apply
 ```
 
 Enter `yes` to apply
+
+While terraform is appling, after the ECR repositories are available, run the following script:
+```
+./scripts/pull-through-images.sh
+```
 
 ### Configure `kubectl` and test cluster
 EKS Cluster details can be extracted from terraform output or from AWS Console to get the name of cluster.
