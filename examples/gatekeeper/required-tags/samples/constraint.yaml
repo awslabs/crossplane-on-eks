@@ -8,4 +8,4 @@ spec:
       - apiGroups: ["dynamodb.aws.upbound.io"]
         kinds: ["Table"]
   parameters:
-    tag: "owner"
+    tags: ["owner"]
