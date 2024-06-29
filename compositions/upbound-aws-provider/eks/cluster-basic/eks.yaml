@@ -1,0 +1,335 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xeks.awsblueprints.io
+  labels:
+    provider: aws
+spec:
+  compositeTypeRef:
+    apiVersion: awsblueprints.io/v1alpha1
+    kind: XEks
+  patchSets:
+    - name: common-parameters-global
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.deletionPolicy
+          toFieldPath: spec.deletionPolicy
+    - name: common-parameters-regional
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.deletionPolicy
+          toFieldPath: spec.deletionPolicy
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.region
+          toFieldPath: spec.forProvider.region
+  resources:
+    - name: clusterRole
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: Role
+        metadata:
+          labels:
+            role: cluster
+        spec:
+          forProvider:
+            assumeRolePolicy: |
+              {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Service": "eks.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRole"
+                  }
+                ]
+              }
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-global
+        - fromFieldPath: "status.atProvider.arn"
+          toFieldPath: "status.eks.clusterRoleArn"
+          type: ToCompositeFieldPath
+        - fromFieldPath: status.atProvider.arn
+          policy:
+            fromFieldPath: Required
+          toFieldPath: status.eks.accountId
+          transforms:
+            - string:
+                regexp:
+                  group: 1
+                  match: arn:aws:iam::(\d+):.*
+                type: Regexp
+              type: string
+          type: ToCompositeFieldPath
+
+    - name: clusterRolePolicyAttachment
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: RolePolicyAttachment
+        spec:
+          forProvider:
+            policyArn: arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+            roleSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: cluster
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-global
+
+    - name: kubernetesCluster
+      base:
+        apiVersion: eks.aws.upbound.io/v1beta1
+        kind: Cluster
+        spec:
+          forProvider:
+            enabledClusterLogTypes: []
+            region: ""
+            roleArnSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: cluster
+            vpcConfig:
+              - endpointPrivateAccess: false
+                endpointPublicAccess: true
+                subnetIds: []
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-regional
+        - fromFieldPath: "spec.version"
+          toFieldPath: "spec.forProvider.version"
+        - fromFieldPath: "spec.authenticationMode"
+          toFieldPath: "spec.forProvider.accessConfig[0].authenticationMode"
+        - fromFieldPath: "spec.bootstrapClusterCreatorAdminPermissions"
+          toFieldPath: "spec.forProvider.accessConfig[0].bootstrapClusterCreatorAdminPermissions"
+        - fromFieldPath: "spec.enabledClusterLogTypes"
+          toFieldPath: "spec.forProvider.enabledClusterLogTypes"
+        - fromFieldPath: "spec.endpointPrivateAccess"
+          toFieldPath: "spec.forProvider.vpcConfig[0].endpointPrivateAccess"
+        - fromFieldPath: "spec.endpointPublicAccess"
+          toFieldPath: "spec.forProvider.vpcConfig[0].endpointPublicAccess"
+        - fromFieldPath: "spec.subnets"
+          toFieldPath: "spec.forProvider.vpcConfig[0].subnetIds"
+          policy:
+            fromFieldPath: Required
+        - fromFieldPath: status.atProvider.identity[0].oidc[0].issuer
+          policy:
+            fromFieldPath: Optional
+          toFieldPath: status.eks.oidc
+          type: ToCompositeFieldPath
+        - fromFieldPath: status.atProvider.identity[0].oidc[0].issuer
+          policy:
+            fromFieldPath: Optional
+          toFieldPath: status.eks.oidcUri
+          transforms:
+            - string:
+                trim: https://
+                type: TrimPrefix
+              type: string
+          type: ToCompositeFieldPath
+        - fromFieldPath: status.atProvider.vpcConfig[0].clusterSecurityGroupId
+          policy:
+            fromFieldPath: Optional
+          toFieldPath: status.eks.clusterSecurityGroupId
+          type: ToCompositeFieldPath
+
+    - name: clusterSecurityGroupImport
+      base:
+        apiVersion: ec2.aws.upbound.io/v1beta1
+        kind: SecurityGroup
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-regional
+        - fromFieldPath: status.eks.clusterSecurityGroupId
+          policy:
+            fromFieldPath: Required
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.id
+          toFieldPath: spec.forProvider.tags[eks.aws.platform.upbound.io/discovery]
+
+    - name: kubernetesClusterAuth
+      base:
+        apiVersion: eks.aws.upbound.io/v1beta1
+        kind: ClusterAuth
+        spec:
+          forProvider:
+            refreshPeriod: "2m0s"
+            clusterNameSelector:
+              matchControllerRef: true
+      connectionDetails:
+        - fromConnectionSecretKey: kubeconfig
+          name: kubeconfig
+          type: FromConnectionSecretKey
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-regional
+        - fromFieldPath: "spec.id"
+          toFieldPath: "spec.writeConnectionSecretToRef.namespace"
+          type: FromCompositeFieldPath
+        - fromFieldPath: "metadata.uid"
+          toFieldPath: "spec.writeConnectionSecretToRef.name"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-ekscluster"
+                type: Format
+          type: FromCompositeFieldPath
+
+    - name: nodegroupRole
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: Role
+        metadata:
+          labels:
+            role: nodegroup
+        spec:
+          forProvider:
+            assumeRolePolicy: |
+              {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Principal": {
+                            "Service": [
+                                "ec2.amazonaws.com"
+                            ]
+                        },
+                        "Action": [
+                            "sts:AssumeRole"
+                        ]
+                    }
+                ]
+              }
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-global
+        - fromFieldPath: "status.atProvider.arn"
+          toFieldPath: "status.eks.nodeGroupRoleArn"
+          type: ToCompositeFieldPath
+
+    - name: nodegroupWorkerNodePolicyAttachment
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: RolePolicyAttachment
+        spec:
+          forProvider:
+            policyArn: arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+            roleSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: nodegroup
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-global
+
+    - name: nodegroupCniPolicyAttachment
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: RolePolicyAttachment
+        spec:
+          forProvider:
+            policyArn: arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+            roleSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: nodegroup
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-global
+
+    - name: ebsCsiRolePolicyAttachment
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: RolePolicyAttachment
+        spec:
+          forProvider:
+            policyArn: arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy
+            roleSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: nodegroup
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-global
+
+    - name: containerRegistryRolePolicyAttachment
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: RolePolicyAttachment
+        spec:
+          forProvider:
+            policyArn: arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+            roleSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: nodegroup
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-global
+
+    - name: nodegroup
+      base:
+        apiVersion: eks.aws.upbound.io/v1beta1
+        kind: NodeGroup
+        spec:
+          forProvider:
+            region: ""
+            clusterNameSelector:
+              matchControllerRef: true
+            nodeRoleArnSelector:
+              matchControllerRef: true
+              matchLabels:
+                role: nodegroup
+            scalingConfig:
+              - desiredSize: 3
+                minSize: 1
+                maxSize: 6
+            subnetIds: []
+          providerConfigRef:
+            name: ""
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-regional
+        - fromFieldPath: "spec.subnets"
+          toFieldPath: "spec.forProvider.subnetIds"
+          policy:
+            fromFieldPath: Required
+        - fromFieldPath: status.atProvider.clusterName
+          policy:
+            fromFieldPath: Optional
+          toFieldPath: status.eks.clusterName
+          type: ToCompositeFieldPath
+
+    - name: oidcProvider
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: OpenIDConnectProvider
+        spec:
+          forProvider:
+            clientIdList:
+              - sts.amazonaws.com
+            thumbprintList:
+              - 9e99a48a9960b14926bb7f3b02e22da2b0ab7280
+      patches:
+        - type: PatchSet
+          patchSetName: common-parameters-global
+        - fromFieldPath: status.eks.oidc
+          policy:
+            fromFieldPath: Required
+          toFieldPath: spec.forProvider.url
+          type: FromCompositeFieldPath
+        - fromFieldPath: status.atProvider.arn
+          policy:
+            fromFieldPath: Optional
+          toFieldPath: status.eks.oidcArn
+          type: ToCompositeFieldPath
