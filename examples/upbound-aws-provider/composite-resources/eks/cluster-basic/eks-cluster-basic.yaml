@@ -26,8 +26,8 @@ spec:
   providerConfigName: crossplane-provider-config
   version: "1.30"
   subnets:
-    - subnet-03f0f3bb1fa48e543
-    - subnet-0be9b7544b1da2de1
-    - subnet-016d2dee489d8ca48
+    - subnet-02b9760c8bd073456
+    - subnet-0c2c5a1cf23d4604e
+    - subnet-084a3cd4de4790113
   writeConnectionSecretToRef:
     name: crossplane-bootstrap-kubeconfig
