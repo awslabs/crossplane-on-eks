@@ -65,7 +65,7 @@ aws secretsmanager create-secret --name ecr-pullthroughcache/docker --descriptio
 ```
 Create an ecr creation teamplate trough the AWS Console. Creation templates is in Preview and there is no aws cli command or api to create the template.
 Navigate to ECR -> Private registry -> Settings -> Creation templates -> Create template ->
-Select 'Any prefix in your ECR registry and keep the rest of the defaults.
+Select "Any prefix in your ECR registry" and keep the defaults.
 ![ecr-createtemplate](../../docs/images/ecr-template.gif)
 
 Note: You can change the default `us-east-1` region in the following scripts before executing them.
