@@ -51,7 +51,7 @@ and executing terraform apply again.
 #### Step0: Clone the repo using the command below
 
 ```shell script
-git clone https://github.com/aws-samples/crossplane-aws-blueprints.git
+git clone https://github.com/awslabs/crossplane-on-eks.git
 ```
 
 > [!IMPORTANT]  
@@ -63,6 +63,11 @@ Replace `your-docker-username` and `your-docker-password` with your actual Docke
 ```
 aws secretsmanager create-secret --name ecr-pullthroughcache/docker --description "Docker credentials" --secret-string '{"username":"your-docker-username","accessToken":"your-docker-password"}'
 ```
+Create an ecr creation teamplate trough the AWS Console. Creation templates is in Preview and there is no aws cli command or api to create the template.
+Navigate to ECR -> Private registry -> Settings -> Creation templates -> Create template ->
+Select 'Any prefix in your ECR registry and keep the rest of the defaults.
+![ecr-createtemplate](../../docs/images/ecr-template.gif)
+
 Note: You can change the default `us-east-1` region in the following scripts before executing them.
 
 Create Crossplane private ECR repos, you can change the default `us-east-1` region in the script before executing: 

@@ -172,12 +172,37 @@ module "eks" {
       max_size       = 5
       desired_size   = 3
       subnet_ids     = module.vpc.private_subnets
+      iam_role_additional_policies = {
+        AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+        additional                         = aws_iam_policy.ecrpullthroughcache.arn
+      }
     }
   }
 
   tags = local.tags
 
   depends_on = [module.vpc]
+}
+
+resource "aws_iam_policy" "ecrpullthroughcache" {
+  name        = "ECRPullThroughCache"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "ecr:CreateRepository",
+          "ecr:BatchImportUpstreamImage",
+          "ecr:TagResource"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+    ]
+  })
+
+  tags = local.tags
 }
 
 #---------------------------------------------------------------
@@ -234,7 +259,7 @@ module "eks_blueprints_addons" {
     })]
   }
 
-  depends_on = [module.eks.cluster_addons, aws_ecr_repository.ecr_repo["quay/prometheus-operator/prometheus-config-reloader"] ] 
+  depends_on = [module.eks.cluster_addons] 
 }
 
 resource "time_sleep" "addons_wait_60_seconds" {
