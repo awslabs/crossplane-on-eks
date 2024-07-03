@@ -85,4 +85,4 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.pas
 ```
 
 ### Sync the ArgoCD app and watch the eks-app come up.
-![EKS App ArgoCD](../../diagrams/argocd-eks-app-sync.png)
+![EKS App ArgoCD](../../../diagrams/argocd-eks-app-sync.png)
