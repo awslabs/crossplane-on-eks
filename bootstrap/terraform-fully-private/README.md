@@ -63,7 +63,7 @@ Replace `your-docker-username` and `your-docker-password` with your actual Docke
 ```
 aws secretsmanager create-secret --name ecr-pullthroughcache/docker --description "Docker credentials" --secret-string '{"username":"your-docker-username","accessToken":"your-docker-password"}'
 ```
-Create an ecr creation teamplate trough the AWS Console. Creation templates is in Preview and there is no aws cli command or api to create the template.
+Create an ecr creation template trough the AWS Console. Creation templates is in Preview and there is no aws cli command or api to create the template.
 Navigate to ECR -> Private registry -> Settings -> Creation templates -> Create template ->
 Select "Any prefix in your ECR registry" and keep the defaults.
 ![ecr-createtemplate](../../docs/images/ecr-template.gif)
