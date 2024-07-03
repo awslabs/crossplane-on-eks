@@ -1,5 +1,6 @@
 # Example to deploy an EKS cluster with one nodegroup and extra features
 This example provides a Claim that deploys an EKS Cluster with some Addons and a single Nodegroup. First, it applies the Crossplane XRDs and Composition. Then it applies an ArgoCD app that contains the Crossplane Claim. The Crossplane creates the EKS Cluster, the Addons and Nodegroup resources.
+
 In addition to the EKS Cluster control-plane and the Nodegroup, the following resources, Addons and features are also deployed:
  - A KMS Key to be used on the cluster encryption for secrets.
  - VPC CNI Addon
@@ -16,7 +17,9 @@ As the Claim requires some input parameters from the target environment, to use 
 Then edit the `eks-cluster-with-extras.yaml` file, providing the following informations:
  - The Subnet IDs on `spec.subnets` to provision the EKS Cluster control-plane private endpoints and the Nodegroup hosts.
  - The ProviderConfig name on `spec.providerConfigName` that should be used to create the EKS Cluster.
+
 If using the `authenticationMode` as 'CONFIG_MAP' or 'API_AND_CONFIG_MAP', it's also possible to provide `iam.clusterAdminRoleArn` and/or `iam.clusterAdminUserArn`. Those role/user should already exist (or be created manually) and will be given cluster administrator rigths in the `aws-auth` ConfigMap.
+
 In addition to that, it's also required to edit the `argocd-eks-app.yaml` file, editing the following information:
  - `spec.source.repoURL` to point to your fork or private copy of the repository.
 

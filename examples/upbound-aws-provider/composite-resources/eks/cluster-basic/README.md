@@ -1,9 +1,11 @@
 # Example to deploy a basic EKS cluster with one nodegroup
 This example provides a Claim that deploys an EKS Cluster with no Addons and a single Nodegroup. First, it applies the Crossplane XRDs and Composition. Then it applies an ArgoCD app that contains the Crossplane Claim. The Crossplane creates the EKS Cluster and Nodegroup resources.
+
 As the Claim requires some input parameters from the target environment, to use it it's first required to fork the repository to your own account or copy it to a private repository.
-Then edit the eks-cluster-basic.yaml file, providing the following informations:
+Then edit the `eks-cluster-basic.yaml` file, providing the following informations:
  - The Subnet IDs on `spec.subnets` to provision the EKS Cluster control-plane private endpoints and the Nodegroup hosts.
  - The ProviderConfig name on `spec.providerConfigName` that should be used to create the EKS Cluster.
+
 In addition to that, it's also required to edit the `argocd-eks-app.yaml` file, editing the following information:
  - `spec.source.repoURL` to point to your fork or private copy of the repository.
 
