@@ -12,6 +12,6 @@ spec:
     path: examples/upbound-aws-provider/composite-resources/eks/cluster-basic/
     directory:
       include: "eks-cluster-basic.yaml"
-    repoURL: https://github.com/hflobao/crossplane-on-eks.git
-    targetRevision: feat/add_eks_with_upbound_provider
+    repoURL: https://github.com/awslabs/crossplane-on-eks.git
+    targetRevision: HEAD
   syncPolicy: {}
