@@ -1,4 +1,4 @@
-# Example to deploy a basic EKS cluster with one nodegroup and extra features
+# Example to deploy an EKS cluster with one nodegroup and extra features
 This example provides a Claim that deploys an EKS Cluster with some Addons and a single Nodegroup. First, it applies the Crossplane XRDs and Composition. Then it applies an ArgoCD app that contains the Crossplane Claim. The Crossplane creates the EKS Cluster, the Addons and Nodegroup resources.
 In addition to the EKS Cluster control-plane and the Nodegroup, the following resources, Addons and features are also deployed:
  - A KMS Key to be used on the cluster encryption for secrets.
