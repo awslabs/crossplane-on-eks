@@ -192,7 +192,9 @@ echo "$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.
 ## Clean up
 1. Delete resources created by Crossplane such as first Claims, then XRDs and Compositions.
 
-2. Delete the EKS cluster resources and ECR repositories with the following script:
+2. See the faq.md for more details on cleaning up the resources created.
+
+3. Delete the EKS cluster resources and ECR repositories with the following script:
 
 ```bash
 ./scripts/cleanup.sh
