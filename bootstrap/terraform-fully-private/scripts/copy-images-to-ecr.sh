@@ -6,7 +6,6 @@ ECR_URL="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
 PROGRAM=crane 
 
-# Define the list of packages
 PACKAGES=(
     "crossplane/crossplane:v1.16.0"
     "crossplane-contrib/provider-helm:v0.18.1"
@@ -30,7 +29,6 @@ PACKAGES=(
     "upbound/provider-family-aws:v1.6.0"
 )
 
-# Loop through each package and copy
 for pkg in "${PACKAGES[@]}"; do
     if [ "$PROGRAM" == "crane" ]; then
         crane copy xpkg.upbound.io/${pkg} ${ECR_URL}/${pkg}

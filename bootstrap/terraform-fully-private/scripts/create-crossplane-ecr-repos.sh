@@ -4,10 +4,8 @@ AWS_REGION='us-east-1'
 ACCOUNT_ID=$(aws sts get-caller-identity --output json | jq -r ".Account" | tr -d '[:space:]')
 ECR_URL="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
-# Login to ECR
 aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_URL
 
-# Define the list of repositories
 REPOSITORIES=(
     "crossplane-contrib/provider-helm"
     "crossplane-contrib/provider-kubernetes"
@@ -30,7 +28,6 @@ REPOSITORIES=(
     "upbound/provider-family-aws"
 )
 
-# Loop through each repository and create it
 for repo in "${REPOSITORIES[@]}"; do
     aws ecr create-repository --repository-name ${repo} --region ${AWS_REGION}
 done

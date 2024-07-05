@@ -192,14 +192,8 @@ echo "$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.
 ## Clean up
 1. Delete resources created by Crossplane such as first Claims, then XRDs and Compositions.
 
-1. Remove crossplane providers by running
-```bash
-terraform apply --var enable_upbound_aws_provider=false --var enable_aws_provider=false --var enable_kubernetes_provider=false --var enable_helm_provider=false
-```
+2. Delete the EKS cluster resources and ECR repositories with the following script:
 
-1. Run `kubectl get providers` to validate all providers were removed. If any left, remove using `kubectl delete providers <provider>`
-
-1. Delete the EKS cluster and it's resources with the following command
 ```bash
-./destroy.sh
+./scripts/cleanup.sh
 ```
