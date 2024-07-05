@@ -57,7 +57,7 @@ and executing terraform apply again.
 #### Step1: Clone the repo using the command below
 
 ```shell script
-git clone https://github.com/aws-samples/crossplane-aws-blueprints.git
+git clone https://github.com/awslabs/crossplane-on-eks.git
 ```
 
 > [!IMPORTANT]  

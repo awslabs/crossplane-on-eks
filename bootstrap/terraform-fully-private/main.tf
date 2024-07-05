@@ -46,9 +46,9 @@ locals {
   name   = var.name
   region = var.region
 
-  ecr_account_id  = var.ecr_account_id != "" ? var.ecr_account_id : data.aws_caller_identity.current.account_id
-  ecr_region      = var.ecr_region != "" ? var.ecr_region : local.region
-  
+  ecr_account_id = var.ecr_account_id != "" ? var.ecr_account_id : data.aws_caller_identity.current.account_id
+  ecr_region     = var.ecr_region != "" ? var.ecr_region : local.region
+
   cluster_version = var.cluster_version
   cluster_name    = local.name
 
@@ -65,7 +65,7 @@ locals {
       from_port   = 443
       to_port     = 443
       type        = "ingress"
-      cidr_blocks = ["10.0.0.0/8"]
+      cidr_blocks = ["10.0.0.0/8"] # This CIDR range is defined in RFC 1918 and is used for private network communication.
     },
     {
       description = "Fully private EKS Cluster - Allow port 443 to 443 from 172.16.0.0/12"
@@ -73,7 +73,7 @@ locals {
       from_port   = 443
       to_port     = 443
       type        = "ingress"
-      cidr_blocks = ["172.16.0.0/12"]
+      cidr_blocks = ["172.16.0.0/12"] # This CIDR range is defined in RFC 1918 and is used for private network communication.
     },
     {
       description = "Fully private EKS Cluster - Allow port 443 to 443 from 192.168.0.0/16"
@@ -81,7 +81,7 @@ locals {
       from_port   = 443
       to_port     = 443
       type        = "ingress"
-      cidr_blocks = ["192.168.0.0/16"]
+      cidr_blocks = ["192.168.0.0/16"] # This CIDR range is defined in RFC 1918 and is used for private network communication.
     }
   ]
 
@@ -185,7 +185,7 @@ module "eks" {
 }
 
 resource "aws_iam_policy" "ecrpullthroughcache" {
-  name        = "ECRPullThroughCache"
+  name = "ECRPullThroughCache"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -259,7 +259,7 @@ module "eks_blueprints_addons" {
     })]
   }
 
-  depends_on = [module.eks.cluster_addons] 
+  depends_on = [module.eks.cluster_addons]
 }
 
 resource "time_sleep" "addons_wait_60_seconds" {
@@ -423,10 +423,10 @@ resource "kubectl_manifest" "upjet_aws_runtime_config" {
 resource "kubectl_manifest" "upjet_provider_family_aws" {
   count = local.upjet_aws_provider.enable == true ? 1 : 0
   yaml_body = templatefile("${path.module}/providers/upjet-aws/provider-family-aws.yaml", {
-    version            = local.upjet_aws_provider.version
-    runtime-config     = local.upjet_aws_provider.runtime_config
-    ecr_account_id     = local.ecr_account_id
-    ecr_region         = local.ecr_region
+    version        = local.upjet_aws_provider.version
+    runtime-config = local.upjet_aws_provider.runtime_config
+    ecr_account_id = local.ecr_account_id
+    ecr_region     = local.ecr_region
   })
 
   depends_on = [kubectl_manifest.upjet_aws_runtime_config, module.crossplane]
@@ -443,11 +443,11 @@ resource "time_sleep" "upjet_family_wait_60_seconds" {
 resource "kubectl_manifest" "upjet_aws_provider" {
   for_each = local.upjet_aws_provider.enable ? toset(local.upjet_aws_provider.families) : toset([])
   yaml_body = templatefile("${path.module}/providers/upjet-aws/provider.yaml", {
-    family             = each.key
-    version            = local.upjet_aws_provider.version
-    runtime-config     = local.upjet_aws_provider.runtime_config
-    ecr_account_id     = local.ecr_account_id
-    ecr_region         = local.ecr_region
+    family         = each.key
+    version        = local.upjet_aws_provider.version
+    runtime-config = local.upjet_aws_provider.runtime_config
+    ecr_account_id = local.ecr_account_id
+    ecr_region     = local.ecr_region
   })
 
   depends_on = [time_sleep.upjet_family_wait_60_seconds, module.crossplane]
@@ -510,11 +510,11 @@ resource "kubectl_manifest" "aws_runtime_config" {
 resource "kubectl_manifest" "aws_provider" {
   count = local.aws_provider.enable == true ? 1 : 0
   yaml_body = templatefile("${path.module}/providers/aws/provider.yaml", {
-    aws-provider-name  = local.aws_provider.name
-    version            = local.aws_provider.version
-    runtime-config     = local.aws_provider.runtime_config
-    ecr_account_id     = local.ecr_account_id
-    ecr_region         = local.ecr_region
+    aws-provider-name = local.aws_provider.name
+    version           = local.aws_provider.version
+    runtime-config    = local.aws_provider.runtime_config
+    ecr_account_id    = local.ecr_account_id
+    ecr_region        = local.ecr_region
   })
 
   depends_on = [kubectl_manifest.aws_runtime_config, module.crossplane]

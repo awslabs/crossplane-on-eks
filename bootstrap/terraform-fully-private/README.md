@@ -83,7 +83,7 @@ Pull, tag, and push Crossplane images to private ECR:
 Initialize a working directory with configuration files
 
 ```shell script
-cd bootstrap/terraform/
+cd bootstrap/terraform-fully-private/
 terraform init
 ```
 
