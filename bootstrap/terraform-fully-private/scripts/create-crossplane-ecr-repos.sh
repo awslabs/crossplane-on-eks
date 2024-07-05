@@ -21,6 +21,7 @@ REPOSITORIES=(
     "upbound/provider-aws-kms"
     "upbound/provider-aws-lambda"
     "upbound/provider-aws-rds"
+    "upbound/provider-aws-cloudfront"
     "upbound/provider-aws-s3"
     "upbound/provider-aws-sns"
     "upbound/provider-aws-sqs"
