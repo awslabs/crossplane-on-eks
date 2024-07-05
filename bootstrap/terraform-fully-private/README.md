@@ -32,11 +32,18 @@ graph TD;
 ```
 
 ## How to Deploy
+
 ### Prerequisites:
-Ensure that you have installed the following tools in your Mac or Windows Laptop before start working with this module and run Terraform Plan and Apply
+Ensure that you have installed the following tools on your laptop before starting to work with this module and run Terraform Plan and Apply:
+
 1. [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
-1. [Kubectl](https://Kubernetes.io/docs/tasks/tools/)
-1. [Terraform >=v1.0.0](https://learn.hashicorp.com/tutorials/terraform/install-cli)
+2. [Kubectl](https://kubernetes.io/docs/tasks/tools/)
+3. [Terraform >= v1.0.0](https://learn.hashicorp.com/tutorials/terraform/install-cli)
+4. [jq](https://stedolan.github.io/jq/download/) - Command-line JSON processor
+5. [crane](https://github.com/google/go-containerregistry/blob/main/cmd/crane/README.md) - Tool for interacting with container registries
+
+These tools are necessary to execute the scripts and manage your crossplane images efficiently. Make sure you follow the installation instructions provided in the links for each tool.
+
 
 ### Troubleshooting
 1. If `terraform apply` errors out after creating the cluster when trying to apply the helm charts, try running the command:
@@ -58,21 +65,11 @@ git clone https://github.com/awslabs/crossplane-on-eks.git
 > The examples in this repository make use of one of the Crossplane AWS providers. 
 For that reason `upbound_aws_provider.enable` is set to `true` and `aws_provider.enable` is set to `false`. If you use the examples for `aws_provider`, adjust the terraform [main.tf](https://github.com/awslabs/crossplane-on-eks/blob/main/bootstrap/terraform/main.tf) in order install only the necessary CRDs to the Kubernetes cluster.
 
-#### Step 1: ECR Settings
-
-**Retrieve Docker Credentials:**
-   - Replace `your-docker-username` and `your-docker-password` with your actual Docker credentials. 
-   - To retrieve the Docker password for Amazon ECR, use the following command, making sure to replace `your-region` with the AWS region where your ECR repository is located:
-     ```bash
-     aws ecr get-login-password --region your-region
-     ```
-
-**Create an AWS Secrets Manager Secret:**
-   - Run the following command to create a secret in AWS Secrets Manager. This secret will store your Docker credentials for ECR access:
-     ```bash
-     aws secretsmanager create-secret --name ecr-pullthroughcache/docker --description "Docker credentials" --secret-string '{"username":"your-docker-username","accessToken":"your-docker-password"}'
-     ```
-
+#### Step 1: ECR settings
+Replace `your-docker-username` and `your-docker-password` with your actual Docker credentials and run the following command to create an aws secretmanager secret:
+```
+aws secretsmanager create-secret --name ecr-pullthroughcache/docker --description "Docker credentials" --secret-string '{"username":"your-docker-username","accessToken":"your-docker-password"}'
+```
 Create an ecr creation template trough the AWS Console. Creation templates is in Preview and there is no aws cli command or api to create the template.
 Navigate to ECR -> Private registry -> Settings -> Creation templates -> Create template ->
 Select "Any prefix in your ECR registry" and keep the defaults.
@@ -81,15 +78,19 @@ Select "Any prefix in your ECR registry" and keep the defaults.
 
 Note: You can change the default `us-east-1` region in the following scripts before executing them.
 
-Create Crossplane private ECR repos, you can change the default `us-east-1` region in the script before executing: 
+to Create Crossplane private ECR repos, run the following script:
 
 ```
 ./scripts/create-crossplane-ecr-repos.sh
 ```
 
-Pull, tag, and push Crossplane images to private ECR:
-```
-./scripts/push-images-to-ecr.sh
+> [!IMPORTANT]  
+> There is currently a bug when using `docker pull`, `docker tag`, and `docker push` where the annotated layer information may be dropped. To avoid this issue, we need to use `crane` instead. For more details, you can refer to this issue: [crossplane/crossplane#5785](https://github.com/crossplane/crossplane/issues/5785).
+
+To copy Crossplane images to a private ECR, run the following script:
+
+```shell script
+./scripts/copy-images-to-ecr.sh
 ```
 
 #### Step 2: Run Terraform INIT
@@ -101,7 +102,22 @@ terraform init
 ```
 
 #### Step 3: Run Terraform PLAN
-Verify the resources created by this execution
+Before running the Terraform plan, ensure you adjust the variables.tf file to include the following required variables:
+
+```
+variable "ecr_account_id" {
+  type        = string
+  description = "ECR repository AWS Account ID"
+  default     = ""
+}
+
+variable "ecr_region" {
+  type        = string
+  description = "ECR repository AWS Region"
+  default     = ""
+}
+```
+Make sure to replace the default values with your specific AWS Account ID and Region.
 
 ```shell script
 export TF_VAR_region=<ENTER YOUR REGION>   # Select your own region
@@ -112,14 +128,7 @@ terraform plan
 to create resources
 
 ```shell script
-terraform apply
-```
-
-Enter `yes` to apply
-
-While terraform is appling, after the ECR repositories are available, run the following script:
-```
-./scripts/pull-through-images.sh
+terraform apply --auto-approve
 ```
 
 ### Configure `kubectl` and test cluster
