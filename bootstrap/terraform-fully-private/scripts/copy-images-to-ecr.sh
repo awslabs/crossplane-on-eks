@@ -29,6 +29,8 @@ PACKAGES=(
     "upbound/provider-family-aws:v1.6.0"
 )
 
+aws ecr get-login-password --region $AWS_REGION | crane auth login --username AWS --password-stdin $ECR_URL
+
 for pkg in "${PACKAGES[@]}"; do
     if [ "$PROGRAM" == "crane" ]; then
         crane copy xpkg.upbound.io/${pkg} ${ECR_URL}/${pkg}
