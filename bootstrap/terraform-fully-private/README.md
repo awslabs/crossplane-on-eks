@@ -48,7 +48,7 @@ and executing terraform apply again.
 1. Make sure you have upgraded to the latest version of AWS CLI. Make sure your AWS credentials are properly configured as well.
 
 ### Deployment Steps
-#### Step0: Clone the repo using the command below
+#### Step 0: Clone the repo using the command below
 
 ```shell script
 git clone https://github.com/awslabs/crossplane-on-eks.git
@@ -58,28 +58,41 @@ git clone https://github.com/awslabs/crossplane-on-eks.git
 > The examples in this repository make use of one of the Crossplane AWS providers. 
 For that reason `upbound_aws_provider.enable` is set to `true` and `aws_provider.enable` is set to `false`. If you use the examples for `aws_provider`, adjust the terraform [main.tf](https://github.com/awslabs/crossplane-on-eks/blob/main/bootstrap/terraform/main.tf) in order install only the necessary CRDs to the Kubernetes cluster.
 
-#### Step1: ECR settings
-Replace `your-docker-username` and `your-docker-password` with your actual Docker credentials and run the following command to create an aws secretmanager secret:
-```
-aws secretsmanager create-secret --name ecr-pullthroughcache/docker --description "Docker credentials" --secret-string '{"username":"your-docker-username","accessToken":"your-docker-password"}'
-```
+#### Step 1: ECR Settings
+
+**Retrieve Docker Credentials:**
+   - Replace `your-docker-username` and `your-docker-password` with your actual Docker credentials. 
+   - To retrieve the Docker password for Amazon ECR, use the following command, making sure to replace `your-region` with the AWS region where your ECR repository is located:
+     ```bash
+     aws ecr get-login-password --region your-region
+     ```
+
+**Create an AWS Secrets Manager Secret:**
+   - Run the following command to create a secret in AWS Secrets Manager. This secret will store your Docker credentials for ECR access:
+     ```bash
+     aws secretsmanager create-secret --name ecr-pullthroughcache/docker --description "Docker credentials" --secret-string '{"username":"your-docker-username","accessToken":"your-docker-password"}'
+     ```
+
 Create an ecr creation template trough the AWS Console. Creation templates is in Preview and there is no aws cli command or api to create the template.
 Navigate to ECR -> Private registry -> Settings -> Creation templates -> Create template ->
 Select "Any prefix in your ECR registry" and keep the defaults.
+
 ![ecr-createtemplate](../../docs/images/ecr-template.gif)
 
 Note: You can change the default `us-east-1` region in the following scripts before executing them.
 
 Create Crossplane private ECR repos, you can change the default `us-east-1` region in the script before executing: 
+
 ```
 ./scripts/create-crossplane-ecr-repos.sh
 ```
+
 Pull, tag, and push Crossplane images to private ECR:
 ```
 ./scripts/push-images-to-ecr.sh
 ```
 
-#### Step2: Run Terraform INIT
+#### Step 2: Run Terraform INIT
 Initialize a working directory with configuration files
 
 ```shell script
@@ -87,7 +100,7 @@ cd bootstrap/terraform-fully-private/
 terraform init
 ```
 
-#### Step3: Run Terraform PLAN
+#### Step 3: Run Terraform PLAN
 Verify the resources created by this execution
 
 ```shell script
@@ -95,7 +108,7 @@ export TF_VAR_region=<ENTER YOUR REGION>   # Select your own region
 terraform plan
 ```
 
-#### Step4: Finally, Terraform APPLY
+#### Step 4: Finally, Terraform APPLY
 to create resources
 
 ```shell script
@@ -113,21 +126,21 @@ While terraform is appling, after the ECR repositories are available, run the fo
 EKS Cluster details can be extracted from terraform output or from AWS Console to get the name of cluster.
 This following command used to update the `kubeconfig` in your local machine where you run kubectl commands to interact with your EKS Cluster.
 
-#### Step5: Run `update-kubeconfig` command
+#### Step 5: Run `update-kubeconfig` command
 
 `~/.kube/config` file gets updated with cluster details and certificate from the below command
 ```shell script
 aws eks --region <enter-your-region> update-kubeconfig --name <cluster-name>
 ```
-#### Step6: List all the worker nodes by running the command below
+#### Step 6: List all the worker nodes by running the command below
 ```shell script
 kubectl get nodes
 ```
-#### Step7: Verify the pods running in `crossplane-system` namespace
+#### Step 7: Verify the pods running in `crossplane-system` namespace
 ```shell script
 kubectl get pods -n crossplane-system
 ```
-#### Step8: Verify the names provider and provider configs
+#### Step 8: Verify the names provider and provider configs
 Run the following command to get the list of providers:
 ```shell script
 kubectl get providers
@@ -156,7 +169,7 @@ NAME                                                                 AGE
 providerconfig.kubernetes.crossplane.io/kubernetes-provider-config   36m
 ```
 
-#### Step9: Access the ArgoCD UI
+#### Step 9: Access the ArgoCD UI
 Get the load balancer url:
 ```
 kubectl -n argocd get service argo-cd-argocd-server -o jsonpath="{.status.loadBalancer.ingress[*].hostname}{'\n'}"
