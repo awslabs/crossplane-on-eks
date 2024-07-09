@@ -9,6 +9,9 @@ This example deploys the following components
 - Kubernetes Provider for Crossplane
 - Helm Provider for Crossplane
 
+> [!IMPORTANT]  
+> Some AWS services, such as IAM and WAFv2, do not have VPC endpoints. To ensure that these services work correctly with Crossplane providers, you need to add a proxy. See an example [here](https://github.com/awslabs/crossplane-on-eks/blob/main/bootstrap/terraform-fully-private/providers/upjet-aws/runtime-config.yaml).
+
 ## Crossplane Deployment Design
 
 ```mermaid

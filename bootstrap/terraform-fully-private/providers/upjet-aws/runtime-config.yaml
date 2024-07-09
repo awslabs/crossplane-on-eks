@@ -14,7 +14,21 @@ spec:
           containers:
             - name: package-runtime
               args:
-              - --debug
+                - --debug
+              # Uncomment the following lines to configure a proxy for Crossplane providers
+              # env:
+              #   - name: http_proxy
+              #     value: "http://proxy-server:8080"
+              #   - name: https_proxy
+              #     value: "http://proxy-server:8080"
+              #   - name: HTTP_PROXY
+              #     value: "http://proxy-server:8080"
+              #   - name: HTTPS_PROXY
+              #     value: "http://proxy-server:8080"
+              #   - name: no_proxy
+              #     value: "10.0.0.0/8, .svc, .cluster.local"
+              #   - name: NO_PROXY
+              #     value: "10.0.0.0/8, .svc, .cluster.local"
           securityContext:
             fsGroup: 2000
   serviceAccountTemplate:
