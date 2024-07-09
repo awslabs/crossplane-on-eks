@@ -8,7 +8,6 @@ spec:
       names:
         kind: AwsRequiredTags
       validation:
-        # Schema for the `parameters` field
         openAPIV3Schema:
           type: object
           properties:
@@ -20,19 +19,11 @@ spec:
     - target: admission.k8s.gatekeeper.sh
       rego: |
         package awsrequiredtags
-        import future.keywords.every
         
         violation[{"msg": msg}] {
-          endswith(input.review.kind.group, "aws.crossplane.io")
-          not startswith(input.review.kind.kind, "ProviderConfig")
-          not input.review.object.spec.forProvider.tags
-          msg := sprintf("Attempting to provision a resource without tags, the following tags are required '%v'", [input.parameters.tags])
-        }
-
-        violation[{"msg": msg}] {
-          some requested_tag in input.parameters.tags
-          every i in input.review.object.spec.forProvider.tags {
-              requested_tag != i.key
-          }
-          msg := sprintf("Attempting to provision a resource with the following tags '%v', one or more of the required tags '%v' is missing", [input.review.object.spec.forProvider.tags, input.parameters.tags])
+          input.review.kind.group == "dynamodb.aws.upbound.io"
+          some i
+          required_tag := input.parameters.tags[i]
+          not input.review.object.spec.forProvider.tags[required_tag]
+          msg := sprintf("Attempting to provision a resource without the required tag '%v'", [required_tag])
         }

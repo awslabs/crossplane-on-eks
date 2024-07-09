@@ -102,7 +102,7 @@ spec:
         spec:
           forProvider:
             applyImmediately: true
-            autogeneratePassword: true
+            autogeneratePassword: false
             backupRetentionPeriod: 3
             dbSubnetGroupNameSelector:
               matchControllerRef: true
@@ -111,10 +111,10 @@ spec:
             masterUsername: root
             masterUserPasswordSecretRef:
               key: password
-              name: to-be-patched
+              name: postgres-root-user-password
               namespace: crossplane-system
             engine: postgres
-            engineVersion: "14.2"
+            engineVersion: "14.11"
             skipFinalSnapshot: true
             storageEncrypted: true
             storageType: gp2
@@ -133,12 +133,6 @@ spec:
             - type: string
               string:
                 fmt: "%s-postgresql"
-        - fromFieldPath: "metadata.uid"
-          toFieldPath: "spec.forProvider.masterUserPasswordSecretRef.name"
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-user"
         - fromFieldPath: "spec.storageGB"
           toFieldPath: "spec.forProvider.allocatedStorage"
         - fromFieldPath: "spec.engineVersion"

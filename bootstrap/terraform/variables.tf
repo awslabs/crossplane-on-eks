@@ -46,5 +46,5 @@ variable "enable_kubernetes_provider" {
 variable "enable_helm_provider" {
   type        = bool
   description = "Installs the helm provider"
-  default     = false
+  default     = true
 }
