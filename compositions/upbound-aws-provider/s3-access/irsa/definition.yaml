@@ -52,7 +52,7 @@ spec:
                       type: object
                   required:
                   - providerConfigName
-                  - region
+                  # - region
                   type: object
                 serviceAccountName:
                   type: string

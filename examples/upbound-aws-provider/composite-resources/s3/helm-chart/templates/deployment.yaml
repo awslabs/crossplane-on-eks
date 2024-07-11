@@ -1,6 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  rollme: {{ randAlphaNum 5 | quote }}
   name: {{ include "s3-access-app.name" . }}
   labels:
     app.kubernetes.io/name: {{ include "s3-access-app.name" . }}
@@ -12,6 +13,8 @@ spec:
       app.kubernetes.io/name: {{ include "s3-access-app.name" . }}
   template:
     metadata:
+      annotations:
+        rollme: {{ randAlphaNum 5 | quote }}
       labels:
         app.kubernetes.io/name: {{ include "s3-access-app.name" . }}
     spec:
