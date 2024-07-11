@@ -11,7 +11,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: examples/upbound-aws-provider/composite-resources/s3-access/helm-chart/
+    path: examples/upbound-aws-provider/composite-resources/s3/helm-chart/
     repoURL: https://github.com/satishbpatil/crossplane-on-eks.git
     targetRevision: podidentity
     helm:
