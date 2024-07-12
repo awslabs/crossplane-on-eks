@@ -2,25 +2,17 @@ apiVersion: s3.aws.upbound.io/v1beta1
 kind: Bucket
 metadata:
   annotations:
-    crossplane.io/external-create-pending: "2023-06-15T21:17:04Z"
-    crossplane.io/external-create-succeeded: "2023-06-15T21:17:05Z"
-    crossplane.io/external-name: my-bucket-123-$ACCOUNT_ID
+    upbound.io/external-create-pending: "2023-06-15T21:17:04Z"
+    upbound.io/external-create-succeeded: "2023-06-15T21:17:05Z"
+    upbound.io/external-name: my-bucket-123-$ACCOUNT_ID
   labels:
-    crossplane.io/claim-name: standard-object-storage
-    crossplane.io/claim-namespace: default
-    crossplane.io/composite: standard-object-storage-xwghv
+    upbound.io/claim-name: standard-object-storage
+    upbound.io/claim-namespace: default
+    upbound.io/composite: standard-object-storage-xwghv
   name: standard-object-storage-new
 spec:
   deletionPolicy: Delete
   forProvider:
-    locationConstraint: us-west-2
-    objectOwnership: BucketOwnerEnforced
-    paymentConfiguration:
-      payer: BucketOwner
-    publicAccessBlockConfiguration:
-      blockPublicAcls: true
-      blockPublicPolicy: true
-      ignorePublicAcls: true
-      restrictPublicBuckets: true
+    region: us-west-2
   providerConfigRef:
     name: aws-provider-config
