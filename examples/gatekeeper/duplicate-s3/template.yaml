@@ -20,8 +20,8 @@ spec:
         #}
 
         sameClaim(obj, review) {
-            obj.metadata.labels["crossplane.io/claim-namespace"] == review.object.metadata.namespace
-            obj.metadata.labels["crossplane.io/claim-name"] == review.object.metadata.name
+            obj.metadata.labels["upbound.io/claim-namespace"] == review.object.metadata.namespace
+            obj.metadata.labels["upbound.io/claim-name"] == review.object.metadata.name
         }
 
         sameBucketMR(obj, review) {
@@ -32,12 +32,12 @@ spec:
         violation[{"msg": msg}] {
             review := input.review
             review.object.kind == "ObjectStorage"
-            obj := data.inventory.cluster["s3.aws.crossplane.io/v1beta1"].Bucket[_]
+            obj := data.inventory.cluster["s3.aws.upbound.io/v1beta1"].Bucket[_]
             not sameClaim(obj, review)
             claimName := review.object.metadata.name
             claimNameSpace := review.object.metadata.namespace
             bucket := review.object.spec.resourceConfig.name
-            bucket == obj.metadata.annotations["crossplane.io/external-name"]
+            bucket == obj.metadata.annotations["upbound.io/external-name"]
 
             msg := sprintf(
               "Claim %v in namespace %v requesting Bucket %v is already managed by Bucket MR %v",
@@ -48,10 +48,10 @@ spec:
         violation[{"msg": msg}] {
             review := input.review
             review.object.kind == "Bucket"
-            obj := data.inventory.cluster["s3.aws.crossplane.io/v1beta1"].Bucket[_]
+            obj := data.inventory.cluster["s3.aws.upbound.io/v1beta1"].Bucket[_]
             not sameBucketMR(obj, review)
-            newBucket := review.object.metadata.annotations["crossplane.io/external-name"]
-            existingBucket := obj.metadata.annotations["crossplane.io/external-name"]
+            newBucket := review.object.metadata.annotations["upbound.io/external-name"]
+            existingBucket := obj.metadata.annotations["upbound.io/external-name"]
             newBucket == existingBucket
 
             msg := sprintf(

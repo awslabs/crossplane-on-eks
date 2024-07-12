@@ -4,6 +4,6 @@ metadata:
   name: s3-syncset
 spec:
   gvks:
-    - group: "s3.aws.crossplane.io"
+    - group: "s3.aws.upbound.io"
       version: "v1beta1"
       kind: "Bucket"
