@@ -99,9 +99,9 @@ Kubernetes service accounts act as identities for processes running inside pods.
 <!--[GitOps](https://www.cncf.io/blog/2021/09/28/gitops-101-whats-it-all-about/) is a way of managing infrastructure and applications using Git as the single source of truth. GitOps watches this Git repository and automatically applies any changes to make the actual state match the desired state in Git-->
 <!--::::-->
 
+<details>
 
-::::expand{header="IRSA example"}
-![S3 IRSA App Diagram](../../diagrams/s3-irsa-app.png)
+<summary>IRSA example</summary>
 
 
 ### Deploy ArgoCD IRSA application
@@ -120,9 +120,12 @@ Use the credentials retrieved previously to log in to the ArgoCD UI.
 
 ![S3 IRSA App Logs](../../diagrams/irsa-irsa-access-success.gif)
 
-::::
+</details>
 
-::::expand{header="Pod Identity example"}
+<details>
+
+<summary>Pod Identity example</summary>
+
 ![S3 IRSA App Diagram](../../diagrams/s3-access-podidentity.png)
 
 
@@ -142,4 +145,4 @@ Use the credentials retrieved previously to log in to the ArgoCD UI.
 
 ![S3 Pod Identity App Logs](../../diagrams/s3-access-podidentity.gif)
 
-::::
+</details>
