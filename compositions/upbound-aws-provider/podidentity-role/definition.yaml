@@ -41,6 +41,8 @@ spec:
                   properties:
                     providerConfigName:
                       type: string
+                    region:
+                      type: string
                   required:
                   - providerConfigName
                   type: object

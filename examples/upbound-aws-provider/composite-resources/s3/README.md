@@ -1,13 +1,16 @@
-# Example to deploy s3-irsa application
+# Example to deploy s3 access application
+
+The example demonstrates how Crossplane can be used to link Kubernetes and AWS IAM to enable secure access to S3 from within pods running in an EKS cluster.
+
 This example deploys the archtecture depicted on the diagram. First, it applies the Crossplane XRDs and Composition. Then it applies an ArgoCD helm chart that contains the Crossplane Claim and a deployment. The Crossplane creates the S3 bucket and IRSA resources, then the deployment contains an aws-cli pod that upload a file to the bucket and list the content of the bucket to validate the IRSA connection works.
 
-![S3 IRSA App Diagram](../../diagrams/s3-irsa-app.png)
 
 ## Pre-requisites
  - [Upbound AWS Provider Crossplane Blueprint Examples](../../README.md)
 
 
-### Deploy XRDs and Compositions
+### Deploy Composite Resource Definations(XRDs) and Compositions
+Navigate to /crossplane-on-eks/examples/upbound-aws-provider/composite-resources/s3
 ```shell
 kubectl apply -k .
 ```
@@ -17,13 +20,15 @@ Verify the XRDs
 kubectl get xrds
 ```
 
-Expected output
+Displays installed XRDs
 ```
 NAME                                   ESTABLISHED   OFFERED   AGE
-iampolicies.awsblueprints.io           True                    5m
-xirsas.awsblueprints.io                True          True      5m
-xobjectstorages.awsblueprints.io       True          True      5m
-xs3irsas.awsblueprints.io              True          True      5m
+iampolicies.awsblueprints.io         True                    18h
+xirsas.awsblueprints.io              True          True      18h
+xobjectstorages.awsblueprints.io     True          True      18h
+xpodidentityroles.awsblueprints.io   True          True      18h
+xs3irsas.awsblueprints.io            True          True      18h
+xs3podidentities.awsblueprints.io    True          True      18h
 ```
 
 Verify the Compositions
@@ -31,37 +36,97 @@ Verify the Compositions
 kubectl get compositions
 ```
 
-Expected output. Note: the output might contain more compositions but these are the ones uses by the claim in the next step
+Displays installed compositions
 ```
-NAME                                                  XR-KIND              XR-APIVERSION               AGE
-irsa.awsblueprints.io                                 XIRSA                awsblueprints.io/v1alpha1   5m
-s3bucket.awsblueprints.io                             XObjectStorage       awsblueprints.io/v1alpha1   5m
-write-s3.iampolicy.awsblueprints.io                   IAMPolicy            awsblueprints.io/v1alpha1   5m
-xs3irsa.awsblueprints.io                              XS3IRSA              awsblueprints.io/v1alpha1   5m
-```
-
-### Validate `EnvironmentConfig`
-
-Crossplane `environmentconfig` named `cluster` is created by the bootstrap terraform code. Validate it exists and contains proper values
-```
-kubectl get environmentconfig cluster -o yaml
-```
-Expected output
-```
-apiVersion: apiextensions.crossplane.io/v1alpha1
-kind: EnvironmentConfig
-metadata:
-  name: cluster
-data:
-  awsAccountID: <account_id>
-  eksOIDC: <oidc>
+NAME                                                  XR-KIND            XR-APIVERSION               AGE
+irsa.awsblueprints.io                                 XIRSA              awsblueprints.io/v1alpha1   18h
+lambda-invoke.iampolicy.awsblueprints.io              IAMPolicy          awsblueprints.io/v1alpha1   18h
+read-kms.iampolicy.awsblueprints.io                   IAMPolicy          awsblueprints.io/v1alpha1   18h
+read-s3.iampolicy.awsblueprints.io                    IAMPolicy          awsblueprints.io/v1alpha1   18h
+read-sqs.iampolicy.awsblueprints.io                   IAMPolicy          awsblueprints.io/v1alpha1   18h
+.
+.
+.
 ```
 
-### Apply ArgoCD application
-The applications contains the claim and the deployment.
+<!--### Validate `EnvironmentConfig`-->
+
+<!--Crossplane `environmentconfig` named `cluster` is created by the bootstrap terraform code. Validate it exists and contains proper values-->
+<!--```-->
+<!--kubectl get environmentconfig cluster -o yaml-->
+<!--```-->
+<!--Expected output-->
+<!--```-->
+<!--apiVersion: apiextensions.crossplane.io/v1alpha1-->
+<!--kind: EnvironmentConfig-->
+<!--metadata:-->
+<!--  name: cluster-->
+<!--data:-->
+<!--  awsAccountID: <account_id>-->
+<!--  eksOIDC: <oidc>-->
+<!--```-->
+
+
+The example uses ArgoCD to deploy the pod and crossplane resources. ArgoCD is already installed by Terraform.
+
+ArgoCD URL:
 ```
-kubectl apply -f argocd-s3-irsa-app.yaml
+kubectl -n argocd get svc argo-cd-argocd-server -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
 ```
+The username is `admin` and the password can be obtained by executing:
+```
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+```
+
+Kubernetes service accounts act as identities for processes running inside pods. To enable a pod to access AWS services, its service account can be mapped to an IAM role that has the necessary permissions. There are two options for mapping the service account to an IAM role in order to grant AWS access: Amazon EKS Pod Identity and IRSA(Iam Roles for Service Accounts)
+
+
+::::expand{header="IRSA example"}
+![S3 IRSA App Diagram](../../diagrams/s3-irsa-app.png)
+
+
+### Deploy ArgoCD IRSA application
+
+The ArgoCD application deploys a Kubernetes deployment to create a pod, along with Crossplane claims to provision an S3 bucket, service account, and IAM role with S3 write access using IRSA.
+```
+kubectl apply -f argocd-s3-irsa.yaml
+```
+
+### Log in to the ArgoCD UI.
+
+Use the credentials retrieved previously to log in to the ArgoCD UI.
+
+### Validate  pod access to bucket
+ It will take few minutes to create the pod. You can review pod logs to verify access to the bucket.
+
+![S3 IRSA App Logs](../../diagrams/irsa-irsa-access-success.gif)
+
+::::
+
+::::expand{header="Pod Identity example"}
+![S3 IRSA App Diagram](../../diagrams/s3-access-podidentity.png)
+
+
+### Deploy ArgoCD Pod Identity application
+
+The ArgoCD application deploys a Kubernetes deployment to create a pod, along with Crossplane claims to provision an S3 bucket, service account, and IAM role with S3 write access using IRSA.
+```
+kubectl apply -f argocd-s3-podidentity.yaml
+```
+
+### Log in to the ArgoCD UI.
+
+Use the credentials retrieved previously to log in to the ArgoCD UI.
+
+### Validate  pod access to bucket
+ It will take few minutes to create the pod. You can review pod logs to verify access to the bucket.
+
+![S3 Pod Identity App Logs](../../diagrams/s3-access-podidentity.gif)
+
+::::
+
+
+
 
 ### Navigate to the ArgoCD UI
 Find the ArgoCD URL:

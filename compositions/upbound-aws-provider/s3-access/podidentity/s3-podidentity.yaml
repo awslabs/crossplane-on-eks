@@ -74,13 +74,13 @@ spec:
       base:
         apiVersion: awsblueprints.io/v1alpha1
         kind: xPodIdentityRole
-        spec:
+        # spec:
       patches:
-        - type: PatchSet
-          patchSetName: common-fields-composition        
         - type: ToCompositeFieldPath
           fromFieldPath: status.roleArn
           toFieldPath: status.roleArn
+        - type: PatchSet
+          patchSetName: common-fields-composition                 
         - type: CombineFromComposite
           toFieldPath: spec.inlinePolicy
           combine:
