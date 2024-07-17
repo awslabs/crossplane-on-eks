@@ -87,6 +87,7 @@ Kubernetes service accounts act as identities for processes running inside pods.
 
 <summary>IRSA example</summary>
 
+![S3 Pod IRSA App Diagram](../../diagrams/s3-irsa-app.png)
 
 ### Deploy ArgoCD IRSA application
 
@@ -110,7 +111,7 @@ Use the credentials retrieved previously to log in to the ArgoCD UI.
 
 <summary>Pod Identity example</summary>
 
-![S3 IRSA App Diagram](../../diagrams/s3-access-podidentity.png)
+![S3 Pod Identity App Diagram](../../diagrams/s3-access-podidentity.png)
 
 
 ### Deploy ArgoCD Pod Identity application
