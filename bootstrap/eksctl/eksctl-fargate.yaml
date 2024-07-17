@@ -16,3 +16,5 @@ fargateProfiles:
       - namespace: crossplane-system
 iam:
   withOIDC: true
+addons:
+  - name: eks-pod-identity-agent # required for `iam.podIdentityAssociations`
