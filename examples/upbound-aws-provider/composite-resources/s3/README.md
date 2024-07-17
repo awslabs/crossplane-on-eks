@@ -13,7 +13,7 @@ Navigate to /crossplane-on-eks/examples/upbound-aws-provider/composite-resources
 kubectl apply -k .
 ```
 
-Verify the XRDs
+Verify  XRDs
 ```shell
 kubectl get xrds
 ```
@@ -29,7 +29,7 @@ xs3irsas.awsblueprints.io            True          True      18h
 xs3podidentities.awsblueprints.io    True          True      18h
 ```
 
-Verify the Compositions
+Verify Compositions
 ```shell
 kubectl get compositions
 ```
@@ -71,12 +71,17 @@ ArgoCD URL:
 ```
 kubectl -n argocd get svc argo-cd-argocd-server -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
 ```
-The username is `admin` and the password can be obtained by executing:
+Use "admin" as the username. Execute the given command to get the password:
 ```
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 ```
 
 Kubernetes service accounts act as identities for processes running inside pods. To enable a pod to access AWS services, its service account can be mapped to an IAM role that has the necessary permissions. There are two options for mapping the service account to an IAM role in order to grant AWS access: Amazon EKS Pod Identity and IRSA(Iam Roles for Service Accounts)
+
+
+<!--::::expand{header="What is GitOps?"}-->
+<!--[GitOps](https://www.cncf.io/blog/2021/09/28/gitops-101-whats-it-all-about/) is a way of managing infrastructure and applications using Git as the single source of truth. GitOps watches this Git repository and automatically applies any changes to make the actual state match the desired state in Git-->
+<!--::::-->
 
 
 ::::expand{header="IRSA example"}
@@ -122,22 +127,3 @@ Use the credentials retrieved previously to log in to the ArgoCD UI.
 ![S3 Pod Identity App Logs](../../diagrams/s3-access-podidentity.gif)
 
 ::::
-
-
-
-
-### Navigate to the ArgoCD UI
-Find the ArgoCD URL:
-```
-kubectl -n argocd get svc argo-cd-argocd-server -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
-```
-The username is `admin` and the password can be obtained by executing:
-```
-kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
-```
-
-### Sync the ArgoCD app and watch the s3-irsa-app come up.
-![S3 IRSA App ArgoCD](../../diagrams/argo-cd-s3-irsa-sync.gif)
-
-### Check the pod logs to validate the application has access to the bucket
-![S3 IRSA App Logs](../../diagrams/s3-irsa-app-check-pod-logs.gif)
