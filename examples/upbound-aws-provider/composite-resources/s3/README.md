@@ -1,8 +1,6 @@
 # Example to deploy s3 access application
 
-The example demonstrates how Crossplane can be used to link Kubernetes and AWS IAM to enable secure access to S3 from within pods running in an EKS cluster.
-
-This example deploys the archtecture depicted on the diagram. First, it applies the Crossplane XRDs and Composition. Then it applies an ArgoCD helm chart that contains the Crossplane Claim and a deployment. The Crossplane creates the S3 bucket and IRSA resources, then the deployment contains an aws-cli pod that upload a file to the bucket and list the content of the bucket to validate the IRSA connection works.
+The example shows how to set up Crossplane to allow secure access to S3 from pods in an EKS cluster
 
 
 ## Pre-requisites
