@@ -1,21 +1,5 @@
 # Example to deploy s3 access application
 
-<details>
-
-<summary>Tips for collapsed sections</summary>
-
-### You can add a header
-
-You can add text within a collapsed section. 
-
-You can add an image or a code block, too.
-
-```ruby
-   puts "Hello World"
-```
-
-</details>
-
 The example shows how to set up Crossplane to allow secure access to S3 from pods in an EKS cluster
 
 
