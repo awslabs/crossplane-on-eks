@@ -26,7 +26,7 @@ graph TD;
     EKS==>ManagedNodeGroup;
     ManagedNodeGroup-->|enable_crossplane=true|id2([Crossplane]);
     subgraph Kubernetes Add-ons
-    id2([Crossplane])-.->|crossplane_aws_provider.enable=true|id3([AWS-Provider]);
+    id2([Crossplane])-.->|enable_aws_provider=false|id3([AWS-Provider]);
     id2([Crossplane])-.->|crossplane_upbound_aws_provider.enable=true|id4([Upbound-AWS-Provider]);
     id2([Crossplane])-.->|crossplane_kubernetes_provider.enable=true|id5([Kubernetes-Provider]);
     id2([Crossplane])-.->|crossplane_helm_provider.enable=true|id6([Helm-Provider]);
