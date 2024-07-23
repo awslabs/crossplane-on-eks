@@ -6,7 +6,7 @@ metadata:
   name: provider-upjet-aws-${family}
 spec:
   package: ${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com/upbound/provider-aws-${family}:${version}
-  # Dependency resolution is skipped for small providers.
+  # Dependency resolution is skipped for family providers.
   # For more details, see the workaround description: https://github.com/crossplane/crossplane/issues/4299#issuecomment-1691379712
   skipDependencyResolution: true
   runtimeConfigRef:
