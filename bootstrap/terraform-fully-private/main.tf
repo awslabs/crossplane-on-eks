@@ -46,9 +46,6 @@ locals {
   name   = var.name
   region = var.region
 
-  ecr_account_id = var.ecr_account_id != "" ? var.ecr_account_id : data.aws_caller_identity.current.account_id
-  ecr_region     = var.ecr_region != "" ? var.ecr_region : local.region
-
   cluster_version = var.cluster_version
   cluster_name    = local.name
 

@@ -69,19 +69,9 @@ git clone https://github.com/awslabs/crossplane-on-eks.git
 For that reason `upbound_aws_provider.enable` is set to `true` and `aws_provider.enable` is set to `false`. If you use the examples for `aws_provider`, adjust the terraform [main.tf](https://github.com/awslabs/crossplane-on-eks/blob/main/bootstrap/terraform/main.tf) in order install only the necessary CRDs to the Kubernetes cluster.
 
 #### Step 1: ECR settings
-Replace `your-docker-username` and `your-docker-password` with your actual Docker credentials and run the following command to create an aws secretmanager secret:
-```
-aws secretsmanager create-secret --name ecr-pullthroughcache/docker --description "Docker credentials" --secret-string '{"username":"your-docker-username","accessToken":"your-docker-password"}'
-```
-Create an ecr creation template trough the AWS Console. Creation templates is in Preview and there is no aws cli command or api to create the template.
-Navigate to ECR -> Private registry -> Settings -> Creation templates -> Create template ->
-Select "Any prefix in your ECR registry" and keep the defaults.
-
-![ecr-createtemplate](../../docs/images/ecr-template.gif)
-
 Note: You can change the default `us-east-1` region in the following scripts before executing them.
 
-to Create Crossplane private ECR repos, run the following script:
+To Create Crossplane private ECR repos, run the following script:
 
 ```
 ./scripts/create-crossplane-ecr-repos.sh
@@ -105,33 +95,33 @@ terraform init
 ```
 
 #### Step 3: Run Terraform PLAN
-Before running the Terraform plan, ensure you adjust the variables.tf file to include the following required variables:
+If your ECR repo is in different account or region than where the Terraform is pointing to, you can adjust the variables.tf file:
 
 ```
 variable "ecr_account_id" {
   type        = string
-  description = "ECR repository AWS Account ID"
-  default     = ""
+  description = "ECR repository AWS Account ID" 
+  default     = "" #defaults to var.region
 }
 
 variable "ecr_region" {
   type        = string
   description = "ECR repository AWS Region"
-  default     = ""
+  default     = "" #defaults to current account
 }
 ```
-Make sure to replace the default values with your specific AWS Account ID and Region.
 
+Run Terraform plan:
 ```shell script
-export TF_VAR_region=<ENTER YOUR REGION>   # Select your own region
+export TF_VAR_region=<ENTER YOUR REGION>   # if ommited, defaults to var.region
 terraform plan
 ```
 
 #### Step 4: Finally, Terraform APPLY
-to create resources
+To create resources:
 
 ```shell script
-terraform apply --auto-approve
+terraform apply -var='docker_secret={"username":"your-docker-username", "accessToken":"your-docker-password"}' --auto-approve
 ```
 
 ### Configure `kubectl` and test cluster
@@ -142,7 +132,7 @@ This following command used to update the `kubeconfig` in your local machine whe
 
 `~/.kube/config` file gets updated with cluster details and certificate from the below command
 ```shell script
-aws eks --region <enter-your-region> update-kubeconfig --name <cluster-name>
+aws eks --region <enter-your-region> update-kubeconfig --name <cluster-name> --alias <cluster-name>
 ```
 #### Step 6: List all the worker nodes by running the command below
 ```shell script
