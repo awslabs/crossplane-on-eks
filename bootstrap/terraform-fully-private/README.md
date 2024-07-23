@@ -69,6 +69,10 @@ git clone https://github.com/awslabs/crossplane-on-eks.git
 For that reason `upbound_aws_provider.enable` is set to `true` and `aws_provider.enable` is set to `false`. If you use the examples for `aws_provider`, adjust the terraform [main.tf](https://github.com/awslabs/crossplane-on-eks/blob/main/bootstrap/terraform/main.tf) in order install only the necessary CRDs to the Kubernetes cluster.
 
 #### Step 1: ECR settings
+
+> [!IMPORTANT]  
+> You need to use the same org/repository for the Crossplane images. Crossplane only allows packages in the same OCI registry and org to be part of the same family. This prevents a malicious provider from declaring itself part of a family and thus being granted RBAC access to its types. [Source Code Reference.](https://github.com/crossplane/crossplane/blob/master/internal/controller/rbac/provider/roles/reconciler.go#L300-L307)
+
 Note: You can change the default `us-east-1` region in the following scripts before executing them.
 
 To Create Crossplane private ECR repos, run the following script:
