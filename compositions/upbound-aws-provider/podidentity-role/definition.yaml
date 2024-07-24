@@ -1,0 +1,58 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xpodidentityroles.awsblueprints.io
+spec:
+  claimNames:
+    kind: PodIdentityRole
+    plural: podidentityroles
+  group: awsblueprints.io
+  names:
+    kind: xPodIdentityRole
+    plural: xpodidentityroles
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          description: Schema for the podidentity role API
+          properties:
+            spec:
+              description: defines the desired state of PodIdentityRole
+              properties:
+                managedPolicyArns:
+                  items:
+                    type: string
+                  type: array
+                inlinePolicy:
+                  type: string
+                inlinePolicyName:
+                  type: string
+                  default: default
+                permissionsBoundaryArn:
+                  type: string
+                resourceConfig:
+                  description: ResourceConfig defines general properties of this AWS
+                    resource.
+                  properties:
+                    providerConfigName:
+                      type: string
+                    region:
+                      type: string
+                  required:
+                  - providerConfigName
+                  type: object
+              required:
+              - resourceConfig
+              type: object
+            status:
+              description:  Status defines the observed state of PodIdentityRole
+              properties:
+                roleArn:
+                  type: string
+              type: object
+          type: object

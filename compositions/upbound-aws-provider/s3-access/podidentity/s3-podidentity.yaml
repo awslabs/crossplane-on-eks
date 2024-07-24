@@ -1,0 +1,144 @@
+
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xs3podidentity-composition
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+  labels:
+    awsblueprints.io/provider: aws
+    awsblueprints.io/environment: dev
+spec:
+  environment:
+    environmentConfigs:
+      - type: Reference
+        ref:
+          name: cluster
+    patches:
+      - type: ToCompositeFieldPath
+        fromFieldPath: region
+        toFieldPath: spec.resourceConfig.region      
+    
+  writeConnectionSecretsToNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: awsblueprints.io/v1alpha1
+    kind: xS3PodIdentity
+  patchSets:
+    - name: common-fields-composition
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig
+          toFieldPath: spec.resourceConfig
+  resources:
+    - name: bucket
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: XObjectStorage
+        metadata:
+          name: standard-object-storage
+      connectionDetails:
+        - fromConnectionSecretKey: bucketName
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-composition
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.bucketArn
+          toFieldPath: status.bucketArn
+          
+    - name: service-account
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: v1
+              kind: ServiceAccount
+              metadata:
+                namespace: default
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+          toFieldPath: spec.forProvider.manifest.metadata.namespace
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.labels[crossplane.io/claim-name]
+          toFieldPath: spec.forProvider.manifest.metadata.name
+        - type: ToCompositeFieldPath
+          fromFieldPath: metadata.labels[crossplane.io/claim-name]
+          toFieldPath: status.serviceAccountName
+
+    - name: podidentity-role
+      base:
+        apiVersion: awsblueprints.io/v1alpha1
+        kind: xPodIdentityRole
+        # spec:
+      patches:
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.roleArn
+          toFieldPath: status.roleArn
+        - type: PatchSet
+          patchSetName: common-fields-composition                 
+        - type: CombineFromComposite
+          toFieldPath: spec.inlinePolicy
+          combine:
+            variables:
+            - fromFieldPath: status.bucketArn
+            - fromFieldPath: status.bucketArn
+            strategy: string
+            string:
+              fmt: |
+                {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "s3:GetObject",
+                        "s3:PutObject",
+                        "s3:PutObjectAcl",
+                        "s3:DeleteObject"
+                      ],
+                      "Resource": [
+                        "%s/*"
+                      ]
+                    },
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "s3:ListBucket",
+                        "s3:GetBucketLocation"
+                      ],
+                      "Resource": [
+                        "%s"
+                      ]
+                    }
+                  ]
+                }
+    - name: podidentity-association
+      base:
+        apiVersion: eks.aws.upbound.io/v1beta1
+        kind: PodIdentityAssociation
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+          toFieldPath: spec.forProvider.namespace           
+          
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.roleArn
+          toFieldPath: spec.forProvider.roleArn
+        - type: FromEnvironmentFieldPath
+          fromFieldPath: clusterName
+          toFieldPath: spec.forProvider.clusterName      
+        - type: FromCompositeFieldPath
+          fromFieldPath: status.serviceAccountName
+          toFieldPath: spec.forProvider.serviceAccount
+ 

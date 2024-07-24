@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: s3-access-app
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: default
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: examples/upbound-aws-provider/composite-resources/s3/helm-chart/
+    repoURL: https://github.com/satishbpatil/crossplane-on-eks.git
+    targetRevision: podidentity
+    helm:
+      values: |- 
+        s3access:
+          enabled: true
+          #access defaults to irsa
+          access: podidentity  
+          
+  syncPolicy:
+    automated: 
+      prune: true
+

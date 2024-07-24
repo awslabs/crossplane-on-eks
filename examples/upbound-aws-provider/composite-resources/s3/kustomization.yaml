@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+ - ../../../../compositions/upbound-aws-provider/podidentity-role/
+ - ../../../../compositions/upbound-aws-provider/s3/
+ - ../../../../compositions/upbound-aws-provider/s3-access/
+ - ../../../../compositions/upbound-aws-provider/iam-policy/
+ - ../../../../compositions/upbound-aws-provider/irsa/
+

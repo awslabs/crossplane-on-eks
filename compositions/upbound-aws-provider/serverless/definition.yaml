@@ -56,10 +56,8 @@ spec:
                       type: string
                     providerConfigName:
                       type: string
-                      default: "aws-provider-config"
                     region:
                       type: string
-                      default: "us-west-2"
                   required:
                   - region
                   type: object

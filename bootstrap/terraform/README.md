@@ -152,7 +152,7 @@ echo "$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.
 
 1. Remove crossplane providers by running
 ```bash
-terraform apply --var enable_upbound_aws_provider=false --var enable_aws_provider=false --var enable_kubernetes_provider=false --var enable_helm_provider=false
+terraform apply --var enable_upjet_aws_provider=false --var enable_aws_provider=false --var enable_kubernetes_provider=false --var enable_helm_provider=false
 ```
 
 1. Run `kubectl get providers` to validate all providers were removed. If any left, remove using `kubectl delete providers <provider>`

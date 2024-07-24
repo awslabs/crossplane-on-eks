@@ -1,0 +1,60 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xpodidentityrole-composition
+spec:
+  compositeTypeRef:
+    apiVersion: awsblueprints.io/v1alpha1
+    kind: xPodIdentityRole
+  patchSets:
+    - name: common-fields-composition
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.resourceConfig.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+  resources:
+    - name: iam-role
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: Role
+        spec:
+          forProvider: 
+            assumeRolePolicy: |
+              {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                      {
+                          "Sid": "AllowEksAuthToAssumeRoleForPodIdentity",
+                          "Effect": "Allow",
+                          "Principal": {
+                              "Service": "pods.eks.amazonaws.com"
+                          },
+                          "Action": [
+                              "sts:AssumeRole",
+                              "sts:TagSession"
+                          ]
+                      }
+                  ]
+              }
+      patches:
+        - type: PatchSet
+          patchSetName: common-fields-composition
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.inlinePolicy
+          toFieldPath: spec.forProvider.inlinePolicy[0].policy
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.inlinePolicyName
+          toFieldPath: spec.forProvider.inlinePolicy[0].name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.managedPolicyArns
+          toFieldPath: spec.forProvider.managedPolicyArns          
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.permissionsBoundaryArn
+          toFieldPath: spec.forProvider.permissionsBoundary
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.arn
+          toFieldPath: status.roleArn      
+    

@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  rollme: {{ randAlphaNum 5 | quote }}
+  name: {{ include "s3-access-app.name" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "s3-access-app.name" . }}
+    helm.sh/chart: {{ include "s3-access-app.chart" . }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "s3-access-app.name" . }}
+  template:
+    metadata:
+      annotations:
+        rollme: {{ randAlphaNum 5 | quote }}
+      labels:
+        app.kubernetes.io/name: {{ include "s3-access-app.name" . }}
+    spec:
+      serviceAccountName: {{ include "s3-access-app.name" . }}
+      containers:
+      - name: aws-cli
+        image: amazon/aws-cli:latest
+        command: ["/bin/sh"]
+        args:
+          - "-c"
+          - |
+            echo "This is a test file" > test.txt
+            aws s3 cp test.txt s3://$BUCKET_NAME/
+            while true; do aws s3 ls s3://$BUCKET_NAME/; sleep 120; done
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "64Mi"
+            cpu: "250m"
+        env:
+        - name: BUCKET_NAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "s3-access-app.name" . }}
+              key: bucketName
+      restartPolicy: Always
