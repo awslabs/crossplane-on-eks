@@ -1,0 +1,37 @@
+# https://github.com/crossplane-contrib/provider-upjet-aws/blob/main/docs/family/Configuration.md
+---
+apiVersion: pkg.crossplane.io/v1beta1
+kind: DeploymentRuntimeConfig
+metadata:
+  name: ${runtime-config}
+spec:
+  deploymentTemplate:
+    spec:
+      replicas: 1
+      selector: {}
+      template:
+        spec:
+          containers:
+            - name: package-runtime
+              args:
+                - --debug
+              # Uncomment the following lines to configure a proxy for Crossplane providers
+              # env:
+              #   - name: http_proxy
+              #     value: "http://proxy-server:8080"
+              #   - name: https_proxy
+              #     value: "http://proxy-server:8080"
+              #   - name: HTTP_PROXY
+              #     value: "http://proxy-server:8080"
+              #   - name: HTTPS_PROXY
+              #     value: "http://proxy-server:8080"
+              #   - name: no_proxy
+              #     value: "10.0.0.0/8, .svc, .cluster.local"
+              #   - name: NO_PROXY
+              #     value: "10.0.0.0/8, .svc, .cluster.local"
+          securityContext:
+            fsGroup: 2000
+  serviceAccountTemplate:
+    metadata:
+      annotations:
+        eks.amazonaws.com/role-arn: ${iam-role-arn}

@@ -1,0 +1,12 @@
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-family-aws
+spec:
+  # Using a fully qualified image path in the private registry as part of the workaround for private registry support.
+  # This includes a subpath acting as an "org" to aid the rbac-manager in creating clusterroles.
+  # For more details, see the workaround description: https://github.com/crossplane/crossplane/issues/4299#issuecomment-1691379712
+  package: ${ecr_account_id}.dkr.ecr.${ecr_region}.amazonaws.com/upbound/provider-family-aws:${version}
+  runtimeConfigRef:
+    name: ${runtime-config}
