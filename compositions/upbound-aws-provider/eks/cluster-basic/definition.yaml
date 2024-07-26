@@ -1,0 +1,94 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xekss.awsblueprints.io
+spec:
+  defaultCompositionRef:
+    name: xeks.awsblueprints.io
+  connectionSecretKeys:
+    - kubeconfig
+  group: awsblueprints.io
+  names:
+    kind: XEks
+    plural: xekss
+  claimNames:
+    kind: Eks
+    plural: ekss
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: ID of this Cluster that other objects will use to refer to it.
+                providerConfigName:
+                  description: Name of the Crossplane ProviderConfig to use for provisioning resources.
+                  type: string
+                region:
+                  description: AWS Region where resources will be deployed.
+                  type: string
+                authenticationMode:
+                  description: Authentication mode for the EKS cluster.
+                  type: string
+                  default: API
+                bootstrapClusterCreatorAdminPermissions:
+                  description: Whether or not to bootstrap the access config values to the EKS cluster. Default is true.
+                  type: boolean
+                  default: true
+                enabledClusterLogTypes:
+                  description: List of the desired control plane logging to enable. For more information, see Amazon EKS Control Plane Logging.
+                  type: array
+                  items:
+                    type: string
+                  default:
+                    - api
+                    - audit
+                    - authenticator
+                    - controllerManager
+                    - scheduler
+                endpointPrivateAccess:
+                  description: Whether the Amazon EKS private API server endpoint is enabled. Default is false.
+                  type: boolean
+                  default: false
+                endpointPublicAccess:
+                  description: Whether the Amazon EKS public API server endpoint is enabled. Default is true.
+                  type: boolean
+                  default: true
+                subnets:
+                  description: Subnets for the EKS cluster and node groups.
+                  type: array
+                  items:
+                    type: string
+                version:
+                  description: Kubernetes version for the EKS cluster.
+                  type: string
+                  default: "1.29"
+                writeConnectionSecretToRef:
+                  description: Reference to a Secret where connection details should be written.
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      description: The name of the secret.
+                deletionPolicy:
+                  description: Deletion policy for the resources. 'Delete' will remove all resources, 'Orphan' will only remove the Kubernetes resource and leave cloud resources.
+                  type: string
+                  enum:
+                    - Delete
+                    - Orphan
+                  default: Delete
+            status:
+              description: A Status represents the observed state
+              properties:
+                eks:
+                  description: Freeform field containing status information for eks
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+              type: object
