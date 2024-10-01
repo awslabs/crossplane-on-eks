@@ -40,7 +40,12 @@ provider "kubectl" {
 }
 
 data "aws_caller_identity" "current" {}
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 locals {
   name   = var.name
