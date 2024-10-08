@@ -99,10 +99,12 @@ spec:
                 idToken: minutes
                 refreshToken: days
           writeConnectionSecretToRef:
+            # Write the client secret as a kubernetes secret with the name provided below
             name: cognito-userpool-client-secret
             # placeholder. Will be replaced by the namespace provided as input
             namespace: default
       patches:
+        # List of patches to apply to the resource
         - fromFieldPath: spec.parameters.name
           toFieldPath: metadata.name
           type: FromCompositeFieldPath
@@ -125,6 +127,7 @@ spec:
           toFieldPath: status.clientId
           type: ToCompositeFieldPath
       connectionDetails:
+        # Write both the client ID and the client secret in a kubernetes secret
         - name: client_id
           fromFieldPath: status.atProvider.id
         - name: client_secret
