@@ -4,53 +4,57 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: write-sqs.iampolicy.awsblueprints.io
   labels:
-    awsblueprints.io/provider: aws
     awsblueprints.io/environment: dev
+    awsblueprints.io/provider: aws
     iam.awsblueprints.io/policy-type: write
     iam.awsblueprints.io/service: sqs
+  name: write-sqs.iampolicy.awsblueprints.io
 spec:
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
     kind: IAMPolicy
-  patchSets:
-    - name: common-fields
-      patches:
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.deletionPolicy
+  mode: Pipeline
+  pipeline:
+  - functionRef:
+      name: function-patch-and-transform
+    input:
+      apiVersion: pt.fn.crossplane.io/v1beta1
+      kind: Resources
+      patchSets:
+      - name: common-fields
+        patches:
+        - fromFieldPath: spec.resourceConfig.deletionPolicy
           toFieldPath: spec.deletionPolicy
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.providerConfigName
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.resourceConfig.providerConfigName
           toFieldPath: spec.providerConfigRef.name
-        - fromFieldPath: "metadata.name"
-          toFieldPath: "metadata.name"
+          type: FromCompositeFieldPath
+        - fromFieldPath: metadata.name
+          toFieldPath: metadata.name
           transforms:
-            - type: string
-              string:
-                fmt: "policy-sqs-write-%s"
-  resources:
-    - name: write-policy
-      base:
-        apiVersion: iam.aws.upbound.io/v1beta1
-        kind: Policy
-        spec:
-          deletionPolicy: Delete
-          forProvider: {}
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.tags
-          toFieldPath: spec.forProvider.tags
+          - string:
+              fmt: policy-sqs-write-%s
+              type: Format
+            type: string
+          type: FromCompositeFieldPath
+      resources:
+      - base:
+          apiVersion: iam.aws.upbound.io/v1beta1
+          kind: Policy
+          spec:
+            deletionPolicy: Delete
+            forProvider: {}
+        name: write-policy
+        patches:
+        - patchSetName: common-fields
+          type: PatchSet
+        - fromFieldPath: spec.resourceConfig.tags
           policy:
-            mergeOptions:
-              keepMapValues: true
-        - type: CombineFromComposite
-          toFieldPath: spec.forProvider.policy
-          combine:
-            variables:
-            - fromFieldPath: spec.resourceArn
+            toFieldPath: MergeObjects
+          toFieldPath: spec.forProvider.tags
+          type: FromCompositeFieldPath
+        - combine:
             strategy: string
             string:
               fmt: |
@@ -69,18 +73,23 @@ spec:
                     }
                   ]
                 }
-    - name: policy-attachment
-      base:
-        apiVersion: iam.aws.upbound.io/v1beta1
-        kind: RolePolicyAttachment
-        spec:
-          deletionPolicy: Delete
-          forProvider:
-            policyArnSelector:
-              matchControllerRef: true
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.roleName
+            variables:
+            - fromFieldPath: spec.resourceArn
+          toFieldPath: spec.forProvider.policy
+          type: CombineFromComposite
+      - base:
+          apiVersion: iam.aws.upbound.io/v1beta1
+          kind: RolePolicyAttachment
+          spec:
+            deletionPolicy: Delete
+            forProvider:
+              policyArnSelector:
+                matchControllerRef: true
+        name: policy-attachment
+        patches:
+        - patchSetName: common-fields
+          type: PatchSet
+        - fromFieldPath: spec.roleName
           toFieldPath: spec.forProvider.role
+          type: FromCompositeFieldPath
+    step: patch-and-transform

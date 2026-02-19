@@ -1,102 +1,108 @@
-
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: kinesisfirehose.upbound.awsblueprints.io
   annotations:
     argocd.argoproj.io/sync-wave: "-10"
   labels:
-    awsblueprints.io/provider: aws
     awsblueprints.io/environment: dev
+    awsblueprints.io/provider: aws
     kinesis.awsblueprints.io/service: firehose
+  name: kinesisfirehose.upbound.awsblueprints.io
 spec:
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
     kind: XKinesisFirehose
-  patchSets:
-    - name: common-fields
-      patches:
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.deletionPolicy
+  mode: Pipeline
+  pipeline:
+  - functionRef:
+      name: function-patch-and-transform
+    input:
+      apiVersion: pt.fn.crossplane.io/v1beta1
+      kind: Resources
+      patchSets:
+      - name: common-fields
+        patches:
+        - fromFieldPath: spec.resourceConfig.deletionPolicy
           toFieldPath: spec.deletionPolicy
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.region
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.resourceConfig.region
           toFieldPath: spec.forProvider.region
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.tags
-          toFieldPath: spec.forProvider.tags
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.resourceConfig.tags
           policy:
-            mergeOptions:
-              keepMapValues: true
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.name
+            toFieldPath: MergeObjects
+          toFieldPath: spec.forProvider.tags
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.resourceConfig.name
           toFieldPath: metadata.annotations[crossplane.io/external-name]
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.providerConfigName
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.resourceConfig.providerConfigName
           toFieldPath: spec.providerConfigRef.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
+          type: FromCompositeFieldPath
+        - fromFieldPath: metadata.name
           toFieldPath: metadata.name
           transforms:
-            - type: string
-              string:
-                fmt: "kinesis-%s"
-        - type: FromCompositeFieldPath  # Labels are required because they are later used by SubscriptionFilter matchlabel selector
-          fromFieldPath: metadata.labels
-          toFieldPath: metadata.labels
+          - string:
+              fmt: kinesis-%s
+              type: Format
+            type: string
+          type: FromCompositeFieldPath
+        - fromFieldPath: metadata.labels
           policy:
-            mergeOptions:
-              keepMapValues: true
-  resources:
-    - name: kinesis-firehose
-      base:
-        apiVersion: firehose.aws.upbound.io/v1beta1
-        kind: DeliveryStream
-        spec:
-          forProvider: {}
-      patches:
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.forProvider
+            toFieldPath: MergeObjects
+          toFieldPath: metadata.labels
+          type: FromCompositeFieldPath
+      resources:
+      - base:
+          apiVersion: firehose.aws.upbound.io/v1beta1
+          kind: DeliveryStream
+          spec:
+            forProvider: {}
+        name: kinesis-firehose
+        patches:
+        - fromFieldPath: spec.forProvider
           toFieldPath: spec.forProvider
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.id
+          type: FromCompositeFieldPath
+        - patchSetName: common-fields
+          type: PatchSet
+        - fromFieldPath: status.atProvider.id
           toFieldPath: status.kinesisArn
-        - type: ToCompositeFieldPath
-          fromFieldPath: metadata.name
+          type: ToCompositeFieldPath
+        - fromFieldPath: metadata.name
           toFieldPath: status.kinesisName
-    - name: kinesis-role
-      base:
-        apiVersion: iam.aws.upbound.io/v1beta1
-        kind: Role
-        spec:
-          forProvider:
-            assumeRolePolicy: |
-              {
-                "Version": "2012-10-17",
-                "Statement": [
-                  {
-                    "Effect": "Allow",
-                    "Principal": {
-                      "Service": "firehose.amazonaws.com"
-                    },
-                    "Action": "sts:AssumeRole"
-                  }
-                ]
-              }
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.arn
+          type: ToCompositeFieldPath
+      - base:
+          apiVersion: iam.aws.upbound.io/v1beta1
+          kind: Role
+          spec:
+            forProvider:
+              assumeRolePolicy: |
+                {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Principal": {
+                        "Service": "firehose.amazonaws.com"
+                      },
+                      "Action": "sts:AssumeRole"
+                    }
+                  ]
+                }
+        name: kinesis-role
+        patches:
+        - patchSetName: common-fields
+          type: PatchSet
+        - fromFieldPath: status.atProvider.arn
           toFieldPath: status.kinesisRoleArn
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.id
+          type: ToCompositeFieldPath
+        - fromFieldPath: status.atProvider.id
           toFieldPath: status.kinesisRoleName
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.permissionsBoundaryArn
+          type: ToCompositeFieldPath
+        - fromFieldPath: spec.permissionsBoundaryArn
           toFieldPath: spec.forProvider.permissionsBoundary
+          type: FromCompositeFieldPath
+    step: patch-and-transform

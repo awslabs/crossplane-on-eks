@@ -231,8 +231,7 @@ spec:
               toFieldPath: spec.envVariables[TABLE_NAME]
               policy:
                 fromFieldPath: Required
-                mergeOptions:
-                  keepMapValues: true
+                toFieldPath: MergeObjects
             - type: FromCompositeFieldPath
               fromFieldPath: spec.codeBucketName
               toFieldPath: spec.bucketName
@@ -346,8 +345,7 @@ spec:
               fromFieldPath: spec.resourceConfig.tags
               toFieldPath: spec.resourceConfig.tags
               policy:
-                mergeOptions:
-                  keepMapValues: true
+                toFieldPath: MergeObjects
             - type: FromCompositeFieldPath
               fromFieldPath: metadata.name
               toFieldPath: metadata.name
@@ -391,8 +389,7 @@ spec:
               toFieldPath: spec.envVariables[AUTHORIZER_PASSWORD_ARN]
               policy:
                 fromFieldPath: Required
-                mergeOptions:
-                  keepMapValues: true
+                toFieldPath: MergeObjects
             - type: FromCompositeFieldPath
               fromFieldPath: spec.codeBucketName
               toFieldPath: spec.bucketName

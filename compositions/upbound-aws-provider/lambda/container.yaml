@@ -4,132 +4,139 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: container.lambda.aws.upbound.awsblueprints.io
   labels:
-    awsblueprints.io/provider: aws
     awsblueprints.io/environment: dev
+    awsblueprints.io/provider: aws
     awsblueprints.io/type: container
+  name: container.lambda.aws.upbound.awsblueprints.io
 spec:
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
     kind: XLambdaFunction
-  patchSets:
-    - name: common-fields
-      patches:
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.deletionPolicy
+  mode: Pipeline
+  pipeline:
+  - functionRef:
+      name: function-patch-and-transform
+    input:
+      apiVersion: pt.fn.crossplane.io/v1beta1
+      kind: Resources
+      patchSets:
+      - name: common-fields
+        patches:
+        - fromFieldPath: spec.resourceConfig.deletionPolicy
           toFieldPath: spec.deletionPolicy
-        - fromFieldPath: "metadata.name"
-          toFieldPath: "metadata.name"
-  resources:
-    - name: function-role
-      base:
-        apiVersion: iam.aws.upbound.io/v1beta1
-        kind: Role
-        spec:
-          forProvider:
-            assumeRolePolicy: |
-              {
-                "Version": "2012-10-17",
-                "Statement": [
-                  {
-                    "Effect": "Allow",
-                    "Principal": {
-                      "Service": "lambda.amazonaws.com"
-                    },
-                    "Action": "sts:AssumeRole"
-                  }
-                ]
-              }
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.providerConfigName
+          type: FromCompositeFieldPath
+        - fromFieldPath: metadata.name
+          toFieldPath: metadata.name
+          type: FromCompositeFieldPath
+      resources:
+      - base:
+          apiVersion: iam.aws.upbound.io/v1beta1
+          kind: Role
+          spec:
+            forProvider:
+              assumeRolePolicy: |
+                {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Principal": {
+                        "Service": "lambda.amazonaws.com"
+                      },
+                      "Action": "sts:AssumeRole"
+                    }
+                  ]
+                }
+        name: function-role
+        patches:
+        - patchSetName: common-fields
+          type: PatchSet
+        - fromFieldPath: spec.resourceConfig.providerConfigName
           toFieldPath: spec.providerConfigRef.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
+          type: FromCompositeFieldPath
+        - fromFieldPath: metadata.name
           toFieldPath: metadata.name
           transforms:
-            - type: string
-              string:
-                fmt: "%s-role"
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.arn
+          - string:
+              fmt: '%s-role'
+              type: Format
+            type: string
+          type: FromCompositeFieldPath
+        - fromFieldPath: status.atProvider.arn
           toFieldPath: status.functionRoleArn
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.id
+          type: ToCompositeFieldPath
+        - fromFieldPath: status.atProvider.id
           toFieldPath: status.functionRoleName
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.permissionsBoundaryArn
+          type: ToCompositeFieldPath
+        - fromFieldPath: spec.permissionsBoundaryArn
           toFieldPath: spec.forProvider.permissionsBoundary
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.tags
-          toFieldPath: spec.forProvider.tags
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.resourceConfig.tags
           policy:
-            mergeOptions:
-              keepMapValues: true
-    - name: lambda-basic-policy-attachment
-      base:
-        apiVersion: iam.aws.upbound.io/v1beta1
-        kind: RolePolicyAttachment
-        spec:
-          forProvider:
-            policyArn: arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-            roleSelector:
-              matchControllerRef: true
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.providerConfigName
+            toFieldPath: MergeObjects
+          toFieldPath: spec.forProvider.tags
+          type: FromCompositeFieldPath
+      - base:
+          apiVersion: iam.aws.upbound.io/v1beta1
+          kind: RolePolicyAttachment
+          spec:
+            forProvider:
+              policyArn: arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+              roleSelector:
+                matchControllerRef: true
+        name: lambda-basic-policy-attachment
+        patches:
+        - patchSetName: common-fields
+          type: PatchSet
+        - fromFieldPath: spec.resourceConfig.providerConfigName
           toFieldPath: spec.providerConfigRef.name
-    - name: function
-      base:
-        apiVersion: lambda.aws.upbound.io/v1beta1
-        kind: Function
-        spec:
-          deletionPolicy: Delete
-          forProvider:
-            packageType: Image
-            environment:
+          type: FromCompositeFieldPath
+      - base:
+          apiVersion: lambda.aws.upbound.io/v1beta1
+          kind: Function
+          spec:
+            deletionPolicy: Delete
+            forProvider:
+              environment:
               - variables: {}
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.region
+              packageType: Image
+        name: function
+        patches:
+        - patchSetName: common-fields
+          type: PatchSet
+        - fromFieldPath: spec.resourceConfig.region
           toFieldPath: spec.forProvider.region
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.providerConfigName
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.resourceConfig.providerConfigName
           toFieldPath: spec.providerConfigRef.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.memorySize
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.memorySize
           toFieldPath: spec.forProvider.memorySize
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.timeout
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.timeout
           toFieldPath: spec.forProvider.timeout
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.imageUri
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.imageUri
           toFieldPath: spec.forProvider.imageUri
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.functionRoleArn
+          type: FromCompositeFieldPath
+        - fromFieldPath: status.functionRoleArn
           toFieldPath: spec.forProvider.role
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.envVariables
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.envVariables
+          policy:
+            toFieldPath: MergeObjects
           toFieldPath: spec.forProvider.environment[0].variables
-          policy:
-            mergeOptions:
-              keepMapValues: true
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.arn
+          type: FromCompositeFieldPath
+        - fromFieldPath: status.atProvider.arn
           toFieldPath: status.functionArn
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.id
+          type: ToCompositeFieldPath
+        - fromFieldPath: status.atProvider.id
           toFieldPath: status.functionName
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.tags
-          toFieldPath: spec.forProvider.tags
+          type: ToCompositeFieldPath
+        - fromFieldPath: spec.resourceConfig.tags
           policy:
-            mergeOptions:
-              keepMapValues: true
+            toFieldPath: MergeObjects
+          toFieldPath: spec.forProvider.tags
+          type: FromCompositeFieldPath
+    step: patch-and-transform

@@ -4,312 +4,307 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: rest.apigateway.aws.upbound.awsblueprints.io
   labels:
-    awsblueprints.io/provider: aws
     awsblueprints.io/environment: dev
+    awsblueprints.io/provider: aws
     awsblueprints.io/type: rest
+  name: rest.apigateway.aws.upbound.awsblueprints.io
 spec:
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
     kind: XApiGateway
-  patchSets:
-    - name: common-fields
-      patches:
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.deletionPolicy
+  mode: Pipeline
+  pipeline:
+  - functionRef:
+      name: function-patch-and-transform
+    input:
+      apiVersion: pt.fn.crossplane.io/v1beta1
+      kind: Resources
+      patchSets:
+      - name: common-fields
+        patches:
+        - fromFieldPath: spec.resourceConfig.deletionPolicy
           toFieldPath: spec.deletionPolicy
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.providerConfigName
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.resourceConfig.providerConfigName
           toFieldPath: spec.providerConfigRef.name
-        - fromFieldPath: "metadata.name"
-          toFieldPath: "metadata.name"
-  resources:
-    - name: restapi
-      base:
-        apiVersion: apigateway.aws.upbound.io/v1beta1
-        kind: RestAPI
-        spec:
-          deletionPolicy: Delete
-          forProvider:
-            name: restApi
-            endpointConfiguration:
-            - types:
+          type: FromCompositeFieldPath
+        - fromFieldPath: metadata.name
+          toFieldPath: metadata.name
+          type: FromCompositeFieldPath
+      resources:
+      - base:
+          apiVersion: apigateway.aws.upbound.io/v1beta1
+          kind: RestAPI
+          spec:
+            deletionPolicy: Delete
+            forProvider:
+              endpointConfiguration:
+              - types:
                 - REGIONAL
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.region
+              name: restApi
+        name: restapi
+        patches:
+        - patchSetName: common-fields
+          type: PatchSet
+        - fromFieldPath: spec.resourceConfig.region
           toFieldPath: spec.forProvider.region
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
+          type: FromCompositeFieldPath
+        - fromFieldPath: metadata.name
           toFieldPath: metadata.name
           transforms:
-            - type: string
-              string:
-                fmt: "%s-restapi"
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.apiDescription
+          - string:
+              fmt: '%s-restapi'
+              type: Format
+            type: string
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.apiDescription
           toFieldPath: spec.forProvider.description
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.apiName
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.apiName
           toFieldPath: spec.forProvider.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.openApiSpecification
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.openApiSpecification
           toFieldPath: spec.forProvider.body
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.endpointType
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.endpointType
           toFieldPath: spec.forProvider.endpointConfiguration[0].types[0]
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.arn
+          type: FromCompositeFieldPath
+        - fromFieldPath: status.atProvider.arn
           toFieldPath: status.apigwArn
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.executionArn
+          type: ToCompositeFieldPath
+        - fromFieldPath: status.atProvider.executionArn
           toFieldPath: status.apiExecutionArn
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.id
+          type: ToCompositeFieldPath
+        - fromFieldPath: status.atProvider.id
           toFieldPath: status.apiId
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.name
+          type: ToCompositeFieldPath
+        - fromFieldPath: status.atProvider.name
           toFieldPath: status.apiName
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.executionArn
+          type: ToCompositeFieldPath
+        - fromFieldPath: status.atProvider.executionArn
           toFieldPath: status.accountId
           transforms:
-            - type: string
-              string:
-                type: Regexp
-                regexp:
-                  match: \d{12,}          
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.tags
-          toFieldPath: spec.forProvider.tags
+          - string:
+              regexp:
+                match: \d{12,}
+              type: Regexp
+            type: string
+          type: ToCompositeFieldPath
+        - fromFieldPath: spec.resourceConfig.tags
           policy:
-            mergeOptions:
-              keepMapValues: true
-
-    - name: apigw-role
-      base:
-        apiVersion: iam.aws.upbound.io/v1beta1
-        kind: Role
-        spec:
-          deletionPolicy: Delete
-          forProvider:
-            assumeRolePolicy: |
-              {
-                "Version": "2012-10-17",
-                "Statement": [
-                  {
-                    "Effect": "Allow",
-                    "Principal": {
-                      "Service": "apigateway.amazonaws.com"
-                    },
-                    "Action": "sts:AssumeRole"
-                  }
-                ]
-              }
-            path: "/"
-            managedPolicyArns:
-              - >-
-                arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
+            toFieldPath: MergeObjects
+          toFieldPath: spec.forProvider.tags
+          type: FromCompositeFieldPath
+      - base:
+          apiVersion: iam.aws.upbound.io/v1beta1
+          kind: Role
+          spec:
+            deletionPolicy: Delete
+            forProvider:
+              assumeRolePolicy: |
+                {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Principal": {
+                        "Service": "apigateway.amazonaws.com"
+                      },
+                      "Action": "sts:AssumeRole"
+                    }
+                  ]
+                }
+              managedPolicyArns:
+              - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+              path: /
+        name: apigw-role
+        patches:
+        - patchSetName: common-fields
+          type: PatchSet
+        - fromFieldPath: metadata.name
           toFieldPath: metadata.name
           transforms:
-            - type: string
-              string:
-                fmt: "%s-apigw-role"
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.arn
+          - string:
+              fmt: '%s-apigw-role'
+              type: Format
+            type: string
+          type: FromCompositeFieldPath
+        - fromFieldPath: status.atProvider.arn
           toFieldPath: status.apigwRoleArn
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.id
+          type: ToCompositeFieldPath
+        - fromFieldPath: status.atProvider.id
           toFieldPath: status.apigwRoleName
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.tags
-          toFieldPath: spec.forProvider.tags
+          type: ToCompositeFieldPath
+        - fromFieldPath: spec.resourceConfig.tags
           policy:
-            mergeOptions:
-              keepMapValues: true
-
-    - name: api-deployment
-      base:
-        apiVersion: apigateway.aws.upbound.io/v1beta1
-        kind: Deployment
-        spec:
-          deletionPolicy: Delete
-          forProvider:
-            restApiIdSelector:
-              matchControllerRef: true
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.region
+            toFieldPath: MergeObjects
+          toFieldPath: spec.forProvider.tags
+          type: FromCompositeFieldPath
+      - base:
+          apiVersion: apigateway.aws.upbound.io/v1beta1
+          kind: Deployment
+          spec:
+            deletionPolicy: Delete
+            forProvider:
+              restApiIdSelector:
+                matchControllerRef: true
+        name: api-deployment
+        patches:
+        - patchSetName: common-fields
+          type: PatchSet
+        - fromFieldPath: spec.resourceConfig.region
           toFieldPath: spec.forProvider.region
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
+          type: FromCompositeFieldPath
+        - fromFieldPath: metadata.name
           toFieldPath: metadata.name
           transforms:
-            - type: string
-              string:
-                fmt: "%s-api-deployment"
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.id
+          - string:
+              fmt: '%s-api-deployment'
+              type: Format
+            type: string
+          type: FromCompositeFieldPath
+        - fromFieldPath: status.atProvider.id
           toFieldPath: status.apigwDeploymentId
-
-    - name: api-stage
-      base:
-        apiVersion: apigateway.aws.upbound.io/v1beta1
-        kind: Stage
-        spec:
-          deletionPolicy: Delete
-          forProvider:
-            restApiIdSelector:
-              matchControllerRef: true
-            deploymentIdSelector:
-              matchControllerRef: true
-            stageName: api
-            accessLogSettings: 
+          type: ToCompositeFieldPath
+      - base:
+          apiVersion: apigateway.aws.upbound.io/v1beta1
+          kind: Stage
+          spec:
+            deletionPolicy: Delete
+            forProvider:
+              accessLogSettings:
               - destinationArn: arn:aws:logs:us-region-1:123456789012:log-group:myrestapi-abcdxyz-api-access-logs
-                format: >-
-                  { 
-                  "requestId":"$context.requestId", 
-                  "ip": "$context.identity.sourceIp", 
-                  "requestTime":"$context.requestTime", 
-                  "httpMethod":"$context.httpMethod",
-                  "routeKey":"$context.routeKey", 
-                  "status":"$context.status",
-                  "protocol":"$context.protocol", 
-                  "integrationStatus": "$context.integrationStatus",
-                  "integrationLatency": "$context.integrationLatency", 
-                  "responseLength":"$context.responseLength" 
-                  }
-            xrayTracingEnabled: true
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.region
+                format: '{  "requestId":"$context.requestId",  "ip": "$context.identity.sourceIp",  "requestTime":"$context.requestTime",  "httpMethod":"$context.httpMethod",
+                  "routeKey":"$context.routeKey",  "status":"$context.status", "protocol":"$context.protocol",  "integrationStatus":
+                  "$context.integrationStatus", "integrationLatency": "$context.integrationLatency",  "responseLength":"$context.responseLength"  }'
+              deploymentIdSelector:
+                matchControllerRef: true
+              restApiIdSelector:
+                matchControllerRef: true
+              stageName: api
+              xrayTracingEnabled: true
+        name: api-stage
+        patches:
+        - patchSetName: common-fields
+          type: PatchSet
+        - fromFieldPath: spec.resourceConfig.region
           toFieldPath: spec.forProvider.region
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
+          type: FromCompositeFieldPath
+        - fromFieldPath: metadata.name
           toFieldPath: metadata.name
           transforms:
-            - type: string
-              string:
-                fmt: "%s-api-stage"
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.apigwAccessLogsGroupArn
-          toFieldPath: spec.forProvider.accessLogSettings[0].destinationArn
+          - string:
+              fmt: '%s-api-stage'
+              type: Format
+            type: string
+          type: FromCompositeFieldPath
+        - fromFieldPath: status.apigwAccessLogsGroupArn
           policy:
             fromFieldPath: Required
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.invokeUrl
+          toFieldPath: spec.forProvider.accessLogSettings[0].destinationArn
+          type: FromCompositeFieldPath
+        - fromFieldPath: status.atProvider.invokeUrl
           toFieldPath: status.apiBaseUrl
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.arn
+          type: ToCompositeFieldPath
+        - fromFieldPath: status.atProvider.arn
           toFieldPath: status.apigwStageArn
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.stageName
+          type: ToCompositeFieldPath
+        - fromFieldPath: status.atProvider.stageName
           toFieldPath: status.apigwStageName
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.tags
-          toFieldPath: spec.forProvider.tags
+          type: ToCompositeFieldPath
+        - fromFieldPath: spec.resourceConfig.tags
           policy:
-            mergeOptions:
-              keepMapValues: true
-
-    - name: api-access-logs-group
-      base:
-        apiVersion: cloudwatchlogs.aws.upbound.io/v1beta1
-        kind: Group
-        spec:
-          deletionPolicy: Delete
-          forProvider:
-            retentionInDays: 1
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.region
+            toFieldPath: MergeObjects
+          toFieldPath: spec.forProvider.tags
+          type: FromCompositeFieldPath
+      - base:
+          apiVersion: cloudwatchlogs.aws.upbound.io/v1beta1
+          kind: Group
+          spec:
+            deletionPolicy: Delete
+            forProvider:
+              retentionInDays: 1
+        name: api-access-logs-group
+        patches:
+        - patchSetName: common-fields
+          type: PatchSet
+        - fromFieldPath: spec.resourceConfig.region
           toFieldPath: spec.forProvider.region
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
+          type: FromCompositeFieldPath
+        - fromFieldPath: metadata.name
           toFieldPath: metadata.name
           transforms:
-            - type: string
-              string:
-                fmt: "%s-api-access-logs"
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.logRetentionPeriod
+          - string:
+              fmt: '%s-api-access-logs'
+              type: Format
+            type: string
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.logRetentionPeriod
           toFieldPath: spec.forProvider.retentionInDays
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.arn
+          type: FromCompositeFieldPath
+        - fromFieldPath: status.atProvider.arn
           toFieldPath: status.apigwAccessLogsGroupArn
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.tags
-          toFieldPath: spec.forProvider.tags
+          type: ToCompositeFieldPath
+        - fromFieldPath: spec.resourceConfig.tags
           policy:
-            mergeOptions:
-              keepMapValues: true
-
-    - name: apigw-logging-account
-      base:
-        apiVersion: apigateway.aws.upbound.io/v1beta1
-        kind: Account
-        spec:
-          deletionPolicy: Delete
-          forProvider:
-            cloudwatchRoleArnSelector: 
-              matchControllerRef: true
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.region
+            toFieldPath: MergeObjects
+          toFieldPath: spec.forProvider.tags
+          type: FromCompositeFieldPath
+      - base:
+          apiVersion: apigateway.aws.upbound.io/v1beta1
+          kind: Account
+          spec:
+            deletionPolicy: Delete
+            forProvider:
+              cloudwatchRoleArnSelector:
+                matchControllerRef: true
+        name: apigw-logging-account
+        patches:
+        - patchSetName: common-fields
+          type: PatchSet
+        - fromFieldPath: spec.resourceConfig.region
           toFieldPath: spec.forProvider.region
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
+          type: FromCompositeFieldPath
+        - fromFieldPath: metadata.name
           toFieldPath: metadata.name
           transforms:
-            - type: string
-              string:
-                fmt: "%s-api-logging-account"
-
-    - name: api-method-settings
-      base:
-        apiVersion: apigateway.aws.upbound.io/v1beta1
-        kind: MethodSettings
-        spec:
-          deletionPolicy: Delete
-          forProvider:
-            restApiIdSelector:
-              matchControllerRef: true
-            stageNameSelector:
-              matchControllerRef: true
-            methodPath: "*/*"
-            settings:
-              - metricsEnabled: true
-                logging_level: "INFO"
-                dataTraceEnabled: true
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.region
+          - string:
+              fmt: '%s-api-logging-account'
+              type: Format
+            type: string
+          type: FromCompositeFieldPath
+      - base:
+          apiVersion: apigateway.aws.upbound.io/v1beta1
+          kind: MethodSettings
+          spec:
+            deletionPolicy: Delete
+            forProvider:
+              methodPath: '*/*'
+              restApiIdSelector:
+                matchControllerRef: true
+              settings:
+              - dataTraceEnabled: true
+                logging_level: INFO
+                metricsEnabled: true
+              stageNameSelector:
+                matchControllerRef: true
+        name: api-method-settings
+        patches:
+        - patchSetName: common-fields
+          type: PatchSet
+        - fromFieldPath: spec.resourceConfig.region
           toFieldPath: spec.forProvider.region
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
+          type: FromCompositeFieldPath
+        - fromFieldPath: metadata.name
           toFieldPath: metadata.name
           transforms:
-            - type: string
-              string:
-                fmt: "%s-api-method-settings"
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.logLevel
+          - string:
+              fmt: '%s-api-method-settings'
+              type: Format
+            type: string
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.logLevel
           toFieldPath: spec.forProvider.settings[0].loggingLevel
+          type: FromCompositeFieldPath
+    step: patch-and-transform

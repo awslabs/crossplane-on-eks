@@ -1,6 +1,4 @@
-# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-# SPDX-License-Identifier: Apache-2.0
-
+---
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
@@ -9,73 +7,77 @@ spec:
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
     kind: XIRSA
-  environment:
-    environmentConfigs:
-      - type: Reference
-        ref:
-          name: cluster
-  patchSets:
-    - name: common-fields
-      patches:
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.providerConfigName
+  mode: Pipeline
+  pipeline:
+  - functionRef:
+      name: function-environment-configs
+    input:
+      apiVersion: environmentconfigs.fn.crossplane.io/v1beta1
+      kind: Input
+      spec:
+        environmentConfigs:
+        - ref:
+            name: cluster
+          type: Reference
+    step: environment-configs
+  - functionRef:
+      name: function-patch-and-transform
+    input:
+      apiVersion: pt.fn.crossplane.io/v1beta1
+      kind: Resources
+      patchSets:
+      - name: common-fields
+        patches:
+        - fromFieldPath: spec.resourceConfig.providerConfigName
           toFieldPath: spec.providerConfigRef.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.deletionPolicy
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.resourceConfig.deletionPolicy
           toFieldPath: spec.deletionPolicy
-  resources:
-    - name: iam-role
-      base:
-        apiVersion: iam.aws.upbound.io/v1beta1
-        kind: Role
-        spec:
-          forProvider:
-            assumeRolePolicy: ""
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromEnvironmentFieldPath
-          fromFieldPath: awsAccountID
+          type: FromCompositeFieldPath
+      resources:
+      - base:
+          apiVersion: iam.aws.upbound.io/v1beta1
+          kind: Role
+          spec:
+            forProvider:
+              assumeRolePolicy: ""
+        name: iam-role
+        patches:
+        - patchSetName: common-fields
+          type: PatchSet
+        - fromFieldPath: awsAccountID
           toFieldPath: metadata.annotations[crossplane.io/awsaccountid]
-        - type: ToCompositeFieldPath
-          fromFieldPath: metadata.annotations[crossplane.io/awsaccountid]
+          type: FromEnvironmentFieldPath
+        - fromFieldPath: metadata.annotations[crossplane.io/awsaccountid]
+          policy:
+            fromFieldPath: Required
           toFieldPath: status.awsAccountID
-          policy:
-            fromFieldPath: Required
-        - type: FromEnvironmentFieldPath
-          fromFieldPath: eksOIDC
+          type: ToCompositeFieldPath
+        - fromFieldPath: eksOIDC
           toFieldPath: metadata.annotations[crossplane.io/eksoidc]
-        - type: ToCompositeFieldPath
-          fromFieldPath: metadata.annotations[crossplane.io/eksoidc]
-          toFieldPath: status.eksOIDC
+          type: FromEnvironmentFieldPath
+        - fromFieldPath: metadata.annotations[crossplane.io/eksoidc]
           policy:
             fromFieldPath: Required
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.arn
+          toFieldPath: status.eksOIDC
+          type: ToCompositeFieldPath
+        - fromFieldPath: status.atProvider.arn
           toFieldPath: status.roleArn
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.arn
+          type: ToCompositeFieldPath
+        - fromFieldPath: status.atProvider.arn
           toFieldPath: status.roleName
           transforms:
-            - type: string
-              string:
-                type: Regexp
-                regexp:
-                  match: 'arn:aws:iam::(\d+):role/(.*)'
-                  group: 2
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.permissionsBoundaryArn
+          - string:
+              regexp:
+                group: 2
+                match: arn:aws:iam::(\d+):role/(.*)
+              type: Regexp
+            type: string
+          type: ToCompositeFieldPath
+        - fromFieldPath: spec.permissionsBoundaryArn
           toFieldPath: spec.forProvider.permissionsBoundary
-        - type: CombineFromComposite
-          toFieldPath: spec.forProvider.assumeRolePolicy
-          combine:
-            variables:
-            - fromFieldPath: status.awsAccountID
-            - fromFieldPath: status.eksOIDC
-            - fromFieldPath: status.eksOIDC
-            - fromFieldPath: status.eksOIDC
-            - fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
-            - fromFieldPath: spec.serviceAccountName
+          type: FromCompositeFieldPath
+        - combine:
             strategy: string
             string:
               fmt: |
@@ -97,29 +99,39 @@ spec:
                     }
                   ]
                 }
-    - name: service-account
-      base:
-        apiVersion: kubernetes.crossplane.io/v1alpha1
-        kind: Object
-        spec:
-          forProvider:
-            manifest:
-              apiVersion: v1
-              kind: ServiceAccount
-              metadata:
-                name: ""
-                namespace: default
-                annotations:
-                  eks.amazonaws.com/role-arn: ""
-      patches:
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+            variables:
+            - fromFieldPath: status.awsAccountID
+            - fromFieldPath: status.eksOIDC
+            - fromFieldPath: status.eksOIDC
+            - fromFieldPath: status.eksOIDC
+            - fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+            - fromFieldPath: spec.serviceAccountName
+          toFieldPath: spec.forProvider.assumeRolePolicy
+          type: CombineFromComposite
+      - base:
+          apiVersion: kubernetes.crossplane.io/v1alpha1
+          kind: Object
+          spec:
+            forProvider:
+              manifest:
+                apiVersion: v1
+                kind: ServiceAccount
+                metadata:
+                  annotations:
+                    eks.amazonaws.com/role-arn: ""
+                  name: ""
+                  namespace: default
+        name: service-account
+        patches:
+        - fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
           toFieldPath: spec.forProvider.manifest.metadata.namespace
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.serviceAccountName
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.serviceAccountName
           toFieldPath: spec.forProvider.manifest.metadata.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.roleArn
-          toFieldPath: spec.forProvider.manifest.metadata.annotations[eks.amazonaws.com/role-arn]
+          type: FromCompositeFieldPath
+        - fromFieldPath: status.roleArn
           policy:
             fromFieldPath: Required
+          toFieldPath: spec.forProvider.manifest.metadata.annotations[eks.amazonaws.com/role-arn]
+          type: FromCompositeFieldPath
+    step: patch-and-transform

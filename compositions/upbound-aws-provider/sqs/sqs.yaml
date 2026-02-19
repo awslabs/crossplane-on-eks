@@ -4,57 +4,64 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: sqs.queue.aws.upbound.awsblueprints.io
   labels:
-    awsblueprints.io/provider: aws
     awsblueprints.io/environment: dev
+    awsblueprints.io/provider: aws
+  name: sqs.queue.aws.upbound.awsblueprints.io
 spec:
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
     kind: XQueue
-  patchSets:
-    - name: common-fields
-      patches:
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.deletionPolicy
+  mode: Pipeline
+  pipeline:
+  - functionRef:
+      name: function-patch-and-transform
+    input:
+      apiVersion: pt.fn.crossplane.io/v1beta1
+      kind: Resources
+      patchSets:
+      - name: common-fields
+        patches:
+        - fromFieldPath: spec.resourceConfig.deletionPolicy
           toFieldPath: spec.deletionPolicy
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.region
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.resourceConfig.region
           toFieldPath: spec.forProvider.region
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.providerConfigName
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.resourceConfig.providerConfigName
           toFieldPath: spec.providerConfigRef.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.tags
-          toFieldPath: spec.forProvider.tags
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.resourceConfig.tags
           policy:
-            mergeOptions:
-              keepMapValues: true
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.name
+            toFieldPath: MergeObjects
+          toFieldPath: spec.forProvider.tags
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.resourceConfig.name
           toFieldPath: metadata.annotations[crossplane.io/external-name]
-  resources:
-    - name: sqs
-      base:
-        apiVersion: sqs.aws.upbound.io/v1beta1
-        kind: Queue
-        spec:
-          deletionPolicy: Delete
-          forProvider:
-            delaySeconds: 10
-            messageRetentionSeconds: 345600
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
+          type: FromCompositeFieldPath
+      resources:
+      - base:
+          apiVersion: sqs.aws.upbound.io/v1beta1
+          kind: Queue
+          spec:
+            deletionPolicy: Delete
+            forProvider:
+              delaySeconds: 10
+              messageRetentionSeconds: 345600
+        name: sqs
+        patches:
+        - patchSetName: common-fields
+          type: PatchSet
+        - fromFieldPath: metadata.name
           toFieldPath: spec.forProvider.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.encryptionKey
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.encryptionKey
           toFieldPath: spec.forProvider.kmsMasterKeyId
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.arn
+          type: FromCompositeFieldPath
+        - fromFieldPath: status.atProvider.arn
           toFieldPath: status.queueArn
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.url
+          type: ToCompositeFieldPath
+        - fromFieldPath: status.atProvider.url
           toFieldPath: status.queueUrl
+          type: ToCompositeFieldPath
+    step: patch-and-transform

@@ -4,81 +4,92 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: lambda-invoke.iampolicy.awsblueprints.io
   labels:
-    awsblueprints.io/provider: aws
     awsblueprints.io/environment: dev
+    awsblueprints.io/provider: aws
     iam.awsblueprints.io/policy-type: invoke
     iam.awsblueprints.io/service: lambda
+  name: lambda-invoke.iampolicy.awsblueprints.io
 spec:
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
     kind: IAMPolicy
-  patchSets:
-    - name: common-fields
-      patches:
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.deletionPolicy
+  mode: Pipeline
+  pipeline:
+  - functionRef:
+      name: function-patch-and-transform
+    input:
+      apiVersion: pt.fn.crossplane.io/v1beta1
+      kind: Resources
+      patchSets:
+      - name: common-fields
+        patches:
+        - fromFieldPath: spec.resourceConfig.deletionPolicy
           toFieldPath: spec.deletionPolicy
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.providerConfigName
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.resourceConfig.providerConfigName
           toFieldPath: spec.providerConfigRef.name
-        - fromFieldPath: "metadata.name"
-          toFieldPath: "metadata.name"
+          type: FromCompositeFieldPath
+        - fromFieldPath: metadata.name
+          toFieldPath: metadata.name
           transforms:
-            - type: string
-              string:
-                fmt: "policy-invoke-lambda-%s"
-  resources:
-    - name: invoke-policy
-      base:
-        apiVersion: iam.aws.upbound.io/v1beta1
-        kind: Policy
-        spec:
-          deletionPolicy: Delete
-          forProvider: {}
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.tags
-          toFieldPath: spec.forProvider.tags
+          - string:
+              fmt: policy-invoke-lambda-%s
+              type: Format
+            type: string
+          type: FromCompositeFieldPath
+      resources:
+      - base:
+          apiVersion: iam.aws.upbound.io/v1beta1
+          kind: Policy
+          spec:
+            deletionPolicy: Delete
+            forProvider: {}
+        name: invoke-policy
+        patches:
+        - patchSetName: common-fields
+          type: PatchSet
+        - fromFieldPath: spec.resourceConfig.tags
           policy:
-            mergeOptions:
-              keepMapValues: true
+            toFieldPath: MergeObjects
+          toFieldPath: spec.forProvider.tags
+          type: FromCompositeFieldPath
         - fromFieldPath: spec.resourceArn
           toFieldPath: spec.forProvider.policy
           transforms:
-            - type: string
-              string:
-                fmt: |
-                  {
-                    "Version": "2012-10-17",
-                    "Statement": [
-                      {
-                          "Action": [
-                              "lambda:InvokeFunction",
-                              "lambda:GetFunctionConfiguration"
-                          ],
-                          "Resource": [
-                              "%s"
-                          ],
-                          "Effect": "Allow"
-                      }
-                    ]
-                  }
-    - name: policy-attachment
-      base:
-        apiVersion: iam.aws.upbound.io/v1beta1
-        kind: RolePolicyAttachment
-        spec:
-          deletionPolicy: Delete
-          forProvider:
-            policyArnSelector:
-              matchControllerRef: true
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.roleName
+          - string:
+              fmt: |
+                {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                        "Action": [
+                            "lambda:InvokeFunction",
+                            "lambda:GetFunctionConfiguration"
+                        ],
+                        "Resource": [
+                            "%s"
+                        ],
+                        "Effect": "Allow"
+                    }
+                  ]
+                }
+              type: Format
+            type: string
+          type: FromCompositeFieldPath
+      - base:
+          apiVersion: iam.aws.upbound.io/v1beta1
+          kind: RolePolicyAttachment
+          spec:
+            deletionPolicy: Delete
+            forProvider:
+              policyArnSelector:
+                matchControllerRef: true
+        name: policy-attachment
+        patches:
+        - patchSetName: common-fields
+          type: PatchSet
+        - fromFieldPath: spec.roleName
           toFieldPath: spec.forProvider.role
+          type: FromCompositeFieldPath
+    step: patch-and-transform

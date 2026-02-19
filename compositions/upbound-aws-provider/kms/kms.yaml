@@ -4,67 +4,74 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: xencryptionkeys-kms.awsblueprints.io
   labels:
     awsblueprints.io/environment: dev
     awsblueprints.io/provider: aws
+  name: xencryptionkeys-kms.awsblueprints.io
 spec:
   compositeTypeRef:
     apiVersion: awsblueprints.io/v1alpha1
     kind: XEncryptionKey
-  patchSets:
-    - name: common-fields
-      patches:
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.deletionPolicy
+  mode: Pipeline
+  pipeline:
+  - functionRef:
+      name: function-patch-and-transform
+    input:
+      apiVersion: pt.fn.crossplane.io/v1beta1
+      kind: Resources
+      patchSets:
+      - name: common-fields
+        patches:
+        - fromFieldPath: spec.resourceConfig.deletionPolicy
           toFieldPath: spec.deletionPolicy
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.region
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.resourceConfig.region
           toFieldPath: spec.forProvider.region
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.providerConfigName
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.resourceConfig.providerConfigName
           toFieldPath: spec.providerConfigRef.name
-  resources:
-    - name: key
-      base:
-        apiVersion: kms.aws.upbound.io/v1beta1
-        kind: Key
-        spec:
-          forProvider:
-            description: "for use with this account"
-            deletionWindowInDays: 10
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.policy
+          type: FromCompositeFieldPath
+      resources:
+      - base:
+          apiVersion: kms.aws.upbound.io/v1beta1
+          kind: Key
+          spec:
+            forProvider:
+              deletionWindowInDays: 10
+              description: for use with this account
+        name: key
+        patches:
+        - patchSetName: common-fields
+          type: PatchSet
+        - fromFieldPath: spec.policy
           toFieldPath: spec.forProvider.policy
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.arn
+          type: FromCompositeFieldPath
+        - fromFieldPath: status.atProvider.arn
           toFieldPath: status.keyArn
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.keyId
+          type: ToCompositeFieldPath
+        - fromFieldPath: status.atProvider.keyId
           toFieldPath: status.keyId
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.resourceConfig.tags
-          toFieldPath: spec.forProvider.tags
+          type: ToCompositeFieldPath
+        - fromFieldPath: spec.resourceConfig.tags
           policy:
-            mergeOptions:
-              keepMapValues: true
-    - name: alais
-      base:
-        apiVersion: kms.aws.upbound.io/v1beta1
-        kind: Alias
-        spec:
-          forProvider: {}
-      patches:
-        - type: PatchSet
-          patchSetName: common-fields
-        - type: FromCompositeFieldPath
-          fromFieldPath: status.keyId
-          toFieldPath: spec.forProvider.targetKeyId
+            toFieldPath: MergeObjects
+          toFieldPath: spec.forProvider.tags
+          type: FromCompositeFieldPath
+      - base:
+          apiVersion: kms.aws.upbound.io/v1beta1
+          kind: Alias
+          spec:
+            forProvider: {}
+        name: alias
+        patches:
+        - patchSetName: common-fields
+          type: PatchSet
+        - fromFieldPath: status.keyId
           policy:
             fromFieldPath: Required
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.id
+          toFieldPath: spec.forProvider.targetKeyId
+          type: FromCompositeFieldPath
+        - fromFieldPath: status.atProvider.id
           toFieldPath: status.keyName
+          type: ToCompositeFieldPath
+    step: patch-and-transform
