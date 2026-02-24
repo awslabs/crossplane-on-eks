@@ -1,0 +1,46 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xupcs.composite.awsblueprints.io
+spec:
+  group: composite.awsblueprints.io
+  names:
+    kind: XUserpoolClient
+    plural: xupcs
+  claimNames:
+    kind: UserpoolClient
+    plural: upcs
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                parameters:
+                  description: List of parameters reused in the composition to produce desired resources.
+                  type: object
+                  properties:
+                    name:
+                      description: Name for the user pool client.
+                      type: string
+                    namespace:
+                      description: Namespace to create the user pool client in.
+                      type: string
+                    callback:
+                      description: Callback URL to replace the placeholder in the composition.
+                      type: string
+                    userPoolId:
+                      description: User pool ID to create the client in.
+                      type: string
+            status:
+              description: List of status fields to be reused by the composition.
+              type: object
+              properties:
+                clientId:
+                  description: Client ID of the user pool client.
+                  type: string

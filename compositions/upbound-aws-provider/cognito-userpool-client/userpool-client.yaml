@@ -1,0 +1,139 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xupcs.composite.awsblueprints.io
+spec:
+  # Placeholder. Will be replaced by the namespace provided as input
+  writeConnectionSecretsToNamespace: default
+  compositeTypeRef:
+    apiVersion: composite.awsblueprints.io/v1alpha1
+    kind: XUserpoolClient
+  resources:
+    - name: userpoolclient
+      base:
+        apiVersion: cognitoidp.aws.upbound.io/v1beta1
+        kind: UserPoolClient
+        metadata:
+          # Placeholder. Will be replaced by the name provided as input
+          name: client-0
+          # Placeholder. Will be replaced by the namespace provided as input
+          namespace: default
+        spec:
+          providerConfigRef:
+            name: upbound-aws-irsa
+          forProvider:
+            # Placeholder. Will be replaced by the name provided as input
+            name: client-0
+            # Placeholder. Will be replaced by the user pool ID provided as input
+            userPoolId: userpool-id
+            accessTokenValidity: 720
+            idTokenValidity: 720
+            region: us-east-1
+            allowedOauthFlows:
+              - code
+              - implicit
+            allowedOauthFlowsUserPoolClient: true
+            allowedOauthScopes:
+              - aws.cognito.signin.user.admin
+              - email
+              - openid
+              - phone
+              - profile
+            authSessionValidity: 3
+            # Placeholder. Will be replaced by the callback URL provided as input
+            callbackUrls:
+              - https://example.com
+            enablePropagateAdditionalUserContextData: false
+            enableTokenRevocation: true
+            explicitAuthFlows:
+              - ALLOW_ADMIN_USER_PASSWORD_AUTH
+              - ALLOW_CUSTOM_AUTH
+              - ALLOW_REFRESH_TOKEN_AUTH
+              - ALLOW_USER_SRP_AUTH
+            generateSecret: true
+            preventUserExistenceErrors: ENABLED
+            readAttributes:
+              - address
+              - birthdate
+              - email
+              - email_verified
+              - family_name
+              - gender
+              - given_name
+              - locale
+              - middle_name
+              - name
+              - nickname
+              - phone_number
+              - phone_number_verified
+              - picture
+              - preferred_username
+              - profile
+              - updated_at
+              - website
+              - zoneinfo
+            refreshTokenValidity: 30
+            supportedIdentityProviders:
+              - COGNITO
+              - Okta
+            writeAttributes:
+              - address
+              - birthdate
+              - email
+              - family_name
+              - gender
+              - given_name
+              - locale
+              - middle_name
+              - name
+              - nickname
+              - phone_number
+              - picture
+              - preferred_username
+              - profile
+              - updated_at
+              - website
+              - zoneinfo
+            tokenValidityUnits:
+              - accessToken: minutes
+                idToken: minutes
+                refreshToken: days
+          writeConnectionSecretToRef:
+            # Write the client secret as a kubernetes secret with the name provided below
+            name: cognito-userpool-client-secret
+            # placeholder. Will be replaced by the namespace provided as input
+            namespace: default
+      patches:
+        # List of patches to apply to the resource
+        - fromFieldPath: spec.parameters.name
+          toFieldPath: metadata.name
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.parameters.name
+          toFieldPath: spec.forProvider.name
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.parameters.namespace
+          toFieldPath: metadata.namespace
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.parameters.namespace
+          toFieldPath: spec.writeConnectionSecretToRef.namespace
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.parameters.callback
+          toFieldPath: spec.forProvider.callbackUrls[0]
+          type: FromCompositeFieldPath
+        - fromFieldPath: spec.parameters.userPoolId
+          toFieldPath: spec.forProvider.userPoolId
+          type: FromCompositeFieldPath
+        - fromFieldPath: status.atProvider.id
+          toFieldPath: status.clientId
+          type: ToCompositeFieldPath
+      connectionDetails:
+        # Write both the client ID and the client secret in a kubernetes secret
+        - name: client_id
+          fromFieldPath: status.atProvider.id
+        - name: client_secret
+          fromConnectionSecretKey: attribute.client_secret
+      readinessChecks:
+        - matchCondition:
+            status: "True"
+            type: Ready
+          type: MatchCondition

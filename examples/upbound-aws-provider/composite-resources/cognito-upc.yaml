@@ -1,0 +1,13 @@
+apiVersion: composite.awsblueprint.io/alpha
+kind: UserpoolClient
+metadata:
+  name: rocket-userpool-client-id
+  namespace: moon
+spec:
+  writeConnectionSecretToRef:
+    name: cognito-userpool-client-details
+  parameters:
+    name: rocket
+    namespace: moon
+    callback: https://awsblueprint.io/earth/oauth_callback
+    userPoolId: us-east-1_toZMoon11
