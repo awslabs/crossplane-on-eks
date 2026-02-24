@@ -1,0 +1,36 @@
+--- 
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: crossplane-bootstrap
+--- 
+apiVersion: awsblueprints.io/v1alpha1
+kind: Eks
+metadata:
+  name: crossplane-bootstrap
+  namespace: crossplane-bootstrap
+spec:
+  id: crossplane-bootstrap
+  region: us-east-1
+  authenticationMode: API_AND_CONFIG_MAP
+  bootstrapClusterCreatorAdminPermissions: true
+  enabledClusterLogTypes:
+    - api
+    - audit
+    - authenticator
+    - controllerManager
+    - scheduler
+  endpointPrivateAccess: true
+  endpointPublicAccess: true
+  iam:
+    clusterAdminRoleArn: "arn:aws:iam::123456789012:role/eks-admin-role"
+    clusterAdminUserArn: "arn:aws:iam::123456789012:user/eks-admin-user"
+  deletionPolicy: "Delete"
+  providerConfigName: crossplane-provider-config
+  version: "1.30"
+  subnets:
+    - subnet-aaaaaaaaaaaaaaaaa
+    - subnet-bbbbbbbbbbbbbbbbb
+    - subnet-ccccccccccccccccc
+  writeConnectionSecretToRef:
+    name: crossplane-bootstrap-kubeconfig
